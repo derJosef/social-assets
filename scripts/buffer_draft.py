@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Transfer one LinkedIn text/image/PDF post to Buffer as a draft, never schedule.
+"""Transfer one LinkedIn/Facebook/Instagram post to Buffer as a draft, never schedule.
 
 No external calls in dry-run mode. Live sending is only possible with --send,
 configured GitHub Actions secrets and a reservation receipt in this repository.
@@ -117,8 +117,8 @@ def read_draft(given_path: str) -> tuple[str, str, bytes]:
     if len(raw) > 100_000:
         raise ValueError("Entwurfsdatei ist zu groß.")
     record = json.loads(raw.decode("utf-8"))
-    if not isinstance(record, dict) or record.get("target") != "linkedin":
-        raise ValueError("Nur LinkedIn-Entwürfe werden akzeptiert.")
+    if not isinstance(record, dict) or record.get("target") not in ("linkedin", "facebook", "instagram"):
+        raise ValueError("Nur LinkedIn-, Facebook- und Instagram-Entwürfe werden akzeptiert.")
     fmt = record.get("format_version")
     if fmt == 1 and set(record) != {"format_version", "target", "text"}:
         raise ValueError("Format 1 erlaubt nur format_version, target und text.")
@@ -126,10 +126,18 @@ def read_draft(given_path: str) -> tuple[str, str, bytes]:
         raise ValueError("Format 2 benötigt genau format_version, target, text und media.")
     if fmt not in (1, 2):
         raise ValueError("Unbekanntes Entwurfsformat.")
-    parse_assets(raw)
+    target = record["target"]
+    assets = parse_assets(raw)
+    if target == "instagram" and not assets:
+        raise ValueError("Instagram benötigt mindestens ein Bild, reiner Text ist nicht erlaubt.")
+    if target != "linkedin" and any("document" in asset for asset in assets):
+        raise ValueError("PDF-Dokumente sind ausschließlich für LinkedIn freigegeben.")
+    if target in ("facebook", "instagram") and len(assets) > 10:
+        raise ValueError("Facebook und Instagram erlauben in dieser Integration maximal 10 Bilder.")
     text = record["text"]
-    if not isinstance(text, str) or not text.strip() or len(text) > 3000:
-        raise ValueError("Text ist leer, ungültig oder länger als 3000 Zeichen.")
+    limit = 2200 if target == "instagram" else 3000
+    if not isinstance(text, str) or not text.strip() or len(text) > limit:
+        raise ValueError(f"Text ist leer, ungültig oder länger als {limit} Zeichen.")
     return accepted_path, text, raw
 
 
@@ -271,12 +279,10 @@ def put_receipt(token: str, receipt: str, content: dict, message: str, sha: str 
     return saved["sha"]
 
 
-def resolve_linkedin_channel(token: str, preferred_id: str = "") -> str:
-    """Read Buffer account/channel metadata and select one LinkedIn channel.
-
-    No mutation; auto-select only if there is exactly one suitable LinkedIn channel.
-    An optional BUFFER_CHANNEL_ID is accepted for accounts with multiple channels.
-    """
+def resolve_channel(token: str, target: str, preferred_id: str = "") -> str:
+    """Select exactly one matching Buffer service. Never fall back to other networks."""
+    if target not in ("linkedin", "facebook", "instagram"):
+        raise ValueError("Unbekannter Buffer-Kanal.")
     account = buffer_graphql(token, GET_ORGANIZATIONS, {}).get("account")
     if not isinstance(account, dict) or not isinstance(account.get("organizations"), list):
         raise RuntimeError("Buffer-Organisationen konnten nicht gelesen werden.")
@@ -291,27 +297,42 @@ def resolve_linkedin_channel(token: str, preferred_id: str = "") -> str:
         for channel in channels:
             if not isinstance(channel, dict):
                 raise RuntimeError("Buffer hat einen ungültigen Kanal geliefert.")
-            if str(channel.get("service", "")).lower() == "linkedin" and channel.get("id"):
+            if str(channel.get("service", "")).lower() == target and channel.get("id"):
                 candidates.add(str(channel["id"]))
     if preferred_id:
         if preferred_id not in candidates:
-            raise RuntimeError("BUFFER_CHANNEL_ID verweist nicht auf einen verbundenen LinkedIn-Kanal.")
+            raise RuntimeError(f"Vorgegebene Kanal-ID passt nicht zu einem {target}-Kanal.")
         return preferred_id
     if not candidates:
-        raise RuntimeError("Kein LinkedIn-Kanal in Buffer verbunden oder für diesen Schlüssel sichtbar.")
+        raise RuntimeError(f"Kein {target}-Kanal in Buffer verbunden oder für den API-Schlüssel sichtbar.")
     if len(candidates) != 1:
         raise RuntimeError(
-            "Mehrere LinkedIn-Kanäle gefunden; BUFFER_CHANNEL_ID zur eindeutigen Auswahl hinterlegen."
+            f"Mehrere {target}-Kanäle gefunden; eindeutige BUFFER_*_CHANNEL_ID erforderlich."
         )
     return next(iter(candidates))
+
+
+def resolve_linkedin_channel(token: str, preferred_id: str = "") -> str:
+    """Compatibility for the original LinkedIn tests."""
+    return resolve_channel(token, "linkedin", preferred_id)
+
+
+def channel_preference(target: str) -> str:
+    name = {
+        "linkedin": "BUFFER_CHANNEL_ID",
+        "facebook": "BUFFER_FACEBOOK_CHANNEL_ID",
+        "instagram": "BUFFER_INSTAGRAM_CHANNEL_ID",
+    }[target]
+    return os.environ.get(name, "").strip()
 
 
 def check_connection() -> None:
     buffer_key = os.environ.get("BUFFER_API_KEY", "")
     if not buffer_key:
         raise RuntimeError("BUFFER_API_KEY fehlt als GitHub-Secret.")
-    resolve_linkedin_channel(buffer_key, os.environ.get("BUFFER_CHANNEL_ID", "").strip())
-    print("Verbindungstest erfolgreich: LinkedIn-Kanal eindeutig gefunden.")
+    for target in ("linkedin", "facebook", "instagram"):
+        resolve_channel(buffer_key, target, channel_preference(target))
+    print("Verbindungstest erfolgreich: LinkedIn, Facebook und Instagram eindeutig gefunden.")
     print("Nur Buffer-Daten gelesen. Kein Entwurf erstellt, nichts eingeplant oder veröffentlicht.")
 
 
@@ -323,10 +344,8 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
     if not all((github_token, buffer_key)):
         raise RuntimeError("GitHub-Token oder BUFFER_API_KEY fehlt.")
 
-    channel_id = resolve_linkedin_channel(
-        buffer_key, os.environ.get("BUFFER_CHANNEL_ID", "").strip()
-    )
-
+    target = json.loads(raw.decode("utf-8"))["target"]
+    channel_id = resolve_channel(buffer_key, target, channel_preference(target))
     assets = parse_assets(raw)
     verify_media_access(assets)
     receipt = receipt_path(draft_path)
@@ -337,6 +356,7 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
         )
     pending = {
         "draft_file": draft_path,
+        "target": target,
         "draft_sha256": hashlib.sha256(raw).hexdigest(),
         "state": "pending_manual_reconciliation_on_failure",
         "github_run_id": os.environ.get("GITHUB_RUN_ID", "unknown"),
@@ -370,7 +390,7 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Buffer: LinkedIn-Draft sicher übertragen.")
+    parser = argparse.ArgumentParser(description="Buffer: freigegebene Entwürfe für drei Kanäle übertragen.")
     parser.add_argument("--draft", required=True, help="JSON unter drafts/ oder ready-for-buffer/")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true", help="Nur lokal prüfen; keine API-Aufrufe.")
@@ -382,7 +402,7 @@ def main() -> int:
         draft_path, text, raw = read_draft(args.draft)
         if args.dry_run:
             assets = parse_assets(raw)
-            print(f"DRY-RUN OK: {draft_path}, LinkedIn, {len(text)} Zeichen, {len(assets)} Medien.")
+            print(f"DRY-RUN OK: {draft_path}, Ziel {json.loads(raw.decode('utf-8'))['target']}, {len(text)} Zeichen, {len(assets)} Medien.")
 
             print("Keine API-Aufrufe, keine Buffer-Aktion.")
         elif args.check_connection:
