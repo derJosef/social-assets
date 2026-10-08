@@ -20,15 +20,10 @@ jobs:
           set -euo pipefail
           curl -fL --retry 2 "$SOURCE_URL" -o /tmp/artwork.png
           file /tmp/artwork.png
-          python3 - <<'PY'
-          from PIL import Image
-          im=Image.open('/tmp/artwork.png')
-          assert im.size==(1122,1402), im.size
-          im.convert('RGB').save('media/images/2026-10-08-agentenrechte-original-logo-freigegeben.webp', 'WEBP', quality=82, method=6)
-          print('Final image:', Image.open('media/images/2026-10-08-agentenrechte-original-logo-freigegeben.webp').size)
-          PY
+          install -m 644 /tmp/artwork.png media/images/2026-10-08-agentenrechte-original-logo-freigegeben.png
+          sha256sum /tmp/artwork.png media/images/2026-10-08-agentenrechte-original-logo-freigegeben.png
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add media/images/2026-10-08-agentenrechte-original-logo-freigegeben.webp
+          git add media/images/2026-10-08-agentenrechte-original-logo-freigegeben.png
           git commit -m 'assets: add approved AI agent permissions campaign artwork'
           git push
