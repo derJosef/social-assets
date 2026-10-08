@@ -1,0 +1,11 @@
+{
+  "format_version": 2,
+  "target": "linkedin",
+  "text": "[Begleittext für das LinkedIn-Karussell ergänzen – nicht freigegeben.]",
+  "media": {
+    "type": "document",
+    "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/documents/DEIN-KARUSSELL.pdf",
+    "thumbnail_url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/DEIN-COVER.png",
+    "title": "[Dokumenttitel]"
+  }
+}
