@@ -1,0 +1,7 @@
+{
+  "draft_file": "ready-for-buffer/2026-10-08-facebook-smoketest-002.json",
+  "target": "facebook",
+  "draft_sha256": "e4d8b85a44272261c1b416ecb0e66a62fd8cad0d0a2d1ae25e471267475758e8",
+  "state": "pending_manual_reconciliation_on_failure",
+  "github_run_id": "37785740152"
+}
