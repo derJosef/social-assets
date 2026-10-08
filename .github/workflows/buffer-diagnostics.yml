@@ -1,0 +1,37 @@
+name: Buffer – Statusprüfung ohne Änderungen
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'diagnostics/*.json'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Nur neue Diagnose-Dateien prüfen
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$BEFORE_SHA" =~ ^0+$ ]]; then exit 1; fi
+          temp_file="$(mktemp)"
+          trap 'rm -f "$temp_file"' EXIT
+          git diff --no-renames --diff-filter=A --name-only -z "$BEFORE_SHA" "$GITHUB_SHA" -- diagnostics/ > "$temp_file"
+          mapfile -d '' -t added < "$temp_file"
+          for file in "${added[@]}"; do
+            if [[ "$file" == diagnostics/*.json && "$file" != diagnostics/*/* ]]; then
+              python3 scripts/buffer_inspect.py "$file"
+            fi
+          done
