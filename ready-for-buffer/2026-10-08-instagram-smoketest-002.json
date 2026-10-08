@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "instagram",
+  "text": "TESTENTWURF INSTAGRAM 2 – Korrigierter GitHub/Buffer-Verbindungstest für @josefpauderer.ai am 08.10.2026. Bitte nicht veröffentlichen oder terminieren.",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/buffer-smoketest-cover.png",
+        "alt_text": "Neutrales technisches Testbild in Dunkelblau, Blau und Petrol."
+      }
+    ]
+  }
+}
