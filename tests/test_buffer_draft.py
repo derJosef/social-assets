@@ -156,9 +156,9 @@ class MediaAssetTests(unittest.TestCase):
         class Response:
             def __enter__(self): return self
             def __exit__(self, *a): return False
-            self_headers = headers
             @property
-            def headers(self): return self.self_headers
+            def headers(self):
+                return {"Content-Type": "image/png", "Content-Length": "25430"}
         with mock.patch.object(integration.urllib.request, "urlopen", return_value=Response()) as call:
             integration.verify_media_access([asset])
         self.assertEqual("HEAD", call.call_args.args[0].get_method())
