@@ -2,6 +2,7 @@
   "draft_file": "ready-for-buffer/2026-10-08-instagram-offene-ki-modelle-klare-kontrolle.json",
   "target": "instagram",
   "draft_sha256": "1379ba067e1c1c30a37e5cb79d48ecf18c42a1b7b37f911d22a56c73d83d704d",
-  "state": "pending_manual_reconciliation_on_failure",
-  "github_run_id": "37798482050"
+  "state": "draft_created",
+  "github_run_id": "37798482050",
+  "buffer_post_id": "6ac7b25ab99c473c41ba1503"
 }
