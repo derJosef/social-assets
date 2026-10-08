@@ -1,0 +1,11 @@
+{
+  "format_version": 2,
+  "target": "linkedin",
+  "text": "TESTENTWURF PDF-KARUSSELL – Technischer Buffer-API-Dokumenttest am 08.10.2026. Zwei Testseiten, keine Veröffentlichung oder Terminierung.",
+  "media": {
+    "type": "document",
+    "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/documents/buffer-smoketest-carousel.pdf",
+    "thumbnail_url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/buffer-smoketest-cover.png",
+    "title": "Buffer PDF-Karussell - Technischer Test"
+  }
+}
