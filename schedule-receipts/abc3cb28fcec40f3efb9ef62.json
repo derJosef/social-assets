@@ -1,0 +1,10 @@
+{
+  "request_file": "ready-to-schedule/2026-10-08-linkedin-agentenrechte-statt-vollmacht.json",
+  "request_sha256": "90d040ff01b0f62522127090b13d0182a03456c478c2ff3ea31824dac84873c5",
+  "draft_file": "ready-for-buffer/2026-10-08-linkedin-agentenrechte-statt-vollmacht.json",
+  "target": "linkedin",
+  "buffer_post_id": "6ac7fa8a62435c1f1fe0e557",
+  "due_at": "2026-10-21T14:00:00Z",
+  "state": "pending_manual_reconciliation_on_failure",
+  "github_run_id": "37839280992"
+}
