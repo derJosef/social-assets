@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "instagram",
+  "text": "OFFENE KI-MODELLE. KLARE KONTROLLE.\n\n🇫🇷 Mistral Large 4\n🇺🇸 Reflection AI Beam\n\nZwei neue KI-Modelle zeigen: Unternehmen könnten künftig mehr Wahlfreiheit beim Einsatz von KI bekommen. Die Open-Weight-Veröffentlichungen sind für später im Oktober angekündigt.\n\nAber ein leistungsfähiges Modell allein ergibt noch keinen zuverlässigen KI-Agenten.\n\nWenn KI beispielsweise Liefertermine aus Auftragsbestätigungen übernimmt, zählen drei Dinge:\n\n📄 Daten kontrolliert verarbeiten\n🔎 Ergebnisse und Quellen prüfen\n✋ Kritische Aktionen vom Menschen freigeben lassen\n\nMeine Überzeugung: Echte KI-Souveränität entsteht durch kontrollierbare Prozesse – nicht nur durch die Modellwahl.\n\nWas ist euch wichtiger: mehr Modellfreiheit oder verlässlich geprüfte Abläufe?\n\n#KIAgenten #KISouveränität #AIAgentBuilder #Mittelstand",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-08-offene-ki-modelle-klare-kontrolle-linkedin.webp",
+        "alt_text": "Illustration eines B2B-Auftragsprozesses: Geschäftsdokument, KI-gestützte Prüfung, menschliche Freigabe und Kalendereintrag."
+      }
+    ]
+  }
+}

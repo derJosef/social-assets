@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "facebook",
+  "text": "Neue KI-Modelle – mehr Unabhängigkeit für Unternehmen?\n\nMistral AI aus Frankreich hat Large 4 vorgestellt, Reflection AI aus den USA das Modell Beam. Beide setzen auf „Open Weights“: Die Modellgewichte sollen später im Oktober verfügbar werden.\n\nDas eröffnet neue Möglichkeiten, KI selbst zu betreiben und anzupassen. Doch ein offenes Modell allein macht Geschäftsprozesse weder sicher noch zuverlässig.\n\nEin praktisches Beispiel: Ein KI-Agent liest eine Auftragsbestätigung und bereitet Liefertermine für den Kalender vor. Dann muss nachvollziehbar sein, woher die Daten stammen, ob sie geprüft wurden und wann ein Mensch freigeben muss.\n\nGenau das ist für mich als AI Agent Builder der entscheidende Punkt: nicht nur leistungsfähige KI, sondern kontrollierbare Abläufe.\n\nWas wäre euch wichtiger: mehr Unabhängigkeit vom KI-Anbieter oder verlässlich geprüfte Prozesse?\n\n#KIAgenten #KISouveränität #Digitalisierung",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-08-offene-ki-modelle-klare-kontrolle-linkedin.webp",
+        "alt_text": "Illustration eines B2B-Auftragsprozesses: Geschäftsdokument, KI-gestützte Prüfung, menschliche Freigabe und Kalendereintrag."
+      }
+    ]
+  }
+}
