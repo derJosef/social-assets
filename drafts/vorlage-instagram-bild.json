@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "instagram",
+  "text": "[Nur Vorlage – Instagram-Bildunterschrift vor Freigabe ersetzen.]",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/DEIN-BILD.png",
+        "alt_text": "[Bildinhalt beschreiben]"
+      }
+    ]
+  }
+}
