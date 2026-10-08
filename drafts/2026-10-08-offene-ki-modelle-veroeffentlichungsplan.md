@@ -1,6 +1,6 @@
 # Veröffentlichungsplan: Offene KI-Modelle, klare Kontrolle
 
-Stand: 08.10.2026. Dieser Plan ist eine redaktionelle Empfehlung für die drei Buffer-Entwürfe, **keine automatische Terminierung oder Veröffentlichung**.
+Stand: 08.10.2026, 18:24 Europe/Berlin. **Alle drei Beiträge sind nach ausdrücklicher Freigabe durch Josef in Buffer fest terminiert** (Status `scheduled` unmittelbar über die Buffer-API bestätigt). Die tatsächliche Veröffentlichung erfolgt automatisch durch Buffer zum angegebenen Termin.
 
 | Kanal | Zieltermin (Europe/Berlin) | Zieltermin (UTC) | Begründung |
 | --- | --- | --- | --- |
@@ -13,8 +13,20 @@ Die drei Beiträge verwenden das Bild `media/images/2026-10-08-offene-ki-modelle
 ## Ablauf und Freigabe
 - Dateien in `drafts/` lösen keinen Buffer-Transfer aus.
 - Erst nach Zustimmung neu nach `ready-for-buffer/` hinzugefügte JSON-Dateien lösen **nur Buffer-Entwürfe** aus.
-- Im aktuellen Workflow gibt es **keine Terminierung und keine automatische Veröffentlichung**. Die angegebenen Zeitpunkte müssen nach Sichtprüfung in Buffer ausdrücklich über „Set Time“ und die finale Freigabe/Queue-Aktion umgesetzt werden.
+- Die Terminierung erfolgte nach **separater ausdrücklicher Veröffentlichungsfreigabe** über `ready-to-schedule/` und den GitHub-Workflow `.github/workflows/buffer-auto-schedule.yml` anhand der bereits vorhandenen Buffer-Post-IDs. Keine manuellen Datums-/Uhrzeiteingaben in Buffer nötig.
+- Der neue Workflow bearbeitet nur vorhandene Entwürfe; `ready-for-buffer/` erzeugt weiterhin ausschließlich Entwürfe.
+- Vor Veröffentlichung verbleiben die drei Beiträge in der Buffer-Warteschlange. Buffer kann bei Plattform-/Kontofehlern scheitern; dies ist keine Garantie, dass die Plattform die Beiträge tatsächlich publiziert.
 - Vor zukünftigen Beiträgen sind die Postingzeiten erneut zu recherchieren und mit eigenen Kanalstatistiken abzugleichen.
+
+## Verifizierte Buffer-Terminierungen (08.10.2026)
+
+| Kanal | Buffer-Post-ID | Nachweis GitHub Actions |
+| --- | --- | --- |
+| LinkedIn | `6ac7b25edaf7bb7cba274102` | [Lauf #37808077681](https://github.com/derJosef/social-assets/actions/runs/37808077681) |
+| Facebook | `6ac7b255daf7bb7cba273f54` | [Lauf #37808388065](https://github.com/derJosef/social-assets/actions/runs/37808388065) |
+| Instagram | `6ac7b25ab99c473c41ba1503` | [Lauf #37808451845](https://github.com/derJosef/social-assets/actions/runs/37808451845) |
+
+Die [abschließende lesende Statusprüfung](https://github.com/derJosef/social-assets/actions/runs/37808524833) bestätigt die drei exakten UTC-Termine und `scheduled` für alle Post-IDs. Frühere abgewiesene Versuche sind mit `pending`-Belegen auditierbar; sie erzeugten keine Terminierung und wurden vor neuen Versuchen per Buffer-Statusabfrage abgeglichen.
 
 ## Recherchierte Quellen
 - LinkedIn: https://buffer.com/resources/best-time-to-post-on-linkedin/ (09.09.2026, 4,8 Mio. Beiträge)
