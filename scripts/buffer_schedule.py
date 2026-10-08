@@ -37,9 +37,10 @@ query GetPost($id: PostId!) {
 }
 """
 SCHEDULE_EXISTING_DRAFT = """
-mutation ScheduleExistingDraft($id: PostId!, $dueAt: DateTime!) {
+mutation ScheduleExistingDraft($id: PostId!, $dueAt: DateTime!, $text: String!) {
   editPost(input: {
     id: $id
+    text: $text
     schedulingType: automatic
     mode: customScheduled
     dueAt: $dueAt
@@ -139,7 +140,9 @@ def schedule(info: dict) -> None:
     }
     receipt_sha = put_receipt(github_token, receipt, pending, f"buffer: reserve scheduling {info['request_file']}")
     # The reservation is deliberately irreversible on uncertain API results.
-    result = buffer_graphql(token, SCHEDULE_EXISTING_DRAFT, {"id": info["post_id"], "dueAt": info["due_at"]})
+    # The API's edit validator requires the existing text explicitly, even though
+    # the docs say omission should preserve it. Preflight compared it byte-for-byte.
+    result = buffer_graphql(token, SCHEDULE_EXISTING_DRAFT, {"id": info["post_id"], "dueAt": info["due_at"], "text": info["text"]})
     action = result.get("editPost")
     changed = action.get("post") if isinstance(action, dict) else None
     if not isinstance(changed, dict) or changed.get("id") != info["post_id"]:
