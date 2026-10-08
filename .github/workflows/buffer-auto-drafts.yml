@@ -1,0 +1,73 @@
+name: Buffer – automatisch nur freigegebene Entwürfe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ready-for-buffer/*.json'
+
+permissions:
+  contents: write # Reservierung und Ergebnisbeleg; keine anderen GitHub-Schreibrechte.
+
+concurrency:
+  group: buffer-drafts-single-flight
+  cancel-in-progress: false
+
+jobs:
+  create-drafts:
+    name: Neue freigegebene LinkedIn-Entwürfe übertragen
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Repository und Git-Historie laden
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Ausschließlich neue Freigabedateien ermitteln
+        id: added
+        env:
+          BEFORE_SHA: ${{github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
+            echo "Kein zuverlässiger Vergleichs-Commit vorhanden. Sicherer Stopp." >&2
+            exit 1
+          fi
+          temp_file="$(mktemp)"
+          trap 'rm -f "$temp_file"' EXIT
+          git diff --no-renames --diff-filter=A --name-only -z "$BEFORE_SHA" "$GITHUB_SHA" -- ready-for-buffer/ > "$temp_file"
+          mapfile -d '' -t added < "$temp_file"
+
+          count=0
+          for file in "${added[@]}"; do
+            if [[ "$file" == ready-for-buffer/*.json && "$file" != ready-for-buffer/*/* ]]; then
+              count=$((count + 1))
+            fi
+          done
+          echo "Anzahl neuer Freigaben: $count"
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+
+      - name: Freigegebene Beiträge ausschließlich als Buffer-Entwürfe anlegen
+        if: steps.added.outputs.count != '0'
+        env:
+          BEFORE_SHA: ${{github.event.before }}
+          BUFFER_API_KEY: ${{secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID: ${{secrets.BUFFER_CHANNEL_ID }}
+          GITHUB_TOKEN: ${{github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          temp_file="$(mktemp)"
+          trap 'rm -f "$temp_file"' EXIT
+          git diff --no-renames --diff-filter=A --name-only -z "$BEFORE_SHA" "$GITHUB_SHA" -- ready-for-buffer/ > "$temp_file"
+          mapfile -d '' -t added < "$temp_file"
+
+          for file in "${added[@]}"; do
+            if [[ "$file" == ready-for-buffer/*.json && "$file" != ready-for-buffer/*/* ]]; then
+              echo "Prüfe und übertrage freigegebenen Entwurf: $file"
+              python3 scripts/buffer_draft.py --draft "$file" --send
+            fi
+          done
