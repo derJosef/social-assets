@@ -1,6 +1,6 @@
 # Arbeitsentwurf: Agentenrechte statt Vollmacht
 
-Stand: 08.10.2026. Status: **Bild und Buffer-Entwürfe freigegeben und erfolgreich übertragen am 08.10.2026; Veröffentlichungstermine noch nicht freigegeben.** Keine Terminierung oder Veröffentlichung ausgelöst.
+Stand: 08.10.2026. Status: **Bild und Beiträge freigegeben; drei bestehende Buffer-Entwürfe am 08.10.2026 erfolgreich für die automatische Veröffentlichung terminiert und anschließend per Buffer-API verifiziert.** Noch nicht veröffentlicht.
 
 ## Drei geprüfte Themen
 
@@ -75,4 +75,18 @@ Josef hat die Grafik mit dem Logo unten rechts ausdrücklich als passend bestät
 
 [GitHub Actions: erfolgreicher Transfer von 3/3 Entwürfen](https://github.com/derJosef/social-assets/actions/runs/37838404565).
 
-**Freigabegrenze:** Die oben genannten Uhrzeiten bleiben redaktionelle Vorschläge. Erst nach ausdrücklicher Freigabe der automatischen Veröffentlichung durch Josef dürfen `ready-to-schedule/`-Aufträge erzeugt werden. Die Übergabe an Buffer ist dagegen bereits abgeschlossen. Die termingenaue Veröffentlichung kann später scheitern, deshalb nach Terminierung und nach Veröffentlichung erneut Status prüfen.
+**Freigabe erteilt:** Josef hat diese drei Uhrzeiten ausdrücklich zur automatischen Veröffentlichung freigegeben. Die `ready-to-schedule/`-Dateien wurden am 08.10.2026 erstellt und der Terminierungsworkflow hat erfolgreich abgeschlossen. Die termingenaue Veröffentlichung kann später scheitern; daher nach den Veröffentlichungsdaten erneut Status prüfen.
+
+## Bestätigte automatische Veröffentlichung – API-Verifikation am 08.10.2026
+
+| Kanal | Buffer-Post-ID | Status | Europe/Berlin | Buffer `dueAt` (UTC) |
+| --- | --- | --- | --- | --- |
+| LinkedIn | `6ac7fa8a62435c1f1fe0e557` | `scheduled` | 21.10.2026 16:00 MESZ | `2026-10-21T14:00:00.000Z` |
+| Facebook | `6ac7fa832a80dca54c7ce231` | `scheduled` | 27.10.2026 19:00 MEZ | `2026-10-27T18:00:00.000Z` |
+| Instagram | `6ac7fa87c121d8911406c941` | `scheduled` | 28.10.2026 18:00 MEZ | `2026-10-28T17:00:00.000Z` |
+
+- [Terminierung, erfolgreicher GitHub-Lauf](https://github.com/derJosef/social-assets/actions/runs/37839280992)
+- [Unabhängige Buffer-Statusabfrage, erfolgreicher GitHub-Lauf](https://github.com/derJosef/social-assets/actions/runs/37839372424)
+- Bestätigte Terminierungsbelege: `schedule-receipts/abc3cb28fcec40f3efb9ef62.json`, `schedule-receipts/e4afa88f9659f87f4d6f63c2.json`, `schedule-receipts/e7bfbe013b9fdd6759fcd13a.json`.
+
+Der Status `scheduled` bestätigt den Veröffentlichungsauftrag in Buffer, nicht eine bereits erfolgte Veröffentlichung.
