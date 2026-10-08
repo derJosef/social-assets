@@ -1,0 +1,52 @@
+name: Buffer – LinkedIn-Entwurf
+
+on:
+  workflow_dispatch:
+    inputs:
+      draft_file:
+        description: "JSON-Datei unter drafts/ (nur LinkedIn-Text)"
+        required: true
+        type: string
+        default: "drafts/beispiel-linkedin.json"
+      send_to_buffer:
+        description: "An Buffer als Entwurf senden? (Standard: NEIN)"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write # Ausschließlich für die GitHub-Empfangsbelege erforderlich.
+
+concurrency:
+  group: buffer-drafts-single-flight
+  cancel-in-progress: false
+
+jobs:
+  draft:
+    name: Nur Entwurf, keine Veröffentlichung
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dateien abrufen
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Python-Version anzeigen
+        run: python3 --version
+
+      - name: JSON prüfen und optional Buffer-Entwurf erstellen
+        env:
+          DRAFT_FILE: ${{ inputs.draft_file }}
+          SEND_TO_BUFFER: ${{ inputs.send_to_buffer }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$SEND_TO_BUFFER" == "true" ]]; then
+            python3 scripts/buffer_draft.py --draft "$DRAFT_FILE" --send
+          else
+            python3 scripts/buffer_draft.py --draft "$DRAFT_FILE" --dry-run
+          fi
