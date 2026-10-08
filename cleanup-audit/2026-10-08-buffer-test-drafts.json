@@ -2,5 +2,11 @@
   "test_date": "2026-10-08",
   "purpose": "Only six approved test drafts; regular content and receipts untouched",
   "github_run_id": "37792336656",
-  "results": []
+  "results": [
+    {
+      "post_id": "6ac75a585d76b00cd8321775",
+      "target": "linkedin",
+      "status": "deleted"
+    }
+  ]
 }
