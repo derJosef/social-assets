@@ -1,6 +1,7 @@
 {
   "draft_file": "ready-for-buffer/2026-10-08-auto-trigger-smoketest-001.json",
   "draft_sha256": "2f105c002ca25cbc858d30f66d0fa2f36ab964bca41707518c98fbbd58356bce",
-  "state": "pending_manual_reconciliation_on_failure",
-  "github_run_id": "37765004369"
+  "state": "draft_created",
+  "github_run_id": "37765004369",
+  "buffer_post_id": "6ac7731af9e3728044fad9bc"
 }
