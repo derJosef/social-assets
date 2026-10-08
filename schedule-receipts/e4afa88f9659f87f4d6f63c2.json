@@ -1,0 +1,10 @@
+{
+  "request_file": "ready-to-schedule/2026-10-08-facebook-agentenrechte-statt-vollmacht.json",
+  "request_sha256": "9ad1547a2ba48eecebf1933b24851cfe6edb4b16a0ba651da452e9d1d29c2b86",
+  "draft_file": "ready-for-buffer/2026-10-08-facebook-agentenrechte-statt-vollmacht.json",
+  "target": "facebook",
+  "buffer_post_id": "6ac7fa832a80dca54c7ce231",
+  "due_at": "2026-10-27T18:00:00Z",
+  "state": "pending_manual_reconciliation_on_failure",
+  "github_run_id": "37839280992"
+}
