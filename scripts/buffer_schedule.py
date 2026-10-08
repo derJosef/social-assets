@@ -21,6 +21,8 @@ from buffer_draft import (  # type: ignore
     buffer_graphql,
     channel_preference,
     fetch_receipt,
+    parse_assets,
+    platform_metadata,
     put_receipt,
     receipt_path,
     resolve_channel,
@@ -37,10 +39,12 @@ query GetPost($id: PostId!) {
 }
 """
 SCHEDULE_EXISTING_DRAFT = """
-mutation ScheduleExistingDraft($id: PostId!, $dueAt: DateTime!, $text: String!) {
+mutation ScheduleExistingDraft($id: PostId!, $dueAt: DateTime!, $text: String!, $assets: [AssetInput!], $metadata: PostInputMetaData) {
   editPost(input: {
     id: $id
     text: $text
+    assets: $assets
+    metadata: $metadata
     schedulingType: automatic
     mode: customScheduled
     dueAt: $dueAt
@@ -108,6 +112,8 @@ def inspect_request(request_file: str, now: datetime | None = None) -> dict:
         "target": target,
         "draft_file": draft_file,
         "text": draft["text"],
+        "assets": parse_assets(draft_raw),
+        "metadata": platform_metadata(target),
         "post_id": delivery["buffer_post_id"],
         "due_at": due,
         "receipt_path": f"schedule-receipts/{digest}.json",
@@ -140,9 +146,12 @@ def schedule(info: dict) -> None:
     }
     receipt_sha = put_receipt(github_token, receipt, pending, f"buffer: reserve scheduling {info['request_file']}")
     # The reservation is deliberately irreversible on uncertain API results.
-    # The API's edit validator requires the existing text explicitly, even though
-    # the docs say omission should preserve it. Preflight compared it byte-for-byte.
-    result = buffer_graphql(token, SCHEDULE_EXISTING_DRAFT, {"id": info["post_id"], "dueAt": info["due_at"], "text": info["text"]})
+    # Buffer's edit validator requires the existing channel content explicitly,
+    # despite its documentation saying omitted fields should be preserved.
+    result = buffer_graphql(token, SCHEDULE_EXISTING_DRAFT, {
+        "id": info["post_id"], "dueAt": info["due_at"],
+        "text": info["text"], "assets": info["assets"], "metadata": info["metadata"],
+    })
     action = result.get("editPost")
     changed = action.get("post") if isinstance(action, dict) else None
     if not isinstance(changed, dict) or changed.get("id") != info["post_id"]:
