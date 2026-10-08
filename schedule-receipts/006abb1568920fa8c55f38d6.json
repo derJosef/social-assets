@@ -1,0 +1,10 @@
+{
+  "request_file": "ready-to-schedule/2026-10-08-linkedin-offene-ki-modelle-klare-kontrolle-retry-01.json",
+  "request_sha256": "a6652d5f14b4b1adb55873bee5933b48de897bdf35a9d621d88ec5de2230fbe6",
+  "draft_file": "ready-for-buffer/2026-10-08-linkedin-offene-ki-modelle-klare-kontrolle.json",
+  "target": "linkedin",
+  "buffer_post_id": "6ac7b25edaf7bb7cba274102",
+  "due_at": "2026-10-09T13:00:00Z",
+  "state": "pending_manual_reconciliation_on_failure",
+  "github_run_id": "37807891626"
+}
