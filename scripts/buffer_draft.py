@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Transfer exactly one LinkedIn text post to Buffer as a draft, never schedule.
+"""Transfer one LinkedIn text/image/PDF post to Buffer as a draft, never schedule.
 
 No external calls in dry-run mode. Live sending is only possible with --send,
 configured GitHub Actions secrets and a reservation receipt in this repository.
@@ -16,6 +16,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 BUFFER_ENDPOINT = "https://api.buffer.com"
@@ -23,13 +24,14 @@ REPOSITORY = "derJosef/social-assets"
 
 # The only Buffer mutation in this script. There is no scheduling or publish path.
 CREATE_DRAFT = """
-mutation CreateDraft($text: String!, $channelId: ChannelId!) {
+mutation CreateDraft($text: String!, $channelId: ChannelId!, $assets: [AssetInput!]!) {
   createPost(input: {
     text: $text
     channelId: $channelId
     schedulingType: automatic
     mode: addToQueue
     saveToDraft: true
+    assets: $assets
   }) {
     ... on PostActionSuccess { post { id text } }
     ... on MutationError { message }
@@ -115,14 +117,120 @@ def read_draft(given_path: str) -> tuple[str, str, bytes]:
     if len(raw) > 100_000:
         raise ValueError("Entwurfsdatei ist zu groß.")
     record = json.loads(raw.decode("utf-8"))
-    if not isinstance(record, dict) or set(record) != {"format_version", "target", "text"}:
-        raise ValueError("Erlaubte Felder: format_version, target, text.")
-    if record["format_version"] != 1 or record["target"] != "linkedin":
-        raise ValueError("Vorerst ausschließlich LinkedIn-Textentwürfe (Format 1).")
+    if not isinstance(record, dict) or record.get("target") != "linkedin":
+        raise ValueError("Nur LinkedIn-Entwürfe werden akzeptiert.")
+    fmt = record.get("format_version")
+    if fmt == 1 and set(record) != {"format_version", "target", "text"}:
+        raise ValueError("Format 1 erlaubt nur format_version, target und text.")
+    if fmt == 2 and set(record) != {"format_version", "target", "text", "media"}:
+        raise ValueError("Format 2 benötigt genau format_version, target, text und media.")
+    if fmt not in (1, 2):
+        raise ValueError("Unbekanntes Entwurfsformat.")
+    parse_assets(raw)
     text = record["text"]
     if not isinstance(text, str) or not text.strip() or len(text) > 3000:
         raise ValueError("Text ist leer, ungültig oder länger als 3000 Zeichen.")
     return accepted_path, text, raw
+
+
+
+# This public repository owns all media. Never send private URLs or tokens to Buffer.
+MEDIA_PREFIX = "https://raw.githubusercontent.com/derJosef/social-assets/main/media/"
+MEDIA_NAME_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}$")
+
+
+def validate_media_url(value: object, category: str) -> str:
+    if not isinstance(value, str) or len(value) > 320:
+        raise ValueError("Ungültige Medien-URL.")
+    parsed = urllib.parse.urlsplit(value)
+    if (
+        parsed.scheme != "https"
+        or parsed.netloc != "raw.githubusercontent.com"
+        or parsed.query or parsed.fragment
+        or parsed.username or parsed.password or parsed.port
+        or not value.startswith(MEDIA_PREFIX)
+    ):
+        raise ValueError("Medien müssen direkt aus dem öffentlichen social-assets/media/ kommen.")
+    suffix = value[len(MEDIA_PREFIX):]
+    parts = suffix.split("/")
+    if len(parts) != 2 or parts[0] != category or not MEDIA_NAME_RE.fullmatch(parts[1]):
+        raise ValueError("Medienpfad muss ein Dateiname unter media/images oder media/documents sein.")
+    extension = Path(parts[1]).suffix.lower()
+    if category == "images" and extension not in {".png", ".jpg", ".jpeg", ".webp"}:
+        raise ValueError("Unterstützt werden PNG, JPG und WebP.")
+    if category == "documents" and extension != ".pdf":
+        raise ValueError("Ein Karussell-Dokument muss eine PDF-Datei sein.")
+    return value
+
+
+def parse_assets(raw: bytes) -> list[dict]:
+    """Validate declarative assets. Offline: no network call, no Buffer mutation."""
+    record = json.loads(raw.decode("utf-8"))
+    if record.get("format_version") == 1:
+        return []
+    if record.get("format_version") != 2:
+        raise ValueError("Unbekanntes Entwurfsformat.")
+    media = record.get("media")
+    if not isinstance(media, dict):
+        raise ValueError("Format 2 benötigt ein media-Objekt.")
+    kind = media.get("type")
+    if kind == "images":
+        if set(media) != {"type", "images"}:
+            raise ValueError("Bilder benötigen type und images.")
+        images = media["images"]
+        if not isinstance(images, list) or not 1 <= len(images) <= 20:
+            raise ValueError("Pro LinkedIn-Beitrag sind 1 bis 20 Bilder zulässig.")
+        assets = []
+        for image in images:
+            if not isinstance(image, dict) or set(image) != {"url", "alt_text"}:
+                raise ValueError("Pro Bild sind url und alt_text erforderlich.")
+            url = validate_media_url(image["url"], "images")
+            alt = image["alt_text"]
+            if not isinstance(alt, str) or not 1 <= len(alt.strip()) <= 1000:
+                raise ValueError("Ein sinnvoller Bild-Alternativtext ist erforderlich.")
+            assets.append({"image": {"url": url, "metadata": {"altText": alt.strip()}}})
+        if len(set(x["image"]["url"] for x in assets)) != len(assets):
+            raise ValueError("Doppelte Bild-URLs in einem Beitrag sind nicht zulässig.")
+        return assets
+    if kind == "document":
+        if set(media) != {"type", "url", "thumbnail_url", "title"}:
+            raise ValueError("PDF benötigt type, url, thumbnail_url und title.")
+        pdf_url = validate_media_url(media["url"], "documents")
+        thumb_url = validate_media_url(media["thumbnail_url"], "images")
+        title = media["title"]
+        if not isinstance(title, str) or not 1 <= len(title.strip()) <= 120:
+            raise ValueError("Ein PDF-Dokumenttitel ist erforderlich.")
+        return [{"document": {
+            "url": pdf_url, "thumbnailUrl": thumb_url, "title": title.strip()
+        }}]
+    raise ValueError("Medientyp nur images oder document.")
+
+
+def verify_media_access(assets: list[dict]) -> None:
+    """Preflight public media URLs before reserving a one-time transfer receipt."""
+    urls = []
+    for asset in assets:
+        media = asset.get("image") or asset.get("document")
+        urls.append((media["url"], "application/pdf" if "document" in asset else "image/"))
+        if "document" in asset:
+            urls.append((media["thumbnailUrl"], "image/"))
+    for url, content_type_prefix in urls:
+        try:
+            request = urllib.request.Request(
+                url, method="HEAD", headers={"User-Agent": "social-assets-buffer-draft/1.0"}
+            )
+            with urllib.request.urlopen(request, timeout=20) as response:
+                typ = response.headers.get("Content-Type", "").lower()
+                length = response.headers.get("Content-Length")
+                size_limit = 100_000_000 if content_type_prefix == "application/pdf" else 10_000_000
+                if typ and not (typ.startswith(content_type_prefix) or typ.startswith("application/octet-stream")):
+                    raise RuntimeError("Medien-Link liefert keinen Bild-/PDF-Inhalt.")
+                if length is not None and int(length) > size_limit:
+                    raise RuntimeError("Mediendatei überschreitet die Größenbegrenzung.")
+        except urllib.error.HTTPError as exc:
+            raise RuntimeError(f"Medien-Link nicht öffentlich abrufbar: HTTP {exc.code}.") from exc
+        except urllib.error.URLError as exc:
+            raise RuntimeError("Öffentliche Medien-URL ist nicht erreichbar.") from exc
 
 
 def receipt_path(draft_path: str) -> str:
@@ -219,6 +327,8 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
         buffer_key, os.environ.get("BUFFER_CHANNEL_ID", "").strip()
     )
 
+    assets = parse_assets(raw)
+    verify_media_access(assets)
     receipt = receipt_path(draft_path)
     if fetch_receipt(github_token, receipt) is not None:
         raise RuntimeError(
@@ -236,7 +346,7 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
     )
     # After the reservation, do not automatically retry on failure:
     # Buffer may have created a post even if the network response was lost.
-    result = buffer_graphql(buffer_key, CREATE_DRAFT, {"text": text, "channelId": channel_id})
+    result = buffer_graphql(buffer_key, CREATE_DRAFT, {"text": text, "channelId": channel_id, "assets": assets})
     post_result = result.get("createPost") or {}
     post = post_result.get("post") if isinstance(post_result, dict) else None
     if not isinstance(post, dict) or not post.get("id"):
@@ -271,7 +381,9 @@ def main() -> int:
     try:
         draft_path, text, raw = read_draft(args.draft)
         if args.dry_run:
-            print(f"DRY-RUN OK: {draft_path}, Ziel LinkedIn, {len(text)} Zeichen.")
+            assets = parse_assets(raw)
+            print(f"DRY-RUN OK: {draft_path}, LinkedIn, {len(text)} Zeichen, {len(assets)} Medien.")
+
             print("Keine API-Aufrufe, keine Buffer-Aktion.")
         elif args.check_connection:
             check_connection()
