@@ -30,6 +30,16 @@ GitHub-Repository `derJosef/social-assets` bleibt öffentlich: keine vertraulich
 6. Der Workflow prüft vor dem API-Aufruf Kanal, ursprünglichen Entwurf, unveränderten Text, Status `draft`, mindestens zwei Minuten Vorlauf und die exakte UTC-Zeit. Nach erfolgreicher API-Antwort muss der Termin übereinstimmen. Es entsteht ein Beleg unter `schedule-receipts/`.
 7. Bei unklaren API-Fehlern bleibt der Beleg auf `pending_manual_reconciliation_on_failure`. **Nicht automatisch wiederholen**; erst Status in Buffer prüfen. Die Reservierung schützt vor Doppelaktionen.
 
+## Abnahme – 08.10.2026
+
+Die produktive Erstterminierung der Kampagne „Offene KI-Modelle, klare Kontrolle“ ist erfolgreich:
+
+- LinkedIn: [GitHub-Lauf #37808077681](https://github.com/derJosef/social-assets/actions/runs/37808077681), `2026-10-09T13:00:00Z`.
+- Facebook: [GitHub-Lauf #37808388065](https://github.com/derJosef/social-assets/actions/runs/37808388065), `2026-10-14T07:00:00Z`.
+- Instagram: [GitHub-Lauf #37808451845](https://github.com/derJosef/social-assets/actions/runs/37808451845), `2026-10-14T16:00:00Z`.
+
+Die [abschließende lesende Buffer-Abfrage](https://github.com/derJosef/social-assets/actions/runs/37808524833) bestätigte auf allen drei Post-IDs `scheduled` und den exakten Zeitpunkt. Frühere abgewiesene API-Validierungen (`text` sowie `facebook.type` fehlten) wurden nach bestätigter Nicht-Terminierung korrigiert; ihre `pending`-Belege bleiben als Audit-Spur erhalten. Ein erfolgreiches Einplanen garantiert nicht, dass die spätere Plattform-Veröffentlichung fehlerfrei ist.
+
 ## Datumsformat und Zeitzone
 
 Die Planung erfolgt **in Europe/Berlin** und wird für die API explizit in UTC umgerechnet (Sommer-/Winterzeit berücksichtigen). Beispiele für die Kampagne vom 8.10.2026:
