@@ -1,6 +1,6 @@
 # Buffer-Entwürfe direkt aus social-assets
 
-**Stand: 2026-10-08.** Diese Integration verwendet ausschließlich GitHub Actions + offizielle Buffer-GraphQL-API, **kein n8n**. Der erste Pilot unterstützt genau einen **LinkedIn-Textentwurf** pro manuellem Lauf. Bilder, Karussells und weitere Kanäle werden bewusst erst nach erfolgreichem Ersttest ergänzt.
+**Stand: 2026-10-08.** Diese Integration verwendet ausschließlich GitHub Actions + offizielle Buffer-GraphQL-API, **kein n8n**. Der manuelle Testtransfer eines LinkedIn-Textentwurfs wurde erfolgreich nachgewiesen. Neu: Eine gesonderte GitHub Action übernimmt **nur neu freigegebene Textentwürfe** unter `ready-for-buffer/` automatisch. Bilder, Karussells und weitere Kanäle bleiben zunächst deaktiviert.
 
 ## Grenzen und Sicherheit
 
@@ -82,6 +82,42 @@ python3 scripts/buffer_draft.py --draft drafts/beispiel-linkedin.json --dry-run
 - **PersonalOS:** führender Kontext, Skills, verbindliche Regeln; durch ChatGPT nicht schreibbar.
 - **agent-workspace:** Recherche und Entwürfe während der Zusammenarbeit mehrerer Agenten.
 - **social-assets:** explizit für den Buffer-Übertragungsweg freigegebene, unkritische Beiträge und später öffentliche Medien-URLs. Keine automatische Übernahme aus agent-workspace; die Übertragung wird bewusst vorbereitet und manuell gestartet.
+
+## Automatische Übertragung neuer freigegebener Textentwürfe
+
+Der Workflow [buffer-auto-drafts.yml](../.github/workflows/buffer-auto-drafts.yml) überwacht ausschließlich **neu hinzugefügte** JSON-Dateien unmittelbar unter `ready-for-buffer/` auf Branch `main`.
+
+Ablauf:
+1. Beitrag unter `drafts/` vorbereiten und inhaltlich prüfen. **Das Anlegen oder Bearbeiten dieser Datei löst keinen Buffer-Transfer aus.**
+2. **Erst nach ausdrücklicher Freigabe durch Josef** eine neue JSON-Datei unter `ready-for-buffer/<eindeutiger-dateiname>.json` erstellen oder dorthin übertragen und nach `main` committen/pushen. Git behandelt Umbenennungen bei der Freigabe absichtlich als neu hinzugefügte Datei.
+3. Der GitHub-Push startet den automatischen Workflow. Nur auf diesem Push **hinzugefügte** JSON-Dateien werden übertragen; Bearbeitungen vorhandener Dateien lösen keinen zweiten Versand aus. Pro Dateiname erzeugt das Skript einen dauerhaften Reservierungs-/Ergebnisbeleg und blockiert Wiederholungen.
+4. Buffer erhält ausschließlich einen **Entwurf**, niemals eine Queue-Aufnahme oder Veröffentlichung. Kontrolle und Veröffentlichung bleiben manuell in Buffer.
+
+Technische Schutzmaßnahmen:
+- `push`-Trigger ist auf `ready-for-buffer/*.json` begrenzt. Ein Commit in `drafts/`, `scripts/`, `docs/` oder `delivery-receipts/` löst keinen automatischen Entwurfstransfer aus.
+- Bei kombinierten Commits werden nur **neu hinzugefügte Dateien** im Freigabeordner verarbeitet. Der Workflow behandelt Dateiänderungen und Löschungen nicht als erneute Freigaben.
+- Falls ein GitHub-Workflow selbst mit dem regulären `GITHUB_TOKEN` Dateien committet, startet dies in der Regel **keinen weiteren Push-Workflow**. Das ist GitHub-Sicherheitsverhalten; direkte Commits durch einen Agenten mit separatem GitHub-App-/Benutzertoken können ihn hingegen auslösen. Deshalb müssen Agenten die Freigabegrenze einhalten. Quelle: https://docs.github.com/en/actions/concepts/security/github_token
+- Ein `pending`-Beleg nach Netzwerk-/API-Fehler muss manuell geklärt werden, um doppelte Entwürfe zu vermeiden.
+- Der neue Workflow ist eingerichtet, aber ein automatischer **Live-Push-Test** mit einem neuen freigegebenen Beitrag steht noch aus. Keinen Test im Freigabeordner anlegen, sofern nicht wirklich ein Buffer-Entwurf erzeugt werden soll.
+
+### Bestehenden Testentwurf nicht erneut übertragen
+
+Der Beispieltext `drafts/beispiel-linkedin.json` wurde bereits manuell als Entwurf übertragen, mit bestätigt gespeicherter Buffer-Post-ID. Verschiebe ihn **nicht** nach `ready-for-buffer/`, wenn du nicht ausdrücklich einen zusätzlichen Testentwurf erzeugen möchtest: Der neue Dateipfad hätte absichtlich einen anderen Empfangsbeleg.
+
+### Medienformate (noch nicht aktiviert)
+
+- **Bildpost**: Buffer nutzt die `assets`-Liste und öffentlich erreichbare Bild-URLs. Das offizielle Beispiel: https://developers.buffer.com/examples/create-image-post.html
+- **LinkedIn-Karussell**: Ein blätterbares LinkedIn-Karussell ist üblicherweise ein PDF-Dokument, nicht einfach eine Sammlung einzelner Bilder. Buffer dokumentiert hierfür die PDF-Nutzung (bis zu 100 MB/300 Seiten, mit Dokumenttitel): https://support.buffer.com/articles/using-linkedin-with-buffer-K7tRkGD3mH
+- Buffer stellt keinen direkten Medien-Upload über diese API bereit. Alle Medien-URLs müssen ohne Login abrufbar sein und bis zum späteren Publikationszeitpunkt verfügbar bleiben: https://developers.buffer.com/guides/hosting-media.html
+- Das aktuelle Skript **lehnt Medienfelder weiterhin ab**, bis Bild- und PDF-Entwürfe separat getestet und freigegeben sind. Keine stillschweigende Erweiterung auf Mehrkanal-Veröffentlichungen.
+
+## Lokale Tests / GitHub CI
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+Die Tests sind offline und benötigen keinen Buffer- oder GitHub-Schlüssel.
 
 ## Ausbau nach dem Pilot
 
