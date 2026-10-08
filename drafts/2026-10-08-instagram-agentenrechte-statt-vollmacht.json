@@ -1,0 +1,23 @@
+{
+  "format_version": 2,
+  "target": "instagram",
+  "status": "draft_unapproved",
+  "headline": "Darf der KI-Agent das?",
+  "text": "DARF DER KI-AGENT DAS?\n\nEin KI-Agent kann Daten lesen, Systeme aktualisieren und Aktionen vorbereiten.\n\nKontrollierbar wird er erst, wenn seine Rechte klar sind:\n\n– eigene Identität\n– Lesen und Schreiben getrennt\n– nur freigegebene Werkzeuge\n– feste Grenzen für kritische Aktionen\n– menschliche Freigabe, wenn es darauf ankommt\n– nachvollziehbares Protokoll\n\n„Human in the Loop“ sollte deshalb nicht nur ein Knopf am Ende sein. Die Freigabe gehört an die Stelle, an der eine Aktion finanziell, irreversibel oder umfangreich wird.\n\nWelche Aktion würdest du nie vollständig automatisieren?\n\nQuellen: NIST NCCoE (02/2026) und internationale Sicherheitsleitlinie zu agentischer KI (01.05.2026).\n\n#KIAgenten #HumanInTheLoop #AIAgentBuilder #Mittelstand",
+  "source_urls": [
+    "https://www.nccoe.nist.gov/sites/default/files/2026-02/accelerating-the-adoption-of-software-and-ai-agent-identity-and-authorization-concept-paper.pdf",
+    "https://www.cyber.gov.au/news/new-joint-guidance-provides-mitigations-for-careful-adoptions-of-agentic-ai-services"
+  ],
+  "visual": {
+    "concept": "Ruhige Prozessgrafik ohne Roboter und Stockfoto: links ein Geschäftsdokument, mittig eine Karte „Agenten-Identität“ mit getrennten Symbolen für Lesen und Schreiben, danach ein klar sichtbares Freigabe-Gate, rechts ein Protokoll. Dunkler Navy-Grund #07111F, Text #F5F7FA, Akzent #7C9CD1 beziehungsweise Petrol #147D78, Inter. Große freie Textfläche für „DARF DER KI-AGENT DAS?“.",
+    "alt_text": "Schematische Darstellung eines kontrollierten KI-Agenten: Ein Dokument gelangt über eine eindeutig gekennzeichnete Agenten-Identität zu einer Rechteprüfung, einer menschlichen Freigabe und einem protokollierten Ergebnis."
+  },
+  "approval_required": [
+    "topic",
+    "text",
+    "visual",
+    "buffer_transfer",
+    "schedule",
+    "publication"
+  ]
+}
