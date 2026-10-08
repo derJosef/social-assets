@@ -18,6 +18,8 @@ helper = types.ModuleType("buffer_draft")
 helper.REPOSITORY = "derJosef/social-assets"
 helper.receipt_path = lambda p: f"delivery-receipts/{hashlib.sha256(p.encode()).hexdigest()[:24]}.json"
 helper.channel_preference = lambda target: ""
+helper.parse_assets = lambda raw: []
+helper.platform_metadata = lambda target: None
 helper.resolve_channel = lambda token, target, preferred_id="": "verified-channel"
 helper.fetch_receipt = lambda token, path: None
 helper.put_receipt = lambda token, path, data, message, sha=None: "receipt-sha"
@@ -112,7 +114,7 @@ class ScheduleTests(unittest.TestCase):
         with patch.dict(os.environ, {"GITHUB_REPOSITORY": helper.REPOSITORY, "GITHUB_REF": "refs/heads/main", "BUFFER_API_KEY": "dummy", "GITHUB_TOKEN": "dummy"}), patch.object(module, "buffer_graphql", side_effect=actions) as api, patch.object(module, "fetch_receipt", return_value=None), patch.object(module, "put_receipt", return_value="sha") as receipt:
             module.schedule(info)
             self.assertEqual(api.call_count, 2)
-            self.assertEqual(api.call_args.args[2], {"id": "existing-draft-id", "dueAt": "2026-10-09T13:00:00Z", "text": "Testtext ohne Geheimnisse"})
+            self.assertEqual(api.call_args.args[2], {"id": "existing-draft-id", "dueAt": "2026-10-09T13:00:00Z", "text": "Testtext ohne Geheimnisse", "assets": [], "metadata": None})
             self.assertEqual(receipt.call_count, 2)
             self.assertEqual(receipt.call_args.args[2]["state"], "scheduled")
 
