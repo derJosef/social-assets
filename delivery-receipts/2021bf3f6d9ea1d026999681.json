@@ -2,6 +2,7 @@
   "draft_file": "ready-for-buffer/2026-10-08-linkedin-offene-ki-modelle-klare-kontrolle.json",
   "target": "linkedin",
   "draft_sha256": "49a01b1b4d5bb077182e7bdffc031efbc4cd0a5679c1738140f9a91459358e9f",
-  "state": "pending_manual_reconciliation_on_failure",
-  "github_run_id": "37798482050"
+  "state": "draft_created",
+  "github_run_id": "37798482050",
+  "buffer_post_id": "6ac7b25edaf7bb7cba274102"
 }
