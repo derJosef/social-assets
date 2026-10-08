@@ -1,6 +1,6 @@
 # Buffer-Entwürfe direkt aus social-assets
 
-**Stand: 2026-10-08.** GitHub Actions + offizielle Buffer-GraphQL-API, **kein n8n**. Manuelle und automatische LinkedIn-Entwürfe wurden erfolgreich an Buffer übertragen: Text, Bild und PDF-Dokument. Der Freigabeordner `ready-for-buffer/` startet nur für neu hinzugefügte JSON-Dateien automatisch. Video und weitere, nicht genannte Kanäle bleiben deaktiviert.
+**Stand: 2026-10-08.** GitHub Actions + offizielle Buffer-GraphQL-API, **kein n8n**. Manuelle und automatische LinkedIn-Entwürfe wurden erfolgreich an Buffer übertragen: Text, Bild und PDF-Dokument. Seit dem 08.10.2026 sind zudem Facebook-Textentwürfe und Instagram-Bildentwürfe mit API- und GitHub-Belegen erfolgreich getestet. Der Freigabeordner `ready-for-buffer/` startet nur für neu hinzugefügte JSON-Dateien automatisch. Video und weitere, nicht genannte Kanäle bleiben deaktiviert.
 
 ## Facebook und Instagram – Erweiterung vom 08.10.2026
 
@@ -17,7 +17,11 @@ Die Eingabedatei entscheidet mit `target` ausdrücklich, zu welcher Plattform ei
 
 Offizielle Quellen: https://developers.buffer.com/guides/data-model.html · https://developers.buffer.com/examples/create-draft-post.html · https://support.buffer.com/en-us/articles/using-instagram-with-buffer-YSjg2dXFV8
 
-**Abnahme:** Die bestehenden 30 Offline-Tests sind erfolgreich. Facebook und Instagram werden gesondert live mit technischen Testentwürfen überprüft.
+**Abnahme vom 08.10.2026:** 34 Offline-Regressionstests bestanden. Beide zusätzlichen Kanäle sind durch bestätigte Live-Übertragungen abgenommen:
+- Facebook: [GitHub-Lauf #37785740152](https://github.com/derJosef/social-assets/actions/runs/37785740152), [Empfangsbeleg](../delivery-receipts/d4a745d637fb922f3cd89153.json), Buffer-Post-ID `6ac79c7cd1ababbf88b1c607`.
+- Instagram: [GitHub-Lauf #37785797813](https://github.com/derJosef/social-assets/actions/runs/37785797813), [Empfangsbeleg](../delivery-receipts/2b85199bff09bcfce284c209.json), Buffer-Post-ID `6ac79c9782db5af660c65919`.
+
+**Fehlerbehebung:** In der ersten Version fehlte die laut Buffer API verpflichtende Social-Media-Metadatenangabe (`facebook.type=post` beziehungsweise `instagram.type=post` und `instagram.shouldShareToFeed=true`). Beide ersten Anfragen wurden von Buffer mit MutationError zurückgewiesen; ihre ursprünglichen `pending_manual_reconciliation_on_failure`-Belege bleiben als unveränderte Prüfspur erhalten. Die erfolgreiche, korrigierte Version verwendet neue, eindeutige Dateinamen und erzeugt niemals von sich aus eine Veröffentlichung oder Terminierung.
 
 ---
 
