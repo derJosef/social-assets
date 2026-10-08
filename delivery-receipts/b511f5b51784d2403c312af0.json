@@ -2,6 +2,7 @@
   "draft_file": "ready-for-buffer/2026-10-08-facebook-offene-ki-modelle-klare-kontrolle.json",
   "target": "facebook",
   "draft_sha256": "c7a4c0b0e74fcd5250d96575f7ed7943c79b21d058a59189868cdb6babd135cc",
-  "state": "pending_manual_reconciliation_on_failure",
-  "github_run_id": "37798482050"
+  "state": "draft_created",
+  "github_run_id": "37798482050",
+  "buffer_post_id": "6ac7b255daf7bb7cba273f54"
 }
