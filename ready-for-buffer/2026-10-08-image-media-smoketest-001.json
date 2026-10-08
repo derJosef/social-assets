@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "linkedin",
+  "text": "TESTENTWURF BILD – Technischer Buffer-API-Medientest am 08.10.2026. Bitte nicht veröffentlichen oder terminieren.",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/buffer-smoketest-cover.png",
+        "alt_text": "Technisches Testbild mit Navy-, Blau- und Petrolflächen zur Überprüfung des Bildtransfers."
+      }
+    ]
+  }
+}
