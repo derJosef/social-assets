@@ -82,6 +82,98 @@ class ChannelSelectionTests(unittest.TestCase):
 
 
 
+
+class MultiChannelTests(unittest.TestCase):
+    IMAGE = "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/test.png"
+    PDF = "https://raw.githubusercontent.com/derJosef/social-assets/main/media/documents/test.pdf"
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        (self.root / "drafts").mkdir()
+        (self.root / "ready-for-buffer").mkdir()
+        p = mock.patch.object(integration, "ROOT", self.root)
+        p.start()
+        self.addCleanup(p.stop)
+
+    def validate(self, record):
+        path = self.root / "drafts" / "check.json"
+        path.write_text(json.dumps(record), encoding="utf-8")
+        return integration.read_draft("drafts/check.json")
+
+    def test_facebook_text_is_allowed(self):
+        _, text, raw = self.validate({"format_version": 1, "target": "facebook", "text": "Facebook test"})
+        self.assertEqual(text, "Facebook test")
+        self.assertEqual(integration.parse_assets(raw), [])
+
+    def test_instagram_text_only_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "mindestens ein Bild"):
+            self.validate({"format_version": 1, "target": "instagram", "text": "No image"})
+
+    def test_instagram_single_image_is_allowed(self):
+        self.validate({"format_version": 2, "target": "instagram", "text": "Caption",
+            "media": {"type": "images", "images": [{"url": self.IMAGE, "alt_text": "Ein Testbild"}]}})
+
+    def test_facebook_document_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "ausschließlich für LinkedIn"):
+            self.validate({"format_version": 2, "target": "facebook", "text": "PDF",
+                "media": {"type": "document", "url": self.PDF, "thumbnail_url": self.IMAGE, "title": "PDF"}})
+
+    def test_instagram_document_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "ausschließlich für LinkedIn"):
+            self.validate({"format_version": 2, "target": "instagram", "text": "PDF",
+                "media": {"type": "document", "url": self.PDF, "thumbnail_url": self.IMAGE, "title": "PDF"}})
+
+    def test_instagram_over_ten_images_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "maximal 10 Bilder"):
+            self.validate({"format_version": 2, "target": "instagram", "text": "Many",
+                "media": {"type": "images", "images": [
+                    {"url": f"https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/i{i}.png",
+                     "alt_text": "Bild"} for i in range(11)]}})
+
+    def test_instagram_caption_limit(self):
+        with self.assertRaisesRegex(ValueError, "2200"):
+            self.validate({"format_version": 2, "target": "instagram", "text": "x" * 2201,
+                "media": {"type": "images", "images": [{"url": self.IMAGE, "alt_text": "Bild"}]}})
+
+    def test_unknown_target_is_rejected(self):
+        with self.assertRaises(ValueError):
+            self.validate({"format_version": 1, "target": "picturefix", "text": "Wrong brand"})
+
+    def test_channel_selection_never_crosses_services(self):
+        def api(token, query, variables):
+            if query == integration.GET_ORGANIZATIONS:
+                return {"account": {"organizations": [{"id": "o1"}]}}
+            return {"channels": [
+                {"id": "id_li", "service": "linkedin"},
+                {"id": "id_fb", "service": "facebook"},
+                {"id": "id_ig", "service": "instagram"}]}
+        with mock.patch.object(integration, "buffer_graphql", side_effect=api):
+            self.assertEqual(integration.resolve_channel("token", "facebook"), "id_fb")
+            self.assertEqual(integration.resolve_channel("token", "instagram"), "id_ig")
+            self.assertEqual(integration.resolve_channel("token", "linkedin"), "id_li")
+            with self.assertRaises(RuntimeError):
+                integration.resolve_channel("token", "facebook", "id_ig")
+
+    def test_ambiguous_facebook_channel_requires_preference(self):
+        def api(token, query, variables):
+            if query == integration.GET_ORGANIZATIONS:
+                return {"account": {"organizations": [{"id": "o1"}]}}
+            return {"channels": [
+                {"id": "id_fb1", "service": "facebook"},
+                {"id": "id_fb2", "service": "facebook"}]}
+        with mock.patch.object(integration, "buffer_graphql", side_effect=api):
+            with self.assertRaisesRegex(RuntimeError, "Mehrere facebook-Kanäle"):
+                integration.resolve_channel("token", "facebook")
+            self.assertEqual(integration.resolve_channel("token", "facebook", "id_fb2"), "id_fb2")
+
+    def test_only_drafts_mutation(self):
+        self.assertIn("saveToDraft: true", integration.CREATE_DRAFT)
+        self.assertNotIn("saveToDraft: false", integration.CREATE_DRAFT)
+
+
+
 class MediaAssetTests(unittest.TestCase):
     IMAGE = "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/probe.png"
     IMAGE_2 = "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/probe2.jpg"
