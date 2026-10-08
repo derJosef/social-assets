@@ -1,6 +1,7 @@
 {
   "draft_file": "ready-for-buffer/2026-10-08-pdf-carousel-smoketest-001.json",
   "draft_sha256": "829b658eaf14aa5ce83c74617cc563c65b1df077cc2bae100dd46181d21fb27c",
-  "state": "pending_manual_reconciliation_on_failure",
-  "github_run_id": "37766132425"
+  "state": "draft_created",
+  "github_run_id": "37766132425",
+  "buffer_post_id": "6ac77582f9e3728044fb41d9"
 }
