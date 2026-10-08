@@ -1,6 +1,6 @@
 # Arbeitsentwurf: Agentenrechte statt Vollmacht
 
-Stand: 08.10.2026. Status: **nicht freigegeben**. Keine Buffer-Übergabe, Terminierung oder Veröffentlichung.
+Stand: 08.10.2026. Status: **Bild und Buffer-Entwürfe freigegeben und erfolgreich übertragen am 08.10.2026; Veröffentlichungstermine noch nicht freigegeben.** Keine Terminierung oder Veröffentlichung ausgelöst.
 
 ## Drei geprüfte Themen
 
@@ -62,3 +62,17 @@ Zeitquellen, abgerufen am 08.10.2026:
 **Konzept:** Ruhige Prozessgrafik ohne Roboter und Stockfoto: links ein Geschäftsdokument, mittig eine Karte „Agenten-Identität“ mit getrennten Symbolen für Lesen und Schreiben, danach ein klar sichtbares Freigabe-Gate, rechts ein Protokoll. Dunkler Navy-Grund #07111F, Text #F5F7FA, Akzent #7C9CD1 beziehungsweise Petrol #147D78, Inter. Große freie Textfläche für „DARF DER KI-AGENT DAS?“.
 
 **Alt-Text:** Schematische Darstellung eines kontrollierten KI-Agenten: Ein Dokument gelangt über eine eindeutig gekennzeichnete Agenten-Identität zu einer Rechteprüfung, einer menschlichen Freigabe und einem protokollierten Ergebnis.
+
+## Übertragungsnachweis vom 08.10.2026
+
+Josef hat die Grafik mit dem Logo unten rechts ausdrücklich als passend bestätigt und die Fortsetzung der Kampagne beauftragt. Die unveränderte PNG-Datei liegt unter [media/images/2026-10-08-agentenrechte-original-logo-freigegeben.png](../media/images/2026-10-08-agentenrechte-original-logo-freigegeben.png). Die zugehörigen angepassten Beiträge wurden als **unveröffentlichte Buffer-Entwürfe** übertragen:
+
+| Kanal | Buffer-Post-ID | Status | Terminvorschlag (Europe/Berlin) |
+| --- | --- | --- | --- |
+| LinkedIn | `6ac7fa8a62435c1f1fe0e557` | Draft | 21.10.2026 16:00 MESZ |
+| Facebook | `6ac7fa832a80dca54c7ce231` | Draft | 27.10.2026 19:00 MEZ |
+| Instagram | `6ac7fa87c121d8911406c941` | Draft | 28.10.2026 18:00 MEZ |
+
+[GitHub Actions: erfolgreicher Transfer von 3/3 Entwürfen](https://github.com/derJosef/social-assets/actions/runs/37838404565).
+
+**Freigabegrenze:** Die oben genannten Uhrzeiten bleiben redaktionelle Vorschläge. Erst nach ausdrücklicher Freigabe der automatischen Veröffentlichung durch Josef dürfen `ready-to-schedule/`-Aufträge erzeugt werden. Die Übergabe an Buffer ist dagegen bereits abgeschlossen. Die termingenaue Veröffentlichung kann später scheitern, deshalb nach Terminierung und nach Veröffentlichung erneut Status prüfen.
