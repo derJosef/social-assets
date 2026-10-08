@@ -1,0 +1,10 @@
+{
+  "request_file": "ready-to-schedule/2026-10-08-facebook-offene-ki-modelle-klare-kontrolle-retry-01.json",
+  "request_sha256": "fca3edf29d74e55748c4fd78f73b43f522d4832b974f80dfcdb713c7b449af08",
+  "draft_file": "ready-for-buffer/2026-10-08-facebook-offene-ki-modelle-klare-kontrolle.json",
+  "target": "facebook",
+  "buffer_post_id": "6ac7b255daf7bb7cba273f54",
+  "due_at": "2026-10-14T07:00:00Z",
+  "state": "pending_manual_reconciliation_on_failure",
+  "github_run_id": "37808388065"
+}
