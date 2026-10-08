@@ -1,0 +1,23 @@
+{
+  "format_version": 2,
+  "target": "facebook",
+  "status": "draft_unapproved",
+  "headline": "Darf der KI-Agent das?",
+  "text": "Darf der KI-Agent das?\n\nEin KI-Agent kann Dokumente lesen, Daten in Systeme übertragen oder E-Mails vorbereiten. Damit stellt sich im Unternehmen nicht nur die Frage, was technisch möglich ist, sondern welche Befugnisse der Agent tatsächlich bekommen soll.\n\nAktuelle Sicherheitsleitlinien empfehlen einen klar begrenzten Einstieg: eigene Identität, möglichst geringe Rechte, laufende Protokollierung und menschliche Freigaben bei kritischen Aktionen.\n\nFür einen kontrollierbaren Ablauf helfen fünf Fragen:\n\n– Wer trägt die Verantwortung?\n– Welche Daten darf der Agent sehen?\n– Was darf er verändern?\n– Wo liegt seine feste Grenze?\n– Wann muss ein Mensch freigeben?\n\nGerade Lese- und Schreibrechte sollten getrennt sein. Ein Agent, der Informationen zusammenfasst, braucht nicht automatisch die Berechtigung, Datensätze zu löschen oder hunderte Vorgänge zu ändern.\n\nWelche Aktion würdest du einem KI-Agenten nur mit menschlicher Freigabe erlauben?\n\nQuellen: NIST NCCoE, Februar 2026; gemeinsame internationale Leitlinie zur sicheren Einführung agentischer KI, 1. Mai 2026.\n\n#KIAgenten #HumanInTheLoop #Mittelstand",
+  "source_urls": [
+    "https://www.nccoe.nist.gov/sites/default/files/2026-02/accelerating-the-adoption-of-software-and-ai-agent-identity-and-authorization-concept-paper.pdf",
+    "https://www.cyber.gov.au/news/new-joint-guidance-provides-mitigations-for-careful-adoptions-of-agentic-ai-services"
+  ],
+  "visual": {
+    "concept": "Ruhige Prozessgrafik ohne Roboter und Stockfoto: links ein Geschäftsdokument, mittig eine Karte „Agenten-Identität“ mit getrennten Symbolen für Lesen und Schreiben, danach ein klar sichtbares Freigabe-Gate, rechts ein Protokoll. Dunkler Navy-Grund #07111F, Text #F5F7FA, Akzent #7C9CD1 beziehungsweise Petrol #147D78, Inter. Große freie Textfläche für „DARF DER KI-AGENT DAS?“.",
+    "alt_text": "Schematische Darstellung eines kontrollierten KI-Agenten: Ein Dokument gelangt über eine eindeutig gekennzeichnete Agenten-Identität zu einer Rechteprüfung, einer menschlichen Freigabe und einem protokollierten Ergebnis."
+  },
+  "approval_required": [
+    "topic",
+    "text",
+    "visual",
+    "buffer_transfer",
+    "schedule",
+    "publication"
+  ]
+}
