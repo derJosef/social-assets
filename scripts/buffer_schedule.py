@@ -143,7 +143,18 @@ def schedule(info: dict) -> None:
     action = result.get("editPost")
     changed = action.get("post") if isinstance(action, dict) else None
     if not isinstance(changed, dict) or changed.get("id") != info["post_id"]:
-        raise RuntimeError("Buffer-Terminierung nicht bestätigt. Pending-Beleg manuell prüfen.")
+        reason = action.get("message", "") if isinstance(action, dict) else ""
+        if isinstance(reason, str):
+            # Only the known-public campaign text may appear in an API error.
+            # Never print API keys or multiline text into this public repo's logs.
+            for secret in (token, github_token, info["text"]):
+                if secret:
+                    reason = reason.replace(secret, "[REDACTED]")
+            reason = re.sub(r"[\r\n\t]+", " ", reason)[:240]
+        else:
+            reason = ""
+        typename = action.get("__typename", "Unknown") if isinstance(action, dict) else "Unknown"
+        raise RuntimeError(f"Buffer-Terminierung abgewiesen ({typename}): {reason}. Pending-Beleg manuell prüfen.")
     # Do not report success until Buffer's scheduled time matches the requested time.
     returned = changed.get("dueAt", "")
     try:
