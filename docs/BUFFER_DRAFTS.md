@@ -1,13 +1,32 @@
 # Buffer-Entwürfe direkt aus social-assets
 
-**Stand: 2026-10-08.** GitHub Actions + offizielle Buffer-GraphQL-API, **kein n8n**. Manuelle und automatische LinkedIn-Entwürfe wurden erfolgreich an Buffer übertragen: Text, Bild und PDF-Dokument. Der Freigabeordner `ready-for-buffer/` startet nur für neu hinzugefügte JSON-Dateien automatisch. Video und weitere Kanäle bleiben deaktiviert.
+**Stand: 2026-10-08.** GitHub Actions + offizielle Buffer-GraphQL-API, **kein n8n**. Manuelle und automatische LinkedIn-Entwürfe wurden erfolgreich an Buffer übertragen: Text, Bild und PDF-Dokument. Der Freigabeordner `ready-for-buffer/` startet nur für neu hinzugefügte JSON-Dateien automatisch. Video und weitere, nicht genannte Kanäle bleiben deaktiviert.
+
+## Facebook und Instagram – Erweiterung vom 08.10.2026
+
+Die Eingabedatei entscheidet mit `target` ausdrücklich, zu welcher Plattform ein Beitrag übertragen wird. **Jede Datei erzeugt ausschließlich einen Entwurf für genau einen Kanal.** Es gibt kein automatisches Mehrfachposting.
+
+- LinkedIn: Text, Bilder, PDF-Dokumente (wie bisher).
+- Facebook-Seite: Textentwürfe (Format 1) oder Bildentwürfe (Format 2).
+- Instagram: ausschließlich Bildentwürfe (Format 2). Text ohne Bild, PDFs, Reels und Storys sind in diesem Workflow gesperrt. Maximal 10 Bilder und 2.200 Zeichen je Caption. Instagram-Bilder müssen ein geeignetes Seitenverhältnis haben (4:5 bis 1,91:1).
+- Die eigentliche Übertragung ist weiterhin ausschließlich ein Buffer-Entwurf mit `saveToDraft: true`. Kein Terminieren, kein Queueing, kein Veröffentlichen.
+- Buffer-Kanäle werden nach ihrem `service`-Wert unterschieden. Sollte mehr als ein Facebook- oder Instagram-Kanal verbunden sein, stoppt der Transfer, bevor Buffer einen Entwurf erstellt. Dann kann die richtige ID ausdrücklich über das GitHub Actions Secret `BUFFER_FACEBOOK_CHANNEL_ID` bzw. `BUFFER_INSTAGRAM_CHANNEL_ID` ausgewählt werden. `BUFFER_CHANNEL_ID` bleibt die bisherige LinkedIn-Option.
+- Neue Vorlagen: [Facebook-Text](../drafts/vorlage-facebook-text.json) und [Instagram-Bild](../drafts/vorlage-instagram-bild.json). Keine dieser Vorlagen wird automatisch versendet, solange sie unter `drafts/` liegt.
+- `ready-for-buffer/` bleibt das **einzige** automatische Freigabeverzeichnis. Ein neuer Dateiname wird durch einen separaten Empfangsbeleg gegen wiederholten Versand geschützt.
+- Medien liegen öffentlich unter `media/`. Keine nicht freigegebenen Firmen- oder Personenbilder hochladen.
+
+Offizielle Quellen: https://developers.buffer.com/guides/data-model.html · https://developers.buffer.com/examples/create-draft-post.html · https://support.buffer.com/en-us/articles/using-instagram-with-buffer-YSjg2dXFV8
+
+**Abnahme:** Die bestehenden 30 Offline-Tests sind erfolgreich. Facebook und Instagram werden gesondert live mit technischen Testentwürfen überprüft.
+
+---
 
 ## Grenzen und Sicherheit
 
-- GitHub Actions läuft **nur manuell** (`workflow_dispatch`). Kein Zeitplan, kein automatischer Push-Trigger.
+- Zwei GitHub Actions: ein manueller `workflow_dispatch`-Test und ein automatischer Push-Workflow ausschließlich für neu hinzugefügte Dateien unter `ready-for-buffer/`. Kein Zeitplan.
 - Voreinstellung `send_to_buffer = false`: prüft nur das JSON, übermittelt **nichts**.
 - Ein Live-Lauf erzeugt nur einen Buffer-**Entwurf**: Der Code erzwingt `saveToDraft: true`. Keine Veröffentlichungs-, Queue- oder Terminierungsoperation im Code. `mode: addToQueue` ist eine von der Buffer-API verlangte Eingabe; wegen `saveToDraft: true` erfolgt **keine** Queue-Aufnahme.
-- Die Kanal-ID wird vor dem Senden gegen die Buffer-API auf LinkedIn geprüft.
+- Die Kanal-ID wird vor jedem Senden gegenüber dem in `target` ausdrücklich genannten Buffer-Dienst geprüft.
 - Nach dem manuellen Sendeauftrag wird **vor** dem Buffer-Aufruf ein GitHub-Beleg unter `delivery-receipts/` reserviert. Ein zweiter Lauf mit demselben Dateinamen bricht ab, statt nochmals zu senden. Nach Erfolg enthält der Beleg die Buffer-Post-ID und den Status `draft_created`.
 - Wenn nach der Reservierung ein API-/Netzwerkfehler auftritt, kann ein Beleg auf `pending_manual_reconciliation_on_failure` stehen bleiben. **Nicht einfach erneut starten**: Zuerst in Buffer nachsehen. Dies schützt vor unbemerkten doppelten Entwürfen, bedeutet aber manuellen Klärungsbedarf.
 - Die Beleg-Dateien sind Teil dieses **öffentlichen** GitHub-Repositories. Sie enthalten keine Buffer-API-Schlüssel, jedoch Status, Dateipfad und gegebenenfalls eine Buffer-Post-ID.
@@ -81,7 +100,7 @@ python3 scripts/buffer_draft.py --draft drafts/beispiel-linkedin.json --dry-run
 
 - **PersonalOS:** führender Kontext, Skills, verbindliche Regeln; durch ChatGPT nicht schreibbar.
 - **agent-workspace:** Recherche und Entwürfe während der Zusammenarbeit mehrerer Agenten.
-- **social-assets:** explizit für den Buffer-Übertragungsweg freigegebene, unkritische Beiträge und später öffentliche Medien-URLs. Keine automatische Übernahme aus agent-workspace; die Übertragung wird bewusst vorbereitet und manuell gestartet.
+- **social-assets:** explizit für den Buffer-Übertragungsweg freigegebene, unkritische Beiträge und später öffentliche Medien-URLs. Keine automatische Übernahme aus agent-workspace; die Übertragung wird bewusst vorbereitet und durch neue, freigegebene JSON-Dateien unter `ready-for-buffer/` gestartet.
 
 ## Automatische Übertragung neuer freigegebener LinkedIn-Entwürfe
 
