@@ -5,6 +5,6 @@
   "target": "linkedin",
   "buffer_post_id": "6ac7b25edaf7bb7cba274102",
   "due_at": "2026-10-09T13:00:00Z",
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "scheduled",
   "github_run_id": "37808077681"
 }
