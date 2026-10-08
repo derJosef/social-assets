@@ -95,14 +95,22 @@ def buffer_graphql(token: str, query: str, variables: dict) -> dict:
 
 
 def read_draft(given_path: str) -> tuple[str, str, bytes]:
-    drafts_dir = (ROOT / "drafts").resolve(strict=True)
+    """Only read a JSON file from drafts/ or ready-for-buffer/, never other paths."""
     path = (ROOT / given_path).resolve(strict=True)
-    try:
-        relative = path.relative_to(drafts_dir)
-    except ValueError as exc:
-        raise ValueError("Die Datei muss unter drafts/ liegen.") from exc
+    allowed = ("drafts", "ready-for-buffer")
+    accepted_path = None
+    for folder in allowed:
+        folder_root = (ROOT / folder).resolve()
+        if path.is_relative_to(folder_root):
+            relative = path.relative_to(folder_root)
+            if len(relative.parts) != 1:
+                raise ValueError("Entwurfsdateien dürfen keine Unterordner verwenden.")
+            accepted_path = f"{folder}/{relative.as_posix()}"
+            break
+    if accepted_path is None:
+        raise ValueError("Die Datei muss unter drafts/ oder ready-for-buffer/ liegen.")
     if path.suffix.lower() != ".json" or not path.is_file():
-        raise ValueError("Eine vorhandene JSON-Datei unter drafts/ ist erforderlich.")
+        raise ValueError("Eine vorhandene JSON-Datei im freigegebenen Ordner ist erforderlich.")
     raw = path.read_bytes()
     if len(raw) > 100_000:
         raise ValueError("Entwurfsdatei ist zu groß.")
@@ -114,7 +122,7 @@ def read_draft(given_path: str) -> tuple[str, str, bytes]:
     text = record["text"]
     if not isinstance(text, str) or not text.strip() or len(text) > 3000:
         raise ValueError("Text ist leer, ungültig oder länger als 3000 Zeichen.")
-    return "drafts/" + relative.as_posix(), text, raw
+    return accepted_path, text, raw
 
 
 def receipt_path(draft_path: str) -> str:
@@ -253,7 +261,7 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Buffer: LinkedIn-Draft sicher übertragen.")
-    parser.add_argument("--draft", required=True, help="JSON unter drafts/, z. B. drafts/beispiel-linkedin.json")
+    parser.add_argument("--draft", required=True, help="JSON unter drafts/ oder ready-for-buffer/")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true", help="Nur lokal prüfen; keine API-Aufrufe.")
     mode.add_argument("--check-connection", action="store_true", help="Buffer-Kanäle nur lesend prüfen.")
