@@ -13,6 +13,11 @@ on:
         required: true
         type: boolean
         default: false
+      check_connection:
+        description: "Nur API-Verbindung und LinkedIn-Kanal prüfen? (KEIN Entwurf)"
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: write # Ausschließlich für die GitHub-Empfangsbelege erforderlich.
@@ -39,13 +44,19 @@ jobs:
         env:
           DRAFT_FILE: ${{ inputs.draft_file }}
           SEND_TO_BUFFER: ${{ inputs.send_to_buffer }}
+          CHECK_CONNECTION: ${{ inputs.check_connection }}
           BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
           BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "$SEND_TO_BUFFER" == "true" ]]; then
+          if [[ "$CHECK_CONNECTION" == "true" && "$SEND_TO_BUFFER" == "true" ]]; then
+            echo "Verbindungstest und Senden können nicht gleichzeitig ausgewählt werden." >&2
+            exit 1
+          elif [[ "$CHECK_CONNECTION" == "true" ]]; then
+            python3 scripts/buffer_draft.py --draft "$DRAFT_FILE" --check-connection
+          elif [[ "$SEND_TO_BUFFER" == "true" ]]; then
             python3 scripts/buffer_draft.py --draft "$DRAFT_FILE" --send
           else
             python3 scripts/buffer_draft.py --draft "$DRAFT_FILE" --dry-run
