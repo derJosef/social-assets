@@ -2,6 +2,7 @@
   "draft_file": "ready-for-buffer/2026-10-08-instagram-smoketest-002.json",
   "target": "instagram",
   "draft_sha256": "8e3ef97a072da0d6b11601f95c063fc15cc1247c6207f84634e8395f72a8476b",
-  "state": "pending_manual_reconciliation_on_failure",
-  "github_run_id": "37785797813"
+  "state": "draft_created",
+  "github_run_id": "37785797813",
+  "buffer_post_id": "6ac79c9782db5af660c65919"
 }
