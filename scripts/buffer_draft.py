@@ -37,9 +37,15 @@ mutation CreateDraft($text: String!, $channelId: ChannelId!) {
 }
 """
 
-CHECK_CHANNEL = """
-query CheckChannel($id: ChannelId!) {
-  channel(input: { id: $id }) {
+GET_ORGANIZATIONS = """
+query GetOrganizations {
+  account { organizations { id } }
+}
+"""
+
+GET_CHANNELS = """
+query GetChannels($organizationId: OrganizationId!) {
+  channels(input: { organizationId: $organizationId }) {
     id
     service
   }
@@ -149,21 +155,61 @@ def put_receipt(token: str, receipt: str, content: dict, message: str, sha: str 
     return saved["sha"]
 
 
+def resolve_linkedin_channel(token: str, preferred_id: str = "") -> str:
+    """Read Buffer account/channel metadata and select one LinkedIn channel.
+
+    No mutation; auto-select only if there is exactly one suitable LinkedIn channel.
+    An optional BUFFER_CHANNEL_ID is accepted for accounts with multiple channels.
+    """
+    account = buffer_graphql(token, GET_ORGANIZATIONS, {}).get("account")
+    if not isinstance(account, dict) or not isinstance(account.get("organizations"), list):
+        raise RuntimeError("Buffer-Organisationen konnten nicht gelesen werden.")
+    candidates: set[str] = set()
+    for organization in account["organizations"]:
+        org_id = organization.get("id") if isinstance(organization, dict) else None
+        if not isinstance(org_id, str) or not org_id:
+            raise RuntimeError("Buffer hat eine ungültige Organisations-ID geliefert.")
+        channels = buffer_graphql(token, GET_CHANNELS, {"organizationId": org_id}).get("channels")
+        if not isinstance(channels, list):
+            raise RuntimeError("Buffer-Kanäle konnten nicht gelesen werden.")
+        for channel in channels:
+            if not isinstance(channel, dict):
+                raise RuntimeError("Buffer hat einen ungültigen Kanal geliefert.")
+            if str(channel.get("service", "")).lower() == "linkedin" and channel.get("id"):
+                candidates.add(str(channel["id"]))
+    if preferred_id:
+        if preferred_id not in candidates:
+            raise RuntimeError("BUFFER_CHANNEL_ID verweist nicht auf einen verbundenen LinkedIn-Kanal.")
+        return preferred_id
+    if not candidates:
+        raise RuntimeError("Kein LinkedIn-Kanal in Buffer verbunden oder für diesen Schlüssel sichtbar.")
+    if len(candidates) != 1:
+        raise RuntimeError(
+            "Mehrere LinkedIn-Kanäle gefunden; BUFFER_CHANNEL_ID zur eindeutigen Auswahl hinterlegen."
+        )
+    return next(iter(candidates))
+
+
+def check_connection() -> None:
+    buffer_key = os.environ.get("BUFFER_API_KEY", "")
+    if not buffer_key:
+        raise RuntimeError("BUFFER_API_KEY fehlt als GitHub-Secret.")
+    resolve_linkedin_channel(buffer_key, os.environ.get("BUFFER_CHANNEL_ID", "").strip())
+    print("Verbindungstest erfolgreich: LinkedIn-Kanal eindeutig gefunden.")
+    print("Nur Buffer-Daten gelesen. Kein Entwurf erstellt, nichts eingeplant oder veröffentlicht.")
+
+
 def send_draft(draft_path: str, text: str, raw: bytes) -> None:
     if os.environ.get("GITHUB_REPOSITORY") != REPOSITORY or os.environ.get("GITHUB_REF") != "refs/heads/main":
         raise RuntimeError("Live-Übertragung nur durch GitHub Actions auf social-assets/main.")
     github_token = os.environ.get("GITHUB_TOKEN", "")
     buffer_key = os.environ.get("BUFFER_API_KEY", "")
-    channel_id = os.environ.get("BUFFER_CHANNEL_ID", "")
-    if not all((github_token, buffer_key, channel_id)):
-        raise RuntimeError("GitHub-Token oder BUFFER_API_KEY/BUFFER_CHANNEL_ID fehlt.")
+    if not all((github_token, buffer_key)):
+        raise RuntimeError("GitHub-Token oder BUFFER_API_KEY fehlt.")
 
-    channel_data = buffer_graphql(buffer_key, CHECK_CHANNEL, {"id": channel_id})
-    channel = channel_data.get("channel")
-    if not isinstance(channel, dict) or str(channel.get("service", "")).lower() != "linkedin":
-        raise RuntimeError("Der konfigurierte Buffer-Kanal ist kein LinkedIn-Kanal.")
-    if str(channel.get("id")) != channel_id:
-        raise RuntimeError("Buffer hat einen anderen Kanal bestätigt.")
+    channel_id = resolve_linkedin_channel(
+        buffer_key, os.environ.get("BUFFER_CHANNEL_ID", "").strip()
+    )
 
     receipt = receipt_path(draft_path)
     if fetch_receipt(github_token, receipt) is not None:
@@ -210,6 +256,7 @@ def main() -> int:
     parser.add_argument("--draft", required=True, help="JSON unter drafts/, z. B. drafts/beispiel-linkedin.json")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true", help="Nur lokal prüfen; keine API-Aufrufe.")
+    mode.add_argument("--check-connection", action="store_true", help="Buffer-Kanäle nur lesend prüfen.")
     mode.add_argument("--send", action="store_true", help="Explizit als Buffer-Entwurf übertragen.")
     args = parser.parse_args()
 
@@ -218,6 +265,8 @@ def main() -> int:
         if args.dry_run:
             print(f"DRY-RUN OK: {draft_path}, Ziel LinkedIn, {len(text)} Zeichen.")
             print("Keine API-Aufrufe, keine Buffer-Aktion.")
+        elif args.check_connection:
+            check_connection()
         else:
             send_draft(draft_path, text, raw)
     except (ValueError, OSError, RuntimeError, json.JSONDecodeError) as exc:
