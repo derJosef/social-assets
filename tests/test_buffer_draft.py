@@ -168,6 +168,23 @@ class MultiChannelTests(unittest.TestCase):
                 integration.resolve_channel("token", "facebook")
             self.assertEqual(integration.resolve_channel("token", "facebook", "id_fb2"), "id_fb2")
 
+    def test_facebook_metadata_has_required_post_type(self):
+        self.assertEqual({"facebook": {"type": "post"}}, integration.platform_metadata("facebook"))
+
+    def test_instagram_metadata_has_two_required_fields(self):
+        self.assertEqual(
+            {"instagram": {"type": "post", "shouldShareToFeed": True}},
+            integration.platform_metadata("instagram"),
+        )
+
+    def test_linkedin_metadata_unchanged(self):
+        self.assertIsNone(integration.platform_metadata("linkedin"))
+
+    def test_graphql_query_passes_metadata_to_create_post(self):
+        self.assertIn("$metadata: PostInputMetaData", integration.CREATE_DRAFT)
+        self.assertIn("metadata: $metadata", integration.CREATE_DRAFT)
+        self.assertIn("saveToDraft: true", integration.CREATE_DRAFT)
+
     def test_only_drafts_mutation(self):
         self.assertIn("saveToDraft: true", integration.CREATE_DRAFT)
         self.assertNotIn("saveToDraft: false", integration.CREATE_DRAFT)
