@@ -243,6 +243,19 @@ def verify_media_access(assets: list[dict]) -> None:
             raise RuntimeError("Öffentliche Medien-URL ist nicht erreichbar.") from exc
 
 
+
+def platform_metadata(target: str) -> dict | None:
+    """Mandatory channel-specific post input metadata, independent of publication mode."""
+    if target == "facebook":
+        return {"facebook": {"type": "post"}}
+    if target == "instagram":
+        return {"instagram": {"type": "post", "shouldShareToFeed": True}}
+    if target == "linkedin":
+        return None
+    raise ValueError("Ungültiger Zielkanal.")
+
+
+
 def receipt_path(draft_path: str) -> str:
     # One receipt per immutable draft filename; changing a sent file cannot resend it.
     digest = hashlib.sha256(draft_path.encode("utf-8")).hexdigest()[:24]
@@ -368,13 +381,9 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
     )
     # After the reservation, do not automatically retry on failure:
     # Buffer may have created a post even if the network response was lost.
-    metadata = None
-    if target == "facebook":
-        metadata = {"facebook": {"type": "post"}}
-    elif target == "instagram":
-        metadata = {"instagram": {"type": "post", "shouldShareToFeed": True}}
     variables = {
-        "text": text, "channelId": channel_id, "assets": assets, "metadata": metadata
+        "text": text, "channelId": channel_id, "assets": assets,
+        "metadata": platform_metadata(target),
     }
     result = buffer_graphql(buffer_key, CREATE_DRAFT, variables)
     post_result = result.get("createPost") or {}
