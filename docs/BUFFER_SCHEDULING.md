@@ -44,7 +44,7 @@ Die Planung erfolgt **in Europe/Berlin** und wird für die API explizit in UTC u
 
 ## Technische Details
 
-`scripts/buffer_schedule.py` verwendet die vorhandene Buffer-API-Verbindung und das GitHub-Secret `BUFFER_API_KEY`. Es prüft zuerst das existierende Buffer-Post-Objekt und verwendet anschließend `editPost` mit `mode: customScheduled`, `dueAt` in UTC und `saveToDraft: false`. Medien und Text werden **nicht neu übertragen und nicht verändert**.
+`scripts/buffer_schedule.py` verwendet die vorhandene Buffer-API-Verbindung und das GitHub-Secret `BUFFER_API_KEY`. Es prüft zuerst das existierende Buffer-Post-Objekt und verwendet anschließend `editPost` mit `mode: customScheduled`, `dueAt` in UTC und `saveToDraft: false`. Buffers API verlangt beim Bearbeiten zusätzlich den **identischen Text sowie die ursprünglichen Medien- und Plattformmetadaten**; diese stammen aus der freigegebenen JSON-Datei. Es wird **kein zweiter Post** erstellt. Nach der Entwurfsübertragung keine manuellen Medienänderungen direkt in Buffer durchführen, ohne zuvor die Freigabedatei abzugleichen.
 
 Offline-Test:
 
