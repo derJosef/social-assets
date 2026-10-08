@@ -40,7 +40,7 @@ jobs:
             "6ac7b25ab99c473c41ba1503":"instagram-ki-souveraenitaet-approved-scheduled",
           }
           query="""query QueryDrafts($org: OrganizationId!) {
-            posts(first:100,input:{organizationId:$org,filter:{status:[draft]},sort:[{field:createdAt,direction:desc}]}) {
+            posts(first:100,input:{organizationId:$org,sort:[{field:createdAt,direction:desc}]}) {
               edges {node{id channelId status createdAt dueAt}}
               pageInfo {hasNextPage endCursor}
             }
@@ -50,11 +50,11 @@ jobs:
             identifier=org["id"]
             data=buffer_graphql(token,query,{"org":identifier})
             posts=data["posts"]
-            print("ORGANIZATION",identifier,"DRAFT_COUNT_PAGE",len(posts["edges"]),"HAS_MORE",posts["pageInfo"]["hasNextPage"])
+            print("ORGANIZATION",identifier,"ALL_COUNT_PAGE",len(posts["edges"]),"HAS_MORE",posts["pageInfo"]["hasNextPage"])
             for edge in posts["edges"]:
               node=edge["node"];total+=1
-              print("DRAFT",node["id"],"channel="+str(node.get("channelId")),"known="+known.get(node["id"],"UNKNOWN"),"createdAt="+str(node.get("createdAt")))
+              print("POST",node["id"],"status="+str(node.get("status")),"channel="+str(node.get("channelId")),"known="+known.get(node["id"],"UNKNOWN"),"createdAt="+str(node.get("createdAt")))
             if posts["pageInfo"]["hasNextPage"]: raise RuntimeError("PAGINATION REQUIRED; STOP, NO DELETION")
-          print("TOTAL_DRAFTS",total)
+          print("TOTAL_POSTS",total)
           print("READ_ONLY_NO_MUTATION")
           PY
