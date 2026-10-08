@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "facebook",
+  "text": "Darf der KI-Agent das?\n\nEin KI-Agent kann Dokumente lesen, Daten in Systeme übertragen oder E-Mails vorbereiten. Damit stellt sich im Unternehmen nicht nur die Frage, was technisch möglich ist, sondern welche Befugnisse der Agent tatsächlich bekommen soll.\n\nAktuelle Sicherheitsleitlinien empfehlen einen klar begrenzten Einstieg: eigene Identität, möglichst geringe Rechte, laufende Protokollierung und menschliche Freigaben bei kritischen Aktionen.\n\nFür einen kontrollierbaren Ablauf helfen fünf Fragen:\n\n– Wer trägt die Verantwortung?\n– Welche Daten darf der Agent sehen?\n– Was darf er verändern?\n– Wo liegt seine feste Grenze?\n– Wann muss ein Mensch freigeben?\n\nGerade Lese- und Schreibrechte sollten getrennt sein. Ein Agent, der Informationen zusammenfasst, braucht nicht automatisch die Berechtigung, Datensätze zu löschen oder hunderte Vorgänge zu ändern.\n\nWelche Aktion würdest du einem KI-Agenten nur mit menschlicher Freigabe erlauben?\n\nQuellen: NIST NCCoE, Februar 2026; gemeinsame internationale Leitlinie zur sicheren Einführung agentischer KI, 1. Mai 2026.\n\n#KIAgenten #HumanInTheLoop #Mittelstand",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-08-agentenrechte-original-logo-freigegeben.png",
+        "alt_text": "Schematische Darstellung eines kontrollierten KI-Agenten: Ein Dokument gelangt über eine eindeutig gekennzeichnete Agenten-Identität zu einer Rechteprüfung, einer menschlichen Freigabe und einem protokollierten Ergebnis."
+      }
+    ]
+  }
+}

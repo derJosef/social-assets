@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "instagram",
+  "text": "DARF DER KI-AGENT DAS?\n\nEin KI-Agent kann Daten lesen, Systeme aktualisieren und Aktionen vorbereiten.\n\nKontrollierbar wird er erst, wenn seine Rechte klar sind:\n\n– eigene Identität\n– Lesen und Schreiben getrennt\n– nur freigegebene Werkzeuge\n– feste Grenzen für kritische Aktionen\n– menschliche Freigabe, wenn es darauf ankommt\n– nachvollziehbares Protokoll\n\n„Human in the Loop“ sollte deshalb nicht nur ein Knopf am Ende sein. Die Freigabe gehört an die Stelle, an der eine Aktion finanziell, irreversibel oder umfangreich wird.\n\nWelche Aktion würdest du nie vollständig automatisieren?\n\nQuellen: NIST NCCoE (02/2026) und internationale Sicherheitsleitlinie zu agentischer KI (01.05.2026).\n\n#KIAgenten #HumanInTheLoop #AIAgentBuilder #Mittelstand",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-08-agentenrechte-original-logo-freigegeben.png",
+        "alt_text": "Schematische Darstellung eines kontrollierten KI-Agenten: Ein Dokument gelangt über eine eindeutig gekennzeichnete Agenten-Identität zu einer Rechteprüfung, einer menschlichen Freigabe und einem protokollierten Ergebnis."
+      }
+    ]
+  }
+}
