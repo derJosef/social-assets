@@ -1,0 +1,34 @@
+name: Buffer – Offline-Validierung
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/buffer_draft.py'
+      - 'tests/**'
+      - '.github/workflows/buffer-tests.yml'
+      - '.github/workflows/buffer-auto-drafts.yml'
+      - '.github/workflows/buffer-draft.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Keine Buffer-Zugangsdaten und keine API-Aufrufe
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Quelltext laden
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Syntaxcheck
+        run: python3 -B -m py_compile scripts/buffer_draft.py tests/test_buffer_draft.py
+
+      - name: Offline-Regressionsprüfungen
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -B -m unittest discover -s tests -v
