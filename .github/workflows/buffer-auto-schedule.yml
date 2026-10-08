@@ -1,0 +1,76 @@
+name: Buffer – freigegebene Entwürfe automatisch terminieren
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ready-to-schedule/*.json'
+
+permissions:
+  contents: write # Nur für einmalige Terminierungsbelege.
+
+concurrency:
+  group: buffer-schedule-single-flight
+  cancel-in-progress: false
+
+jobs:
+  schedule-existing-drafts:
+    name: Nur neue, einzeln freigegebene Termine übernehmen
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Repository mit Git-Historie auschecken
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Offline-Sicherheitstests
+        run: python3 -m unittest discover -s tests -p 'test_buffer_schedule.py' -v
+
+      - name: Neue, explizit freigegebene Terminierungsdateien ermitteln
+        id: added
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
+            echo "Kein zuverlässiger Vergleichs-Commit. Sicherer Stopp." >&2
+            exit 1
+          fi
+          temp_file="$(mktemp)"
+          trap 'rm -f "$temp_file"' EXIT
+          git diff --no-renames --diff-filter=A --name-only -z "$BEFORE_SHA" "$GITHUB_SHA" -- ready-to-schedule/ > "$temp_file"
+          mapfile -d '' -t added < "$temp_file"
+          count=0
+          for file in "${added[@]}"; do
+            if [[ "$file" == ready-to-schedule/*.json && "$file" != ready-to-schedule/*/* ]]; then
+              python3 scripts/buffer_schedule.py --request "$file" --dry-run
+              count=$((count + 1))
+            fi
+          done
+          echo "Neue bestätigte Terminierungsanfragen: $count"
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+
+      - name: Vorhandene Buffer-Entwürfe terminieren
+        if: steps.added.outputs.count != '0'
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
+          BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_FACEBOOK_CHANNEL_ID }}
+          BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_INSTAGRAM_CHANNEL_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          temp_file="$(mktemp)"
+          trap 'rm -f "$temp_file"' EXIT
+          git diff --no-renames --diff-filter=A --name-only -z "$BEFORE_SHA" "$GITHUB_SHA" -- ready-to-schedule/ > "$temp_file"
+          mapfile -d '' -t added < "$temp_file"
+          for file in "${added[@]}"; do
+            if [[ "$file" == ready-to-schedule/*.json && "$file" != ready-to-schedule/*/* ]]; then
+              python3 scripts/buffer_schedule.py --request "$file" --schedule
+            fi
+          done
