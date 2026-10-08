@@ -24,7 +24,7 @@ REPOSITORY = "derJosef/social-assets"
 
 # The only Buffer mutation in this script. There is no scheduling or publish path.
 CREATE_DRAFT = """
-mutation CreateDraft($text: String!, $channelId: ChannelId!, $assets: [AssetInput!]!) {
+mutation CreateDraft($text: String!, $channelId: ChannelId!, $assets: [AssetInput!]!, $metadata: PostInputMetaData) {
   createPost(input: {
     text: $text
     channelId: $channelId
@@ -32,7 +32,9 @@ mutation CreateDraft($text: String!, $channelId: ChannelId!, $assets: [AssetInpu
     mode: addToQueue
     saveToDraft: true
     assets: $assets
+    metadata: $metadata
   }) {
+    __typename
     ... on PostActionSuccess { post { id text } }
     ... on MutationError { message }
   }
@@ -366,11 +368,23 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
     )
     # After the reservation, do not automatically retry on failure:
     # Buffer may have created a post even if the network response was lost.
-    result = buffer_graphql(buffer_key, CREATE_DRAFT, {"text": text, "channelId": channel_id, "assets": assets})
+    metadata = None
+    if target == "facebook":
+        metadata = {"facebook": {"type": "post"}}
+    elif target == "instagram":
+        metadata = {"instagram": {"type": "post", "shouldShareToFeed": True}}
+    variables = {
+        "text": text, "channelId": channel_id, "assets": assets, "metadata": metadata
+    }
+    result = buffer_graphql(buffer_key, CREATE_DRAFT, variables)
     post_result = result.get("createPost") or {}
     post = post_result.get("post") if isinstance(post_result, dict) else None
     if not isinstance(post, dict) or not post.get("id"):
-        raise RuntimeError("Buffer-Draft nicht bestätigt. Pending-Beleg bleibt; manuell prüfen.")
+        typename = post_result.get("__typename", "MutationError") if isinstance(post_result, dict) else "Unknown"
+        # Only publish GraphQL type, never raw errors that could contain private data.
+        raise RuntimeError(
+            f"Buffer-Draft nicht bestätigt ({typename}). Pending-Beleg bleibt; manuell prüfen."
+        )
     pending.update({"state": "draft_created", "buffer_post_id": str(post["id"])})
     try:
         put_receipt(
