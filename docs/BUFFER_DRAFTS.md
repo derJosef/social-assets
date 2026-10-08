@@ -1,6 +1,6 @@
 # Buffer-Entwürfe direkt aus social-assets
 
-**Stand: 2026-10-08.** Diese Integration verwendet ausschließlich GitHub Actions + offizielle Buffer-GraphQL-API, **kein n8n**. Der manuelle Testtransfer eines LinkedIn-Textentwurfs wurde erfolgreich nachgewiesen. Neu: Eine gesonderte GitHub Action übernimmt **nur neu freigegebene Textentwürfe** unter `ready-for-buffer/` automatisch. Bilder, Karussells und weitere Kanäle bleiben zunächst deaktiviert.
+**Stand: 2026-10-08.** GitHub Actions + offizielle Buffer-GraphQL-API, **kein n8n**. Manuelle und automatische LinkedIn-Entwürfe wurden erfolgreich an Buffer übertragen: Text, Bild und PDF-Dokument. Der Freigabeordner `ready-for-buffer/` startet nur für neu hinzugefügte JSON-Dateien automatisch. Video und weitere Kanäle bleiben deaktiviert.
 
 ## Grenzen und Sicherheit
 
@@ -83,7 +83,7 @@ python3 scripts/buffer_draft.py --draft drafts/beispiel-linkedin.json --dry-run
 - **agent-workspace:** Recherche und Entwürfe während der Zusammenarbeit mehrerer Agenten.
 - **social-assets:** explizit für den Buffer-Übertragungsweg freigegebene, unkritische Beiträge und später öffentliche Medien-URLs. Keine automatische Übernahme aus agent-workspace; die Übertragung wird bewusst vorbereitet und manuell gestartet.
 
-## Automatische Übertragung neuer freigegebener Textentwürfe
+## Automatische Übertragung neuer freigegebener LinkedIn-Entwürfe
 
 Der Workflow [buffer-auto-drafts.yml](../.github/workflows/buffer-auto-drafts.yml) überwacht ausschließlich **neu hinzugefügte** JSON-Dateien unmittelbar unter `ready-for-buffer/` auf Branch `main`.
 
@@ -98,18 +98,32 @@ Technische Schutzmaßnahmen:
 - Bei kombinierten Commits werden nur **neu hinzugefügte Dateien** im Freigabeordner verarbeitet. Der Workflow behandelt Dateiänderungen und Löschungen nicht als erneute Freigaben.
 - Falls ein GitHub-Workflow selbst mit dem regulären `GITHUB_TOKEN` Dateien committet, startet dies in der Regel **keinen weiteren Push-Workflow**. Das ist GitHub-Sicherheitsverhalten; direkte Commits durch einen Agenten mit separatem GitHub-App-/Benutzertoken können ihn hingegen auslösen. Deshalb müssen Agenten die Freigabegrenze einhalten. Quelle: https://docs.github.com/en/actions/concepts/security/github_token
 - Ein `pending`-Beleg nach Netzwerk-/API-Fehler muss manuell geklärt werden, um doppelte Entwürfe zu vermeiden.
-- Der neue Workflow ist eingerichtet, aber ein automatischer **Live-Push-Test** mit einem neuen freigegebenen Beitrag steht noch aus. Keinen Test im Freigabeordner anlegen, sofern nicht wirklich ein Buffer-Entwurf erzeugt werden soll.
+- Der automatische Live-Push-Test ist bestanden (Text, Bild und PDF). Kein Test im Freigabeordner anlegen, sofern nicht wirklich ein zusätzlicher Buffer-Entwurf erzeugt werden soll.
 
 ### Bestehenden Testentwurf nicht erneut übertragen
 
 Der Beispieltext `drafts/beispiel-linkedin.json` wurde bereits manuell als Entwurf übertragen, mit bestätigt gespeicherter Buffer-Post-ID. Verschiebe ihn **nicht** nach `ready-for-buffer/`, wenn du nicht ausdrücklich einen zusätzlichen Testentwurf erzeugen möchtest: Der neue Dateipfad hätte absichtlich einen anderen Empfangsbeleg.
 
-### Medienformate (noch nicht aktiviert)
+### Medienformate: Bilder und PDF-Karussells freigeschaltet
 
-- **Bildpost**: Buffer nutzt die `assets`-Liste und öffentlich erreichbare Bild-URLs. Das offizielle Beispiel: https://developers.buffer.com/examples/create-image-post.html
-- **LinkedIn-Karussell**: Ein blätterbares LinkedIn-Karussell ist üblicherweise ein PDF-Dokument, nicht einfach eine Sammlung einzelner Bilder. Buffer dokumentiert hierfür die PDF-Nutzung (bis zu 100 MB/300 Seiten, mit Dokumenttitel): https://support.buffer.com/articles/using-linkedin-with-buffer-K7tRkGD3mH
-- Buffer stellt keinen direkten Medien-Upload über diese API bereit. Alle Medien-URLs müssen ohne Login abrufbar sein und bis zum späteren Publikationszeitpunkt verfügbar bleiben: https://developers.buffer.com/guides/hosting-media.html
-- Das aktuelle Skript **lehnt Medienfelder weiterhin ab**, bis Bild- und PDF-Entwürfe separat getestet und freigegeben sind. Keine stillschweigende Erweiterung auf Mehrkanal-Veröffentlichungen.
+Für Medienentwürfe gilt `format_version: 2`; das ursprüngliche Textformat `format_version: 1` funktioniert unverändert weiter.
+
+- **Bilder:** Im Feld `media` steht `{"type":"images","images":[{"url":"...","alt_text":"..."}]}`. Zulässig sind 1 bis 20 Bilder (PNG, JPG/JPEG, WebP) mit aussagekräftigem Alternativtext. Vorlage: [LinkedIn-Bild](../drafts/vorlage-linkedin-bild.json).
+- **LinkedIn-PDF-Karussell:** Im Feld `media` steht `{"type":"document","url":"...pdf","thumbnail_url":"...png","title":"Dokumenttitel"}`. Genau ein PDF je Beitrag; zusätzlich sind ein Vorschau-Bild und ein Titel erforderlich. Vorlage: [LinkedIn-PDF](../drafts/vorlage-linkedin-karussell.json). Buffer dokumentiert bis zu 100 MB und 300 PDF-Seiten.
+- **Hosting:** Medien unter `media/images/` oder `media/documents/` müssen öffentlich und über `https://raw.githubusercontent.com/derJosef/social-assets/main/media/...` erreichbar sein. Die API akzeptiert keine Dateiuploads, sondern nur Medien-URLs. Die Dateien müssen bis zur späteren manuellen Veröffentlichung bestehen bleiben.
+- **Live-Prüfung:** Das Skript kontrolliert vor dem Versand den HTTPS-Medienpfad und die direkte öffentliche Erreichbarkeit per HEAD-Anfrage. Fehler verhindern den Buffer-Aufruf. Wiederholungen werden durch die bestehenden GitHub-Belege blockiert.
+- **Keine automatische Veröffentlichung:** Die einzige Buffer-Mutation setzt weiter `saveToDraft: true`. Bilder und PDFs gehören nur zum bestehenden LinkedIn-Kanal, kein Video und keine zusätzlichen Kanäle.
+- **Wichtig:** Das gesamte Repository ist öffentlich. Vor dem Upload Datenschutz, Urheberrechte, Bildrechte und etwaige Personenbezüge prüfen.
+
+Offizielle Dokumentation:
+- https://developers.buffer.com/examples/create-image-post.html
+- https://developers.buffer.com/guides/hosting-media.html
+- https://support.buffer.com/articles/using-linkedin-with-buffer-K7tRkGD3mH
+
+**Nachgewiesene Live-Medientests am 08.10.2026:**
+- Bild-Entwurf: [GitHub-Lauf #37766082237](https://github.com/derJosef/social-assets/actions/runs/37766082237), Buffer-Post-ID `6ac77566390a3385c92eda30`.
+- PDF-Karussell-Entwurf: [GitHub-Lauf #37766132425](https://github.com/derJosef/social-assets/actions/runs/37766132425), Buffer-Post-ID `6ac77582f9e3728044fb41d9`.
+- Die Buffer-API hat jeweils die Entwurfserstellung bestätigt. Ob die Medien vollständig und optisch korrekt im Buffer-Editor erscheinen, ist zusätzlich manuell zu prüfen.
 
 ## Lokale Tests / GitHub CI
 
@@ -121,6 +135,6 @@ Die Tests sind offline und benötigen keinen Buffer- oder GitHub-Schlüssel.
 
 ## Ausbau nach dem Pilot
 
-Bildposts/Karussells benötigen über Buffer öffentlich abrufbare, dauerhaft verfügbare direkte Bild-URLs; Buffer bietet keinen nativen Upload-Endpunkt über diese API. Vor Erweiterung die Plattformanforderungen und die Rechte an Assets prüfen.
+Für die produktive Nutzung zunächst ein echtes Markenbild und ein PDF-Karussell in Buffer visuell prüfen. Danach kann das Bild-/PDF-Format für freigegebene Inhalte verwendet werden. Die gemischte Bild-und-Video-Funktion aus Buffers Weboberfläche ist noch nicht separat über die API geprüft und bleibt daher außerhalb dieser Integration.
 
 Offizielle Buffer-Anleitung: https://developers.buffer.com/guides/hosting-media.html
