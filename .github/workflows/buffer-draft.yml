@@ -29,11 +29,11 @@ concurrency:
 jobs:
   draft:
     name: Nur Entwurf, keine Veröffentlichung
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Dateien abrufen
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
