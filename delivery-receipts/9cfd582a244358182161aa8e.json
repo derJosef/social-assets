@@ -2,6 +2,7 @@
   "draft_file": "ready-for-buffer/2026-10-08-linkedin-agentenrechte-statt-vollmacht.json",
   "target": "linkedin",
   "draft_sha256": "e701aea1bf74d0ddfff1a48497cc365af5e69f2da33627188f22fd090d09688c",
-  "state": "pending_manual_reconciliation_on_failure",
-  "github_run_id": "37838404565"
+  "state": "draft_created",
+  "github_run_id": "37838404565",
+  "buffer_post_id": "6ac7fa8a62435c1f1fe0e557"
 }
