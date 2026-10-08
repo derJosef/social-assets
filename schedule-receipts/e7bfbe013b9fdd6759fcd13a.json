@@ -5,6 +5,6 @@
   "target": "instagram",
   "buffer_post_id": "6ac7fa87c121d8911406c941",
   "due_at": "2026-10-28T17:00:00Z",
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "scheduled",
   "github_run_id": "37839280992"
 }
