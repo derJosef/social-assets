@@ -15,16 +15,25 @@
 
 ## Einmalige Einrichtung (durch den Repository-Eigentümer)
 
-1. In Buffer unter https://publish.buffer.com/settings/api einen **persönlichen API-Schlüssel** erstellen. Für diesen Ablauf nur die notwendigen Berechtigungen einschalten: `accountRead` (Kanalabfrage) und `postsWrite` (Entwurf erstellen); weitere Rechte vermeiden. Buffer nennt für Free **einen** persönlichen API-Schlüssel. Nach Ablauf des gewählten Gültigkeitszeitraums muss er erneuert werden.
-2. Den API-Schlüssel ausschließlich in GitHub hinterlegen:
+1. In Buffer unter https://publish.buffer.com/settings/api den **bereits vorhandenen persönlichen API-Schlüssel** wiederverwenden (z. B. den Schlüssel mit der Bezeichnung `GitHub`). **Keinen zweiten Schlüssel erstellen und keinen laufenden Schlüssel löschen.** Ein vorhandener API-Schlüssel kann für mehrere passende API-Abfragen verwendet werden. Der Explorer ist nicht erforderlich.
+2. Falls noch nicht geschehen, den vorhandenen Buffer-Schlüssel in GitHub hinterlegen:
    `derJosef/social-assets → Settings → Secrets and variables → Actions → New repository secret`
-   **Name:** `BUFFER_API_KEY` – **Wert:** der persönliche Buffer-API-Schlüssel. Den Schlüssel niemals in GitHub-Dateien, Issues oder Chat-Nachrichten kopieren.
-3. Die **Buffer-Kanal-ID** des richtigen LinkedIn-Profils ermitteln, beispielsweise über Buffer API Explorer:
-   - Organisation: `query { account { organizations { id name } } }`
-   - Kanal: `query { channels(input: { organizationId: "DEINE_ORG_ID" }) { id name service } }`
-   - Die LinkedIn-`id` in einem zweiten GitHub-Repository-Secret namens `BUFFER_CHANNEL_ID` hinterlegen.
+   **Name:** `BUFFER_API_KEY` – **Wert:** vorhandener persönlicher Buffer-API-Schlüssel. Niemals in Repository-Dateien oder Chat-Nachrichten kopieren. GitHub-Secrets geben ihren Wert später nicht erneut preis: Falls der Schlüssel dort bereits eingerichtet ist, brauchst du ihn nicht noch einmal zu kopieren.
+3. **Keine manuelle LinkedIn-Kanal-ID nötig:** Das Skript fragt mit demselben Buffer-Schlüssel erst die Organisation(en), dann die Kanäle ab und wählt automatisch den eindeutigen LinkedIn-Kanal. Wenn mehrere LinkedIn-Kanäle vorhanden sind, stoppt es ohne Versand. In diesem Sonderfall kann `BUFFER_CHANNEL_ID` optional als weiteres GitHub-Secret hinterlegt werden.
 4. Auf GitHub unter `Settings → Actions → General` GitHub Actions freischalten und prüfen, dass die Workflow-Berechtigungen ein Repository-`GITHUB_TOKEN` mit `contents: write` für die Empfangsbelege erlauben. Der Workflow fordert die Berechtigung ausdrücklich an.
 5. Der manuelle Workflow heißt `Buffer – LinkedIn-Entwurf`: `.github/workflows/buffer-draft.yml`.
+
+## Verbindungstest (nur lesend, keine Buffer-Entwürfe)
+
+In `derJosef/social-assets → Actions → Buffer – LinkedIn-Entwurf → Run workflow`:
+
+- Branch: `main`
+- `draft_file`: `drafts/beispiel-linkedin.json` unverändert lassen.
+- `check_connection`: **anhaken**.
+- `send_to_buffer`: **nicht anhaken**.
+- Starten. Das Log sollte `Verbindungstest erfolgreich: LinkedIn-Kanal eindeutig gefunden.` anzeigen.
+- Bei fehlendem `BUFFER_API_KEY` oder ungültigem Schlüssel kommt eine Fehlermeldung; es wird nichts an Buffer gesendet.
+- Der Test liest nur Organisations-/Kanalinformationen über die Buffer-API. Die ermittelte Kanal-ID wird **nicht** in den öffentlichen GitHub-Actions-Logs ausgegeben.
 
 ## Trockenlauf (keine Buffer-Übertragung)
 
@@ -33,6 +42,7 @@ In `derJosef/social-assets → Actions → Buffer – LinkedIn-Entwurf → Run w
 - Branch: `main`.
 - `draft_file`: `drafts/beispiel-linkedin.json`.
 - `send_to_buffer`: **nicht anhaken**.
+- `check_connection`: **nicht anhaken**.
 - Starten und im Actions-Protokoll auf `DRY-RUN OK` prüfen. Dabei wird **kein** Buffer-Schlüssel benötigt.
 
 Alternativ lokal aus dem Repository-Root:
@@ -52,7 +62,7 @@ python3 scripts/buffer_draft.py --draft drafts/beispiel-linkedin.json --dry-run
    }
    ```
 2. Die neue Datei auf `main` committen. Erst nach Prüfung des Inhalts im GitHub-Workflow die Datei auswählen.
-3. Workflow manuell starten und **nur diesmal** `send_to_buffer` aktivieren.
+3. Workflow manuell starten, **nur diesmal** `send_to_buffer` aktivieren und `check_connection` deaktiviert lassen. Eine LinkedIn-ID brauchst du bei genau einem verbundenen LinkedIn-Kanal nicht selbst einzutragen.
 4. Die Ausführung bestätigt bei Erfolg die Buffer-Post-ID. Im entsprechenden LinkedIn-Kanal in Buffer unter **Entwürfe** nachsehen.
 5. Keine Veröffentlichung oder Planung durch den GitHub-Workflow. Eine spätere manuelle Planung in Buffer ist eine eigenständige Entscheidung.
 
@@ -63,6 +73,8 @@ python3 scripts/buffer_draft.py --draft drafts/beispiel-linkedin.json --dry-run
 - Buffer offizielles Draft-Beispiel: https://developers.buffer.com/examples/create-draft-post.html
 - Buffer GraphQL-Schnittstelle und Autorisierung: https://developers.buffer.com/guides/getting-started.html
 - Buffer-Kanal-IDs: https://developers.buffer.com/examples/get-channels.html
+- Buffer-Organisationen: https://developers.buffer.com/guides/data-model.html
+- API-Authentifizierung: https://developers.buffer.com/guides/authentication.html
 - GitHub Actions manueller Start: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_dispatch
 
 ## Abgrenzung zu PersonalOS / agent-workspace
