@@ -47,11 +47,12 @@ def load_brief(path):
     file = (ROOT/path).resolve(strict=True)
     require(file.is_relative_to(ROOT) and file.is_file(), "ungültiger Auftragsdateipfad")
     j = json.loads(file.read_text(encoding="utf-8"))
-    require(isinstance(j, dict) and set(j) == {"format_version","brand","campaign_id","topic","sources","posting_sources"},
+    require(isinstance(j, dict) and set(j) == {"format_version","brand","campaign_id","topic","sources","posting_sources","execution_mode"},
             "Brief-Schema ungültig")
     cid = Path(path).stem
     require(j["format_version"] == 1 and j["brand"] == "ai-agent-builder"
             and j["campaign_id"] == cid, "Kampagnenkennung oder Marke stimmt nicht")
+    require(j["execution_mode"] in ("smoke","drafts"), "Ausführungsmodus muss smoke/drafts sein")
     require(isinstance(j["topic"], str) and 30 <= len(j["topic"]) <= 550, "konkretes Thema erforderlich")
     require(isinstance(j["sources"], list) and 2 <= len(j["sources"]) <= 6, "2-6 Inhaltquellen erforderlich")
     domains = set()
