@@ -1,0 +1,214 @@
+name: AI Agent Builder – Recherche bis geprüfter Buffer-Entwurf
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'orchestration/briefs/*.json'
+  workflow_dispatch:
+    inputs:
+      brief:
+        description: 'orchestration/briefs/YYYY-MM-DD-slug.json'
+        type: string
+        required: true
+      mode:
+        description: 'smoke = ohne Netzwerk/Buffer, drafts = vollständiger Durchlauf'
+        type: choice
+        required: true
+        default: smoke
+        options: [smoke, drafts]
+
+permissions:
+  contents: write
+  models: read
+
+concurrency:
+  group: social-campaign-orchestrator
+  cancel-in-progress: false
+
+jobs:
+  orchestrate:
+    name: Research → QA → Original-Logo → Buffer Drafts (or safe stop)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    steps:
+      - name: Repository vollständig laden
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Python einrichten
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Bild- und QA-Abhängigkeiten
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow>=11,<13' 'numpy>=2,<3'
+
+      - name: Offline-Regressionen (keine API-Aufrufe)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/social_orchestrator.py scripts/orchestrator_verify_buffer.py
+          python3 -m unittest discover -s tests -v
+
+      - name: Genau einen Auftrag und Ausführungsmodus bestimmen
+        id: request
+        shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_BRIEF: ${{ inputs.brief }}
+          INPUT_MODE: ${{ inputs.mode }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            BRIEF="$INPUT_BRIEF"
+            MODE="$INPUT_MODE"
+          else
+            [[ "$BEFORE_SHA" =~ ^[0-9a-f]{40}$ && ! "$BEFORE_SHA" =~ ^0+$ ]] || { echo 'Unbekannter vorheriger Commit' >&2; exit 1; }
+            tempfile="$(mktemp)"
+            trap 'rm -f "$tempfile"' EXIT
+            git diff --no-renames --name-only -z "$BEFORE_SHA" "$GITHUB_SHA" -- orchestration/briefs/ > "$tempfile"
+            mapfile -d '' -t changed < "$tempfile"
+            [[ "${#changed[@]}" -eq 1 ]] || { echo 'Pro Push genau einen neuen oder geänderten Auftrag zulässig' >&2; exit 1; }
+            BRIEF="${changed[0]}"
+            MODE="$(python3 - "$BRIEF" <<'PY'
+          import json,sys
+          with open(sys.argv[1],encoding='utf-8') as f:
+              print(json.load(f)['execution_mode'])
+          PY
+          )"
+          fi
+          [[ "$BRIEF" =~ ^orchestration/briefs/20[0-9]{2}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*\.json$ ]] || { echo 'Unsicherer Auftragsdateiname' >&2; exit 1; }
+          [[ "$MODE" == smoke || "$MODE" == drafts ]] || { echo 'Unsicherer Ausführungsmodus' >&2; exit 1; }
+          [[ -f "$BRIEF" ]] || { echo 'Auftrag fehlt' >&2; exit 1; }
+          CAMPAIGN="$(basename "$BRIEF" .json)"
+          echo "brief=$BRIEF" >> "$GITHUB_OUTPUT"
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "campaign=$CAMPAIGN" >> "$GITHUB_OUTPUT"
+          echo "BRIEF=$BRIEF" >> "$GITHUB_ENV"
+          echo "RUN_MODE=$MODE" >> "$GITHUB_ENV"
+          echo "CAMPAIGN=$CAMPAIGN" >> "$GITHUB_ENV"
+
+      - name: Inter-Schrift nur für die echte Bildproduktion beziehen
+        if: steps.request.outputs.mode == 'drafts'
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 2 'https://raw.githubusercontent.com/google/fonts/main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf' -o /tmp/Inter.ttf
+          test -s /tmp/Inter.ttf
+
+      - name: Orchestrator ausführen (fail closed)
+        id: build
+        shell: bash
+        env:
+          OPENAI_API_KEY: ${{ secrets.SOCIAL_OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          SOCIAL_GITHUB_MODEL: openai/gpt-4o-mini
+          REPORT_PATH: ${{ runner.temp }}/social-orchestrator-report.json
+        run: |
+          set -euo pipefail
+          python3 scripts/social_orchestrator.py --brief "$BRIEF" --mode "$RUN_MODE" --report "$REPORT_PATH"
+
+      - name: Alle neuen Assets atomar nach GitHub übertragen
+        if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            "artwork-requests/$CAMPAIGN.json" \
+            "media/source-images/$CAMPAIGN-base.png" \
+            "media/images/$CAMPAIGN-branded.png" \
+            "artwork-receipts/$CAMPAIGN.json" \
+            "campaign-manifests/$CAMPAIGN.json" \
+            "drafts/$CAMPAIGN-plan.md" \
+            "ready-for-buffer/auto-$CAMPAIGN-linkedin.json" \
+            "ready-for-buffer/auto-$CAMPAIGN-facebook.json" \
+            "ready-for-buffer/auto-$CAMPAIGN-instagram.json"
+          count="$(git diff --cached --name-only | wc -l)"
+          [[ "$count" -eq 9 ]] || { echo "Nur 9 neue Dateien erlaubt; gefunden: $count" >&2; exit 1; }
+          git diff --cached --name-status | grep -v '^A[[:space:]]' && { echo 'Bestehende Dateien dürfen nicht geändert werden' >&2; exit 1; } || true
+          git commit -m "campaign: verified autonomous draft package $CAMPAIGN"
+          git push origin HEAD:main
+          echo "9 markenkonforme Kampagnendateien committed. Buffer wird im selben Workflow ausgeführt." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Vorbereitete Beiträge ohne Fremdtrigger DIREKT als Drafts senden
+        if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
+          BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_FACEBOOK_CHANNEL_ID }}
+          BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_INSTAGRAM_CHANNEL_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$BUFFER_API_KEY" || { echo "BUFFER_API_KEY fehlt. Kampagne auf GitHub, Buffer nicht gesendet." >&2; exit 1; }
+          for platform in linkedin facebook instagram; do
+            file="ready-for-buffer/auto-$CAMPAIGN-$platform.json"
+            python3 scripts/buffer_draft.py --draft "$file" --send
+          done
+
+      - name: Unabhängige Buffer-Prüfung (draft und dueAt=null)
+        if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          REPORT_PATH: ${{ runner.temp }}/social-orchestrator-report.json
+        run: |
+          set -euo pipefail
+          python3 scripts/orchestrator_verify_buffer.py --campaign "$CAMPAIGN" --report "$REPORT_PATH"
+
+      - name: Prüfbericht als dauerhaftes GitHub-Receipt sichern
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUEST_CAMPAIGN: ${{ steps.request.outputs.campaign }}
+          REPORT_PATH: ${{ runner.temp }}/social-orchestrator-report.json
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/social-final-report
+          python3 - <<'PY'
+          import os,json
+          from datetime import datetime,timezone
+          path=os.environ["REPORT_PATH"]
+          try:
+              with open(path,encoding="utf-8") as f: data=json.load(f)
+          except (OSError,ValueError):
+              data={"steps":{},"state":"blocked_before_preparation"}
+          data["github_run_id"]=os.environ["GITHUB_RUN_ID"]
+          data["github_run_url"]=f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+          data["job_status"]=os.environ["JOB_STATUS"]
+          data["receipt_at"]=datetime.now(timezone.utc).isoformat()
+          cid=os.environ.get("REQUEST_CAMPAIGN","") or "preflight"
+          data["campaign"]=data.get("campaign") or cid
+          with open("/tmp/social-final-report/receipt.json","w",encoding="utf-8") as f:
+              json.dump(data,f,ensure_ascii=False,indent=2);f.write("\n")
+          print(f"Report status: {data.get('state')}, job={data['job_status']}")
+          PY
+          file="orchestration/reports/${REQUEST_CAMPAIGN:-preflight}-run-${GITHUB_RUN_ID}.json"
+          content="$(base64 -w0 /tmp/social-final-report/receipt.json)"
+          gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$file" \
+            -f message="audit: orchestration run $GITHUB_RUN_ID" \
+            -f content="$content" -f branch=main > /dev/null
+          echo "Prüfbericht: https://github.com/$GITHUB_REPOSITORY/blob/main/$file" >> "$GITHUB_STEP_SUMMARY"
+          echo "Buffer-Publikation wurde durch diesen Workflow nie aktiviert." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Zusätzliche Artefakt-Sicherung bei fehlgeschlagenem GitHub-Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: social-orchestrator-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/social-orchestrator-report.json
+            /tmp/social-final-report/receipt.json
+          if-no-files-found: warn
+          retention-days: 30
