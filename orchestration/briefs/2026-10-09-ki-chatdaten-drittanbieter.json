@@ -2,7 +2,7 @@
   "format_version": 1,
   "brand": "ai-agent-builder",
   "campaign_id": "2026-10-09-ki-chatdaten-drittanbieter",
-  "execution_mode": "smoke",
+  "execution_mode": "drafts",
   "topic": "Dokumentbasierter Praxistest zu einem BASIC-thinking-Bericht vom 08.10.2026: Eine IMDEA-Networks-Untersuchung analysiert, welche gesprächsbezogenen Informationen in getesteten Verbraucher-KI-Chats an Drittparteien übertragen werden können. Für den B2B-Mittelstand sachlich einordnen: keine pauschalen Vorwürfe, Consumer gegen Enterprise/API unterscheiden, Datenflüsse und Auftragsverarbeitung vor KI-Agenteneinsatz prüfen.",
   "sources": [
     {
