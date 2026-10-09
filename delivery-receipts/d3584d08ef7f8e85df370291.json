@@ -2,6 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-09-ein-agent-drei-tests-facebook.json",
   "target": "facebook",
   "draft_sha256": "516ac13ade2fc622c3202d00ddb83dd3f6948fec5322daffc108fe1e01660ae6",
-  "state": "pending_manual_reconciliation_on_failure",
-  "github_run_id": "37898575725"
+  "state": "draft_created",
+  "github_run_id": "37898575725",
+  "buffer_post_id": "6ac89617f07e682de6a98b36"
 }
