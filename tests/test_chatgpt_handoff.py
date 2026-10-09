@@ -50,7 +50,7 @@ class ContractTests(unittest.TestCase):
         self.assertFalse(r["automatic_publication"])
     def test_model_generation_not_accepted_as_subscription_handoff(self):
         del self.record["prepared_content"];self.write()
-        with self.assertRaisesRegex(Blocked,"fertig redigierte"):
+        with self.assertRaisesRegex(ValueError,"fertig redigierte"):
             validate(self.path,self.root)
     def test_wrong_brand_rejected(self):
         self.record["brand"]="picturefix";self.write()
