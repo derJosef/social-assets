@@ -126,7 +126,12 @@ def call_model(messages, *, max_tokens=3100):
         "User-Agent":"ai-agent-builder-gh-orchestrator"})
     try:
         with urllib.request.urlopen(req,timeout=100) as response:
-            out=json.load(response)
+            raw=response.read(3_000_000)
+            content_type=response.headers.get("Content-Type","")
+        try:
+            out=json.loads(raw)
+        except json.JSONDecodeError:
+            raise Blocked(f"Modellantwort ist kein JSON-Objekt (HTTP 200, Bytes={len(raw)}, Content-Type={content_type[:60]})") from None
     except urllib.error.HTTPError as err:
         raise Blocked(f"Modellanbieter HTTP {err.code} – GitHub Models oder API-Berechtigung prüfen") from None
     except urllib.error.URLError:
