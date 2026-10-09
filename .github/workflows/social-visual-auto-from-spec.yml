@@ -1,0 +1,121 @@
+name: Social Visual – automatisch aus Kampagnenauftrag
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'artwork-requests/*.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: brand-artwork-single-flight
+  cancel-in-progress: false
+
+jobs:
+  create:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install deterministic graphics dependencies
+        run: python -m pip install --disable-pip-version-check --quiet 'Pillow>=11,<13' 'numpy>=2,<3'
+
+      - name: Identify exactly one new artwork request
+        id: source
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ ! "$BEFORE_SHA" =~ ^0+$ ]] || { echo "Missing previous commit" >&2; exit 1; }
+          temp="$(mktemp)"
+          trap 'rm -f "$temp"' EXIT
+          git diff --no-renames --diff-filter=A --name-only -z "$BEFORE_SHA" "$GITHUB_SHA" -- artwork-requests/ > "$temp"
+          mapfile -d '' -t added < "$temp"
+          [[ ${#added[@]} -eq 1 ]] || { echo "One new artwork-request.json per push required" >&2; exit 1; }
+          [[ "${added[0]}" =~ ^artwork-requests/20[0-9]{2}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*\.json$ ]] || { echo 'Invalid request filename' >&2; exit 1; }
+          echo "filename=${added[0]}" >> "$GITHUB_OUTPUT"
+          echo "campaign=$(basename "${added[0]}" .json)" >> "$GITHUB_OUTPUT"
+
+      - name: Download Inter and validate original immutable logo
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf' -o /tmp/Inter.ttf
+          echo '15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0  media/brand/logo-pauderer-original.png' | sha256sum -c -
+
+      - name: Generate logo-free background and validated brand final
+        id: compose
+        shell: bash
+        env:
+          REQUEST: ${{steps.source.outputs.filename}}
+          CAMPAIGN: ${{steps.source.outputs.campaign}}
+        run: |
+          set -euo pipefail
+          BASE="media/source-images/${CAMPAIGN}-base.png"
+          FINAL="media/images/${CAMPAIGN}-branded.png"
+          RECEIPT="artwork-receipts/${CAMPAIGN}.json"
+          [[ ! -e "$BASE" && ! -e "$FINAL" && ! -e "$RECEIPT" ]] || {
+            echo "Existing output detected: never overwrite or resend" >&2; exit 1;
+          }
+          mkdir -p media/source-images media/images artwork-receipts
+          python3 scripts/social_visual_from_spec.py \
+            --request "$REQUEST" --output "$BASE" --heading-output /tmp/heading_box.txt --font /tmp/Inter.ttf
+          BOX="$(cat /tmp/heading_box.txt)"
+          python3 scripts/logo_composite.py compose "$BASE" "$FINAL" \
+            --heading-corner top-left --original media/brand/logo-pauderer-original.png \
+            --frame on --margin-ratio 0.05 --stroke-ratio 0.03
+          python3 scripts/logo_composite.py verify "$FINAL" "$BASE" \
+            --original media/brand/logo-pauderer-original.png \
+            --heading-corner top-left --heading-box "$BOX"
+          export CAMPAIGN BASE FINAL RECEIPT BOX
+          python3 - <<'PY'
+          from pathlib import Path
+          import os, json, hashlib
+          f=Path(os.environ['FINAL'])
+          h=hashlib.sha256(f.read_bytes()).hexdigest()
+          record={
+            "campaign_id":os.environ['CAMPAIGN'],
+            "brand":"ai-agent-builder",
+            "status":"verified_image_only",
+            "base":os.environ['BASE'],
+            "final":os.environ['FINAL'],
+            "sha256":h,
+            "heading_corner":"top-left",
+            "heading_box":[int(v) for v in os.environ['BOX'].split(',')],
+            "logo_original_sha256":"15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0"
+          }
+          Path(os.environ['RECEIPT']).write_text(json.dumps(record,indent=2)+"\n")
+          print("AUTOMATED_BRAND_IMAGE_PASS",json.dumps(record))
+          PY
+          echo "final=$FINAL" >> "$GITHUB_OUTPUT"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "receipt=$RECEIPT" >> "$GITHUB_OUTPUT"
+
+      - name: Publish only new, verified images and receipt to GitHub
+        shell: bash
+        env:
+          BASE: ${{steps.compose.outputs.base}}
+          FINAL: ${{steps.compose.outputs.final}}
+          RECEIPT: ${{steps.compose.outputs.receipt}}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- "$BASE" "$FINAL" "$RECEIPT"
+          [[ "$(git diff --cached --name-only | wc -l)" -eq 3 ]] || {
+            echo "Unexpected staged file set" >&2; exit 1;
+          }
+          git commit -m 'assets: automatically verified AI Agent Builder campaign image'
+          git push origin HEAD:main
+          echo "Image: ${FINAL}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Source and brand QA: PASS; no Buffer/scheduling action" >> "$GITHUB_STEP_SUMMARY"
