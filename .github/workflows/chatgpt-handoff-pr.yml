@@ -1,0 +1,63 @@
+name: ChatGPT → GitHub – nur Review der neuen Kampagne
+
+# A ChatGPT connector writes to a separate branch and opens a PR.
+# This job has no secrets and NEVER sends to Buffer or merges the PR.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'orchestration/briefs/*.json'
+
+permissions:
+  contents: read
+
+jobs:
+  check-handoff:
+    name: Ausschließlich einen neuen ChatGPT-Brief prüfen
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Verifizierten Stand von main separat auschecken
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+          fetch-depth: 0
+          path: trusted
+
+      - name: Nur Daten des PRs abrufen, niemals PR-Code ausführen
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+          path: submission
+
+      - name: Exakt eine neue Brief-Datei sicher übernehmen
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          git -C submission merge-base --is-ancestor "$BASE_SHA" "$HEAD_SHA" || {
+            echo 'PR-Daten müssen vom aktuellen Main abstammen' >&2; exit 1;
+          }
+          tmp="$(mktemp)"
+          trap 'rm -f "$tmp"' EXIT
+          git -C submission diff --name-status --no-renames "$BASE_SHA" "$HEAD_SHA" > "$tmp"
+          [[ "$(wc -l < "$tmp")" -eq 1 ]] || {
+            echo 'Nur genau eine neue Brief-Datei pro PR erlaubt' >&2; exit 1;
+          }
+          IFS=$'\t' read -r status filename < "$tmp"
+          [[ "$status" == A && "$filename" =~ ^orchestration/briefs/20[0-9]{2}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*\.json$ ]] || {
+            echo 'Unzulässige Datei oder Bestandsänderung' >&2; exit 1;
+          }
+          [[ ! -e "trusted/$filename" ]] || { echo 'Diese Kampagne existiert bereits' >&2; exit 1; }
+          mkdir -p trusted/orchestration/briefs
+          cp -- "submission/$filename" "trusted/$filename"
+          cd trusted
+          python3 -B scripts/validate_chatgpt_handoff.py --brief "$filename"
+          echo '## Strukturprüfung bestanden, kein Buffer-Aufruf' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Inhalt und Quellen müssen vor dem Merge redaktionell geprüft werden.' >> "$GITHUB_STEP_SUMMARY"
