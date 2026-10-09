@@ -36,6 +36,6 @@ Die Eingaben werden auf sichere Pfade und Syntax geprüft. Der Workflow übergib
 
 ## Veröffentlichungsgrenze
 
-Ein technischer PASS besagt nur, dass das **Bild** markenkonform zusammengesetzt wurde. Er ersetzt weder Quellenrecherche noch inhaltliche Qualitätskontrolle, menschliche Themen-/Text-/Bildfreigabe oder die gesonderte Erlaubnis zum Erstellen von Buffer-Entwürfen und zur Veröffentlichung. Bei einem späteren Beitrags-Workflow muss ein geprüftes Bild ausgewählt und **vor** dem explizit freigegebenen Transfer nach `ready-for-buffer/` verwendet werden. Dieser Bildworkflow veröffentlicht nie.
+Ein technischer PASS besagt nur, dass das **Bild** markenkonform zusammengesetzt wurde. Er ersetzt weder Quellenrecherche noch inhaltliche Qualitätskontrolle. Für **AI Agent Builder** besteht seit 09.10.2026 eine dauerhafte Berechtigung zur automatischen Themen-/Text-/Bildproduktion und Buffer-Draft-Übertragung nach erfolgreicher QA-Prüfung; Details in [AUTONOMOUS_BUFFER_POLICY.md](AUTONOMOUS_BUFFER_POLICY.md). **Die Aktivierung eines Buffer-Publikationstermins bleibt einzeln freigabepflichtig.** Dieser reine Bildworkflow veröffentlicht nie.
 
 - [Wiederholungstest für den Überschreibschutz](https://github.com/derJosef/social-assets/actions/runs/37894871638): Ausführung nach Umstellung auf temporäre Artefakte ohne neuen Medien-Commit; Status anhand des Workflow-Laufs kontrollieren.

@@ -2,6 +2,9 @@
 
 ## Ziel und Freigabegrenze
 
+**Ergänzung vom 09.10.2026:** Die Dauerberechtigung für AI Agent Builder erlaubt eigenständige Themenwahl, Draft-Erstellung und **Terminplanung** (Vorschläge in `campaign-manifests/`). Sie erlaubt **nicht**, Buffer-Entwürfe auf `scheduled` zu setzen, solange Josef nicht ausdrücklich die spätere Veröffentlichung freigegeben hat. Denn Buffers `editPost(mode: customScheduled, saveToDraft: false)` bewirkt eine automatische Veröffentlichung am Termin. Die bestehende Freigabeschranke für `ready-to-schedule/` wird bewusst nicht gelockert. Siehe [AUTONOMOUS_BUFFER_POLICY.md](AUTONOMOUS_BUFFER_POLICY.md).
+
+
 Der bestehende Workflow `buffer-auto-drafts.yml` erstellt ausschließlich **Buffer-Entwürfe**.
 Der hier ergänzte Workflow `buffer-auto-schedule.yml` kann einen **bereits vorhandenen** Buffer-Entwurf erst **nach einer zweiten, ausdrücklichen Freigabe von Josef** automatisch für einen festen Termin in die Veröffentlichungswarteschlange übernehmen.
 
