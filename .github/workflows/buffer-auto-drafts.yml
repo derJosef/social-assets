@@ -1,4 +1,4 @@
-name: Buffer – automatisch nur freigegebene Entwürfe
+name: Buffer – automatische geprüfte Entwürfe
 
 on:
   push:
@@ -49,6 +49,34 @@ jobs:
           done
           echo "Anzahl neuer Freigaben: $count"
           echo "count=$count" >> "$GITHUB_OUTPUT"
+
+      - name: Autonomous campaign quality gate (fail closed before any Buffer writes)
+        if: steps.added.outputs.count != '0'
+        env:
+          BEFORE_SHA: ${{github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tempfile="$(mktemp)"
+          trap 'rm -f "$tempfile"' EXIT
+          git diff --no-renames --diff-filter=A --name-only -z "$BEFORE_SHA" "$GITHUB_SHA" -- ready-for-buffer/ > "$tempfile"
+          mapfile -d '' -t added < "$tempfile"
+
+          auto=()
+          for file in "${added[@]}"; do
+            if [[ "$file" == ready-for-buffer/auto-*.json && "$file" != ready-for-buffer/*/* ]]; then
+              auto+=("$file")
+            fi
+          done
+
+          if (( ${#auto[@]} > 0 )); then
+            echo "Validiere alle automatisch vorbereiteten Dateien zuerst: ${#auto[@]}"
+            python3 -m pip install --disable-pip-version-check --quiet 'Pillow>=11,<13' 'numpy>=2,<3'
+            python3 -m unittest discover -s tests -p 'test_autonomous_campaign_gate.py' -v
+            python3 scripts/autonomous_campaign_gate.py --posts "${auto[@]}"
+          else
+            echo "Keine autonom erstellten Kampagnen in diesem Commit."
+          fi
 
       - name: Freigegebene Beiträge ausschließlich als Buffer-Entwürfe anlegen
         if: steps.added.outputs.count != '0'
