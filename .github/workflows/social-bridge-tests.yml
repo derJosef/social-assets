@@ -1,0 +1,29 @@
+name: Bridge und Publishing-Gate – Offline-Sicherheitstests
+on:
+  push:
+    branches:
+      - 'feature/chatgpt-bridge-safe-intake-20261009'
+  pull_request:
+    paths:
+      - '.github/workflows/buffer-auto-schedule.yml'
+      - '.github/workflows/social-bridge-tests.yml'
+      - 'scripts/buffer_schedule.py'
+      - 'tests/**'
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Keine Geheimnisse, keine Buffer- oder GitHub-Schreibaufrufe
+        run: |
+          set -euo pipefail
+          python3 -B -m py_compile scripts/buffer_schedule.py tests/test_buffer_schedule.py
+          python3 -B -m unittest discover -s tests -v
