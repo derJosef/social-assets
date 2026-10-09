@@ -59,6 +59,20 @@ Bei einer neuen Kampagne:
 }
 ```
 
+## Vollautomatische Produktion neuer Markenbilder
+
+Neben dem manuellen ImageGen→Compositing-Weg existiert jetzt der getestete GitHub-Actions-Workflow [Social Visual – automatisch aus Kampagnenauftrag](../.github/workflows/social-visual-auto-from-spec.yml). Dadurch muss bei einer neuen Kampagne kein individuelles Bildskript programmiert werden.
+
+1. Der Agent erzeugt genau eine neue, quellen- und themenbezogene Datei `artwork-requests/YYYY-MM-DD-slug.json` (schema 1, Marke AI Agent Builder) mit `badge`, `headline`, `subtitle`, exakt drei `cards` mit `title`/`description` und `closing`.
+2. Der Push durch einen GitHub-App-/Benutzer-Token startet den Workflow. Er erzeugt **ohne KI-Neuzeichnung des Logos** ein logo-freies PNG unter `media/source-images/` und setzt das SHA-geprüfte Original-PNG mittels Pillow zusammen. Er prüft die finale Grafik gegen Original und Hintergrundpixel.
+3. **Nur nach bestandenem Test** werden Basisbild, finale Markenbilddatei und ein Bild-Receipt unter `artwork-receipts/YYYY-MM-DD-slug.json` committet (inklusive SHA-256, Überschriften-Box, Bildpfaden). Der Agent liest diese Belege vor der nächsten Phase zurück.
+4. Der Agent führt die eigenständige redaktionelle Prüfung aus, erstellt `campaign-manifests/YYYY-MM-DD-slug.json` und legt die drei neuen Auto-Drafts in `ready-for-buffer/` an; der vorhandene Draft-Workflow verifiziert **vor jedem** Buffer-Aufruf erneut Logo, Basisbild, Quellen und Zeitumrechnung.
+5. Fehlt eine Fähigkeit im Hintergrundlauf, bleibt der Beitrag außerhalb von `ready-for-buffer`; kein Fehler darf durch eine bloße Behauptung `checks: true` übersprungen werden. Die Bild-Erstellung und die Freigabe der tatsächlichen Publikation bleiben getrennte Vorgänge.
+
+**Nachgewiesener Bildtest:** [GitHub-Lauf #37899111557](https://github.com/derJosef/social-assets/actions/runs/37899111557) `success`; drei Dateien (Basis, Final, Receipt) auf GitHub. [Finale Testgrafik](../media/images/2026-10-09-automatisierung-probelauf-branded.png). Das ist ein **reiner Techniktest** und hat keinen weiteren Buffer-Beitrag erstellt.
+
+**Nachgewiesener Live-Pilot** (bestehende, ebenfalls verifizierte Grafik): [GitHub-Lauf #37898575725](https://github.com/derJosef/social-assets/actions/runs/37898575725), QA-Gate PASS, drei neue Buffer-Entwürfe. [Statusprüfung #37898698353](https://github.com/derJosef/social-assets/actions/runs/37898698353): alle drei `status=draft`, `dueAt=None`.
+
 ## Sicherheitsgrenzen und Tests
 
 - **Autonome Entwürfe** nur für Marke `ai-agent-builder`; nicht für Picture Fix oder Sticken-Lasern.
