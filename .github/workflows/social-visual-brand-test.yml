@@ -1,0 +1,159 @@
+name: Social Visual – Generate, Composite, Verify
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/social-visual-brand-test.yml'
+      - 'scripts/social_visual_e2e_20261008.py'
+      - 'scripts/logo_composite.py'
+      - 'scripts/test_logo_composite.py'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Smoke test, or brand a pre-existing logo-free PNG'
+        type: choice
+        required: true
+        default: smoketest
+        options:
+          - smoketest
+          - existing
+      source_image:
+        description: 'For existing mode: drafts/NAME.png or media/source-images/NAME.png'
+        type: string
+        required: false
+      output_name:
+        description: 'For existing mode: NEW filename under media/images/, ending .png'
+        type: string
+        required: false
+      heading_corner:
+        description: 'Main heading corner'
+        type: choice
+        required: true
+        default: top-left
+        options:
+          - top-left
+          - top-right
+          - bottom-left
+          - bottom-right
+      heading_box:
+        description: 'Heading pixel rectangle x0,y0,x1,y1 (mandatory for existing mode)'
+        type: string
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: social-visual-generation
+  cancel-in-progress: false
+
+jobs:
+  create-and-verify:
+    name: Deterministic logo compositing / no Buffer
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out authorized asset repository
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: true
+
+      - name: Configure Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install image tooling (no generative logo)
+        run: python -m pip install --disable-pip-version-check 'Pillow>=11,<13' 'numpy>=2,<3'
+
+      - name: Verify logo original and source consistency
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0  media/brand/logo-pauderer-original.png' | sha256sum -c -
+          python - <<'PY'
+          from PIL import Image
+          path='media/brand/logo-pauderer-original.png'
+          with Image.open(path) as im:
+              assert im.size == (1939,1324), f'Wrong logo dimensions: {im.size}'
+              print(f'ORIGINAL LOGO OK: {im.size}, mode={im.mode}')
+          PY
+
+      - name: Run original PersonalOS brand geometry regression tests
+        run: python -m unittest discover -s scripts -p 'test_logo_composite.py' -v
+
+      - name: Fetch Inter font for background typography
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 'https://raw.githubusercontent.com/google/fonts/main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf' -o /tmp/Inter.ttf
+          python - <<'PY'
+          from PIL import ImageFont
+          font=ImageFont.truetype('/tmp/Inter.ttf',33)
+          print('Inter loaded:', font.getname())
+          PY
+
+      - name: Generate background, composite exact logo and enforce verification gate
+        shell: bash
+        env:
+          INTER_FONT: /tmp/Inter.ttf
+          SOURCE_MODE: ${{ inputs.mode || 'smoketest' }}
+          INPUT_SOURCE_IMAGE: ${{ inputs.source_image || '' }}
+          INPUT_OUTPUT_NAME: ${{ inputs.output_name || '' }}
+          INPUT_HEADING_CORNER: ${{ inputs.heading_corner || 'top-left' }}
+          INPUT_HEADING_BOX: ${{ inputs.heading_box || '' }}
+        run: |
+          set -euo pipefail
+          if [[ "$SOURCE_MODE" == smoketest ]]; then
+            [[ "$INPUT_HEADING_CORNER" == top-left ]] || { echo 'Smoketest requires heading top-left' >&2; exit 1; }
+            SOURCE='drafts/.visual-e2e-base.png'
+            OUTPUT='media/images/2026-10-09-ein-agent-drei-tests-branded-test.png'
+            HEADING_BOX='58,138,700,365'
+            python scripts/social_visual_e2e_20261008.py
+          elif [[ "$SOURCE_MODE" == existing ]]; then
+            [[ "$INPUT_SOURCE_IMAGE" =~ ^(drafts|media/source-images)/[a-zA-Z0-9][a-zA-Z0-9_.-]*\.png$ ]] || { echo 'Invalid source path' >&2; exit 1; }
+            [[ "$INPUT_OUTPUT_NAME" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]*\.png$ ]] || { echo 'Invalid output name' >&2; exit 1; }
+            [[ "$INPUT_HEADING_BOX" =~ ^[0-9]+,[0-9]+,[0-9]+,[0-9]+$ ]] || { echo 'A valid heading box is required' >&2; exit 1; }
+            [[ -f "$INPUT_SOURCE_IMAGE" ]] || { echo 'Source PNG missing' >&2; exit 1; }
+            SOURCE="$INPUT_SOURCE_IMAGE"
+            OUTPUT="media/images/$INPUT_OUTPUT_NAME"
+            HEADING_BOX="$INPUT_HEADING_BOX"
+          else
+            echo 'Unsupported source mode' >&2; exit 1
+          fi
+          [[ ! -e "$OUTPUT" ]] || { echo "Output already exists; never overwrite: $OUTPUT" >&2; exit 1; }
+
+          python scripts/logo_composite.py compose "$SOURCE" "$OUTPUT" \
+            --heading-corner "$INPUT_HEADING_CORNER" \
+            --original media/brand/logo-pauderer-original.png \
+            --frame on --margin-ratio 0.05 --stroke-ratio 0.03
+          python scripts/logo_composite.py verify "$OUTPUT" "$SOURCE" \
+            --original media/brand/logo-pauderer-original.png \
+            --heading-corner "$INPUT_HEADING_CORNER" --heading-box "$HEADING_BOX"
+
+          test -s "$OUTPUT"
+          sha256sum "$OUTPUT"
+          echo "FINAL_IMAGE=$OUTPUT" >> "$GITHUB_ENV"
+          echo "Verified: $OUTPUT"
+
+      - name: Upload verified image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: social-image-verified
+          path: ${{ env.FINAL_IMAGE }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Commit only verified image (never send to Buffer)
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- "$FINAL_IMAGE"
+          [[ "$(git diff --cached --name-only | wc -l)" -eq 1 ]] || { echo 'Unexpected staged files' >&2; exit 1; }
+          git commit -m 'assets: verified branded social visual (no Buffer transfer)'
+          git push origin HEAD:main
+          echo "GITHUB_ASSET=https://github.com/${GITHUB_REPOSITORY}/blob/main/${FINAL_IMAGE}" >> "$GITHUB_STEP_SUMMARY"
+          echo "PASS: Original-Logo SHA, Kontur, diagonale Position, exakte Pixelpruefung. Kein Buffer-Aufruf." >> "$GITHUB_STEP_SUMMARY"
