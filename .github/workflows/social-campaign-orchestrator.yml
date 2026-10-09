@@ -132,7 +132,10 @@ jobs:
             "ready-for-buffer/auto-$CAMPAIGN-instagram.json"
           count="$(git diff --cached --name-only | wc -l)"
           [[ "$count" -eq 9 ]] || { echo "Nur 9 neue Dateien erlaubt; gefunden: $count" >&2; exit 1; }
-          git diff --cached --name-status | grep -v '^A[[:space:]]' && { echo 'Bestehende Dateien dürfen nicht geändert werden' >&2; exit 1; } || true
+          if git diff --cached --name-status | grep -v '^A[[:space:]]'; then
+            echo 'Bestehende Dateien dürfen nicht geändert werden' >&2
+            exit 1
+          fi
           git commit -m "campaign: verified autonomous draft package $CAMPAIGN"
           git push origin HEAD:main
           echo "9 markenkonforme Kampagnendateien committed. Buffer wird im selben Workflow ausgeführt." >> "$GITHUB_STEP_SUMMARY"
