@@ -99,7 +99,7 @@ class ScheduleTests(unittest.TestCase):
     def test_legacy_format_rejected(self):
         self.request["format_version"] = 1
         self.write_request()
-        with self.assertRaisesRegex(ValueError, "Format|v2"):
+        with self.assertRaisesRegex(ValueError, "Freigabe|freigabe"):
             module.inspect_request(self.request_file, self.now)
 
     def test_publish_fails_without_environment_approval(self):
