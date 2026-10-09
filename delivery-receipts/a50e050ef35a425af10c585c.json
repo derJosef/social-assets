@@ -1,0 +1,7 @@
+{
+  "draft_file": "ready-for-buffer/auto-2026-10-09-ki-chatdaten-drittanbieter-facebook.json",
+  "target": "facebook",
+  "draft_sha256": "4b9304aa5f39be29e2e6d240385d1f99cdc25d343c91021df1b456e0f4dc9ca7",
+  "state": "pending_manual_reconciliation_on_failure",
+  "github_run_id": "37926453890"
+}
