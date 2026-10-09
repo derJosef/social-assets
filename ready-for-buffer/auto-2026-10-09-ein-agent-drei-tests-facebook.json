@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "facebook",
+  "text": "Ein KI-Agent funktioniert in der Vorführung. Aber ist er schon bereit für deinen Betrieb?\n\nIch würde vor dem Einsatz drei Dinge getrennt prüfen:\n\n1. Modelltest: Löst er die eigentliche Aufgabe korrekt, auch bei komplizierten Dokumenten?\n2. Red Teaming: Was passiert bei falschen, widersprüchlichen oder manipulierten Eingaben?\n3. Nutzertest: Können Mitarbeitende die Ergebnisse verstehen, kontrollieren und Fehler vernünftig korrigieren?\n\nDiese drei Perspektiven gehören auch zum Evaluierungsansatz ARIA des US-Normungsinstituts NIST. Ergänzende Sicherheitsleitlinien von OWASP beschäftigen sich mit den Risiken von KI-Anwendungen und Agenten.\n\nEin überzeugender Prototyp ist ein Anfang. Für den Alltag braucht es dokumentierte Prüfungen – nicht nur ein gutes Bauchgefühl.\n\nWas würdest du bei einem KI-Agenten zuerst testen?\n\nQuellen: NIST ARIA Evaluation Planning Manual, 18.09.2026; OWASP GenAI Security Project, September 2026.\n\n#KIAgenten #Qualitätssicherung #Mittelstand",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-09-ein-agent-drei-tests-branded-test.png",
+        "alt_text": "Technische Prozessgrafik mit den drei Evaluationsschritten Modelltest, Red Teaming und Nutzertest; Markenlogo unten rechts."
+      }
+    ]
+  }
+}

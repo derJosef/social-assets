@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "instagram",
+  "text": "EIN AGENT. DREI TESTS.\n\nBevor ein KI-Agent im Unternehmen Aufgaben übernimmt, sollte er nicht nur eine schöne Demo liefern.\n\n01 MODELLTEST\nKann er die Aufgabe wirklich zuverlässig lösen?\n\n02 RED TEAMING\nWas passiert bei Fehlern, Grenzfällen oder manipulierten Eingaben?\n\n03 NUTZERTEST\nKommen die Menschen im Arbeitsalltag mit den Ergebnissen und Ausnahmen zurecht?\n\nDiese drei Testperspektiven nennt auch der NIST-Leitfaden zur ARIA-Evaluierung (09/2026). Für Sicherheitsfragen bieten die OWASP-Ressourcen zusätzliche Orientierung.\n\nErst prüfen. Dann einsetzen.\n\nWelcher Test wäre für deinen Betrieb besonders wichtig?\n\n#KIAgenten #AITesting #AIService #Mittelstand",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-09-ein-agent-drei-tests-branded-test.png",
+        "alt_text": "Technische Prozessgrafik mit den drei Evaluationsschritten Modelltest, Red Teaming und Nutzertest; Markenlogo unten rechts."
+      }
+    ]
+  }
+}

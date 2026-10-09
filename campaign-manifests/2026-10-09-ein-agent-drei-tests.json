@@ -1,0 +1,58 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-09-ein-agent-drei-tests",
+  "checked_at": "2026-10-09",
+  "sources": [
+    {
+      "url": "https://www.nist.gov/publications/aria-evaluation-planning-manual-elements-aria-style-ai-evaluations",
+      "published_at": "2026-09-18",
+      "checked_at": "2026-10-09"
+    },
+    {
+      "url": "https://genai.owasp.org/2026/09/01/owasp-genai-security-project-unveils-2026-top-10-for-llm-applications-new-agent-control-standard-and-sponsors-as-community-tops-30000-members/",
+      "published_at": "2026-09-01",
+      "checked_at": "2026-10-09"
+    }
+  ],
+  "checks": {
+    "novelty": true,
+    "claims_with_sources": true,
+    "language_and_cta": true,
+    "six_hats": true,
+    "privacy_and_rights": true,
+    "brand_image": true,
+    "posting_time_research": true
+  },
+  "image": {
+    "final": "media/images/2026-10-09-ein-agent-drei-tests-branded-test.png",
+    "base": "media/source-images/2026-10-09-ein-agent-drei-tests-base.png",
+    "sha256": "7afe237cb3d0017562a0dd96b587fcdace1751c0019b23fc388097a1a7c2b1e0",
+    "heading_corner": "top-left",
+    "heading_box": [
+      58,
+      138,
+      700,
+      365
+    ]
+  },
+  "posts": {
+    "linkedin": "ready-for-buffer/auto-2026-10-09-ein-agent-drei-tests-linkedin.json",
+    "facebook": "ready-for-buffer/auto-2026-10-09-ein-agent-drei-tests-facebook.json",
+    "instagram": "ready-for-buffer/auto-2026-10-09-ein-agent-drei-tests-instagram.json"
+  },
+  "posting_times": {
+    "linkedin": {
+      "local": "2026-11-04T16:00:00+01:00",
+      "utc": "2026-11-04T15:00:00Z"
+    },
+    "facebook": {
+      "local": "2026-11-10T19:00:00+01:00",
+      "utc": "2026-11-10T18:00:00Z"
+    },
+    "instagram": {
+      "local": "2026-11-11T18:00:00+01:00",
+      "utc": "2026-11-11T17:00:00Z"
+    }
+  }
+}

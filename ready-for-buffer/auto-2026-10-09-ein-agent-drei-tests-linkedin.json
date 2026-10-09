@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "linkedin",
+  "text": "Ein KI-Agent überzeugt im Demo-Termin. Aber hält er auch im Arbeitsalltag stand?\n\nBevor ein KI-Agent reale Vorgänge übernimmt, würde ich ihn durch drei unterschiedliche Tests schicken:\n\n1. MODELLTEST – Kann das System die eigentliche Aufgabe zuverlässig lösen? Beispiel: Erkennt es aus einer Auftragsbestätigung mehrere unterschiedliche Liefertermine und ordnet sie korrekt zu?\n\n2. RED TEAMING – Was passiert, wenn die Eingabe unvollständig, widersprüchlich oder gezielt manipuliert ist? Erkennt das System problematische Anweisungen und bleibt es innerhalb seines vorgesehenen Ablaufs?\n\n3. NUTZERTEST – Können die Menschen, die damit arbeiten, Ergebnisse nachvollziehen, Fehler erkennen und Ausnahmen vernünftig bearbeiten?\n\nDas sind keine drei Namen für denselben Test. Jeder prüft eine andere Schwachstelle.\n\nDer NIST-Leitfaden zur ARIA-Evaluierung vom September 2026 unterscheidet ausdrücklich Model Testing, Red Teaming und User Testing. Die OWASP-Leitlinien zeigen ergänzend, warum bei agentischen Systemen nicht nur die Antwort, sondern auch die reale Auswirkung ihrer Handlungen zählt.\n\nFür mich ist deshalb ein erfolgreicher Demo-Lauf noch keine Produktionsfreigabe. Entscheidend sind dokumentierte Testfälle, klare Abbruchkriterien und eine nachvollziehbare Bewertung im konkreten Geschäftsprozess.\n\nWelche dieser drei Prüfungen fehlt bei KI-Projekten deiner Erfahrung nach am häufigsten?\n\nQuellen:\nNIST, ARIA Evaluation Planning Manual (18.09.2026)\nOWASP GenAI Security Project, aktualisierte Sicherheitsressourcen (09/2026)\n\n#KIAgenten #AITesting #Qualitätssicherung #Mittelstand",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-09-ein-agent-drei-tests-branded-test.png",
+        "alt_text": "Technische Prozessgrafik mit den drei Evaluationsschritten Modelltest, Red Teaming und Nutzertest; Markenlogo unten rechts."
+      }
+    ]
+  }
+}
