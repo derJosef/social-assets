@@ -1,0 +1,29 @@
+{
+  "started_at": "2026-10-09T11:45:24.729887+00:00",
+  "mode": "drafts",
+  "state": "blocked",
+  "steps": {
+    "brief": {
+      "status": "PASS",
+      "detail": ""
+    },
+    "primary_source_fetch": {
+      "status": "PASS",
+      "detail": "3 Quellen"
+    },
+    "time_studies": {
+      "status": "PASS",
+      "detail": "2 Studien"
+    },
+    "blocker": {
+      "status": "BLOCKED",
+      "detail": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+    }
+  },
+  "campaign": "2026-10-09-ki-chatdaten-drittanbieter",
+  "finished_at": "2026-10-09T11:45:29.166333+00:00",
+  "github_run_id": "37925672233",
+  "github_run_url": "https://github.com/derJosef/social-assets/actions/runs/37925672233",
+  "job_status": "failure",
+  "receipt_at": "2026-10-09T11:45:29.225621+00:00"
+}
