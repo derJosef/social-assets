@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "linkedin",
+  "text": "Dein KI-Agent kennt vielleicht Kundennamen, Rechnungen und interne Abläufe. Aber weißt du, welche Drittdienste Informationen aus dem Chat tatsächlich erhalten?\n\nEine Untersuchung von IMDEA Networks zu ausgewählten KI-Chatdiensten zeigt: In getesteten Verbraucher-Websites und Android-Apps konnten gesprächsbezogene Informationen an externe Dienste übertragen werden. Je nach Anwendung waren das beispielsweise Metadaten oder einzelne Inhalte. Daraus folgt nicht, dass jeder Anbieter vollständige Chats weitergibt – und auch nicht, dass dieselben Datenflüsse für Enterprise- oder API-Verträge gelten.\n\nFür Unternehmen ist das ein guter Anlass, drei Fragen vor dem Einsatz eines KI-Agenten zu stellen:\n\n1. DATEN: Welche vertraulichen Informationen dürfen überhaupt in den Prozess gelangen?\n2. DATENFLÜSSE: Welche Plattformen, Telemetrie- und Drittanbieter-Dienste erhalten dabei Informationen?\n3. KONTROLLE: Wie sind Rollen, Verträge, Protokollierung und Freigaben geregelt?\n\nEine Datenschutzerklärung allein ersetzt keine konkrete technische und vertragliche Prüfung. Gerade wenn ein Agent eigenständig Dokumente liest und Aktionen ausführt, müssen Datenwege und Verantwortlichkeiten nachvollziehbar sein.\n\nWie prüfst du heute, welche Daten dein eingesetzter KI-Dienst tatsächlich weitergibt?\n\nQuelle: IMDEA Networks, „Your conversations with AI may not be as private as you think“; Hintergrundbericht: BASIC thinking, 08.10.2026.\n\n#KIAgenten #Datenschutz #KIimMittelstand #Governance",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-09-ki-chatdaten-drittanbieter-branded.png",
+        "alt_text": "WER LIEST MIT? – drei Prozessschritte, Originalmarke unten rechts."
+      }
+    ]
+  }
+}

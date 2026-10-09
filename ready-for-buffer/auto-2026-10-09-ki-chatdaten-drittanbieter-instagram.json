@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "instagram",
+  "text": "WER LIEST BEI DEINEM KI-CHAT MIT?\n\nEin KI-Agent kann sensible Geschäftsinformationen verarbeiten. Aber wohin fließen sie?\n\nEine Untersuchung von IMDEA Networks hat bei ausgewählten Verbraucher-KI-Diensten Übertragungen gesprächsbezogener Daten an Dritte festgestellt.\n\nDas bedeutet NICHT, dass alle KI-Produkte vollständige Chatverläufe weitergeben. Unternehmenslösungen und APIs müssen gesondert bewertet werden.\n\nDREI PRÜFFRAGEN:\n01 Welche Daten verarbeitet der Agent?\n02 Welche Drittanbieter erhalten Informationen?\n03 Wer kontrolliert Zugriff und Freigaben?\n\nDatenschutz beginnt nicht erst mit einem Vertrag – auch die technischen Datenwege zählen.\n\nWas würdest du vor einem KI-Agenten-Einsatz zuerst überprüfen?\n\nQuellen: IMDEA Networks, BASIC thinking (08.10.2026).\n\n#KIimUnternehmen #KIAgenten #Datenschutz",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-09-ki-chatdaten-drittanbieter-branded.png",
+        "alt_text": "WER LIEST MIT? – drei Prozessschritte, Originalmarke unten rechts."
+      }
+    ]
+  }
+}

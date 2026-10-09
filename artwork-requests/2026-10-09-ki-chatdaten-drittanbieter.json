@@ -1,0 +1,23 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-09-ki-chatdaten-drittanbieter",
+  "badge": "KI & DATENSCHUTZ",
+  "headline": "WER LIEST MIT?",
+  "subtitle": "Datenflüsse von KI-Agenten prüfen.",
+  "cards": [
+    {
+      "title": "DATEN",
+      "description": "Welche Informationen fließen ein?"
+    },
+    {
+      "title": "DRITTSYSTEME",
+      "description": "Welche Dienste erhalten Daten?"
+    },
+    {
+      "title": "KONTROLLE",
+      "description": "Wer prüft Rechte und Verträge?"
+    }
+  ],
+  "closing": "Nicht nur vertrauen. Datenwege prüfen."
+}

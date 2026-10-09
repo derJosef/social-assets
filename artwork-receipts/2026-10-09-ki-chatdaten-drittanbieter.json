@@ -1,0 +1,16 @@
+{
+  "campaign_id": "2026-10-09-ki-chatdaten-drittanbieter",
+  "brand": "ai-agent-builder",
+  "status": "verified_image_only",
+  "base": "media/source-images/2026-10-09-ki-chatdaten-drittanbieter-base.png",
+  "final": "media/images/2026-10-09-ki-chatdaten-drittanbieter-branded.png",
+  "sha256": "b2b8d88131cec0d4d6ccbdf2a8d4cbef91fc3f713c33dd8c04c219865657646f",
+  "heading_corner": "top-left",
+  "heading_box": [
+    58,
+    145,
+    593,
+    328
+  ],
+  "logo_original_sha256": "15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0"
+}

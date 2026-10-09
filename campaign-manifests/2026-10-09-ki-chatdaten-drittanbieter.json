@@ -1,0 +1,63 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-09-ki-chatdaten-drittanbieter",
+  "checked_at": "2026-10-09",
+  "sources": [
+    {
+      "url": "https://www.basicthinking.de/blog/2026/10/08/datenschutz-ki-anbieter-geben-sogar-chatdaten-weiter/",
+      "published_at": "2026-10-08",
+      "checked_at": "2026-10-09"
+    },
+    {
+      "url": "https://networks.imdea.org/your-conversations-with-ai-may-not-be-as-private-as-you-think/",
+      "published_at": "2026-05-06",
+      "checked_at": "2026-10-09"
+    },
+    {
+      "url": "https://dspace.networks.imdea.org/handle/20.500.12761/2073",
+      "published_at": "2026-09-22",
+      "checked_at": "2026-10-09"
+    }
+  ],
+  "checks": {
+    "novelty": true,
+    "claims_with_sources": true,
+    "language_and_cta": true,
+    "six_hats": true,
+    "privacy_and_rights": true,
+    "brand_image": true,
+    "posting_time_research": true
+  },
+  "image": {
+    "final": "media/images/2026-10-09-ki-chatdaten-drittanbieter-branded.png",
+    "base": "media/source-images/2026-10-09-ki-chatdaten-drittanbieter-base.png",
+    "sha256": "b2b8d88131cec0d4d6ccbdf2a8d4cbef91fc3f713c33dd8c04c219865657646f",
+    "heading_corner": "top-left",
+    "heading_box": [
+      58,
+      145,
+      593,
+      328
+    ]
+  },
+  "posts": {
+    "linkedin": "ready-for-buffer/auto-2026-10-09-ki-chatdaten-drittanbieter-linkedin.json",
+    "facebook": "ready-for-buffer/auto-2026-10-09-ki-chatdaten-drittanbieter-facebook.json",
+    "instagram": "ready-for-buffer/auto-2026-10-09-ki-chatdaten-drittanbieter-instagram.json"
+  },
+  "posting_times": {
+    "linkedin": {
+      "local": "2026-11-18T16:00:00+01:00",
+      "utc": "2026-11-18T15:00:00Z"
+    },
+    "facebook": {
+      "local": "2026-11-24T19:00:00+01:00",
+      "utc": "2026-11-24T18:00:00Z"
+    },
+    "instagram": {
+      "local": "2026-11-25T18:00:00+01:00",
+      "utc": "2026-11-25T17:00:00Z"
+    }
+  }
+}
