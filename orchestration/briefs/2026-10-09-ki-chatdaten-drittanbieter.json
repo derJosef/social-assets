@@ -1,0 +1,25 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-09-ki-chatdaten-drittanbieter",
+  "execution_mode": "smoke",
+  "topic": "Dokumentbasierter Praxistest zu einem BASIC-thinking-Bericht vom 08.10.2026: Eine IMDEA-Networks-Untersuchung analysiert, welche gesprächsbezogenen Informationen in getesteten Verbraucher-KI-Chats an Drittparteien übertragen werden können. Für den B2B-Mittelstand sachlich einordnen: keine pauschalen Vorwürfe, Consumer gegen Enterprise/API unterscheiden, Datenflüsse und Auftragsverarbeitung vor KI-Agenteneinsatz prüfen.",
+  "sources": [
+    {
+      "url": "https://www.basicthinking.de/blog/2026/10/08/datenschutz-ki-anbieter-geben-sogar-chatdaten-weiter/",
+      "published_at": "2026-10-08"
+    },
+    {
+      "url": "https://networks.imdea.org/your-conversations-with-ai-may-not-be-as-private-as-you-think/",
+      "published_at": "2026-05-06"
+    },
+    {
+      "url": "https://dspace.networks.imdea.org/handle/20.500.12761/2073",
+      "published_at": "2026-09-22"
+    }
+  ],
+  "posting_sources": [
+    "https://buffer.com/resources/best-time-to-post-on-linkedin/",
+    "https://sproutsocial.com/insights/best-times-to-post-on-linkedin/"
+  ]
+}
