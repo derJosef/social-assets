@@ -93,7 +93,7 @@ class AutonomousCampaignGateTests(unittest.TestCase):
     def test_three_channel_preflight_passes_and_does_not_send(self):
         with tempfile.TemporaryDirectory() as td:
             paths, manifest, _=self.create_fixture(td)
-            with patch.object(gate,"ROOT",Path(td)), patch("buffer_draft.ROOT",Path(td)):
+            with patch.object(gate,"ROOT",Path(td)), patch.dict(gate.read_draft.__globals__,{"ROOT":Path(td)}):
                 r=gate.check_campaign(list(paths.values()),today=date(2026,10,9),verify_image=False)
             self.assertEqual(r["status"],"eligible_for_draft_only")
             self.assertEqual(r["scheduling"],"proposal_only")
@@ -103,7 +103,7 @@ class AutonomousCampaignGateTests(unittest.TestCase):
             paths, manifest, m=self.create_fixture(td)
             manifest["checks"]["claims_with_sources"]=False
             m.write_text(json.dumps(manifest),encoding="utf-8")
-            with patch.object(gate,"ROOT",Path(td)),patch("buffer_draft.ROOT",Path(td)):
+            with patch.object(gate,"ROOT",Path(td)),patch.dict(gate.read_draft.__globals__,{"ROOT":Path(td)}):
                 with self.assertRaisesRegex(ValueError,"QA-Nachweise"):
                     gate.check_campaign(list(paths.values()),today=date(2026,10,9),verify_image=False)
 
@@ -112,7 +112,7 @@ class AutonomousCampaignGateTests(unittest.TestCase):
             paths, manifest, m=self.create_fixture(td)
             manifest["image"]["sha256"]="0"*64
             m.write_text(json.dumps(manifest),encoding="utf-8")
-            with patch.object(gate,"ROOT",Path(td)),patch("buffer_draft.ROOT",Path(td)):
+            with patch.object(gate,"ROOT",Path(td)),patch.dict(gate.read_draft.__globals__,{"ROOT":Path(td)}):
                 with self.assertRaisesRegex(ValueError,"Bildpruefsumme"):
                     gate.check_campaign(list(paths.values()),today=date(2026,10,9),verify_image=False)
 
@@ -121,7 +121,7 @@ class AutonomousCampaignGateTests(unittest.TestCase):
             paths, manifest, m=self.create_fixture(td)
             manifest["posting_times"]["linkedin"]["utc"]="2026-11-04T14:00:00Z"
             m.write_text(json.dumps(manifest),encoding="utf-8")
-            with patch.object(gate,"ROOT",Path(td)),patch("buffer_draft.ROOT",Path(td)):
+            with patch.object(gate,"ROOT",Path(td)),patch.dict(gate.read_draft.__globals__,{"ROOT":Path(td)}):
                 with self.assertRaisesRegex(ValueError,"Sommerzeit"):
                     gate.check_campaign(list(paths.values()),today=date(2026,10,9),verify_image=False)
 
@@ -129,7 +129,7 @@ class AutonomousCampaignGateTests(unittest.TestCase):
         from subprocess import CalledProcessError
         with tempfile.TemporaryDirectory() as td:
             paths, manifest, _=self.create_fixture(td)
-            with patch.object(gate,"ROOT",Path(td)),patch("buffer_draft.ROOT",Path(td)):
+            with patch.object(gate,"ROOT",Path(td)),patch.dict(gate.read_draft.__globals__,{"ROOT":Path(td)}):
                 with patch.object(gate.subprocess,"run",side_effect=CalledProcessError(1,"logo verify")):
                     with self.assertRaises(CalledProcessError):
                         gate.check_campaign(list(paths.values()),today=date(2026,10,9),verify_image=True)
