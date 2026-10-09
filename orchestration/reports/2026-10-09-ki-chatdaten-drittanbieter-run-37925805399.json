@@ -1,0 +1,29 @@
+{
+  "started_at": "2026-10-09T11:46:41.057426+00:00",
+  "mode": "drafts",
+  "state": "blocked",
+  "steps": {
+    "brief": {
+      "status": "PASS",
+      "detail": ""
+    },
+    "primary_source_fetch": {
+      "status": "PASS",
+      "detail": "3 Quellen"
+    },
+    "time_studies": {
+      "status": "PASS",
+      "detail": "2 Studien"
+    },
+    "blocker": {
+      "status": "BLOCKED",
+      "detail": "Blocked: Modellantwort ist kein JSON-Objekt (HTTP 200, Bytes=4, Content-Type=text/plain)"
+    }
+  },
+  "campaign": "2026-10-09-ki-chatdaten-drittanbieter",
+  "finished_at": "2026-10-09T11:46:46.547532+00:00",
+  "github_run_id": "37925805399",
+  "github_run_url": "https://github.com/derJosef/social-assets/actions/runs/37925805399",
+  "job_status": "failure",
+  "receipt_at": "2026-10-09T11:46:46.605137+00:00"
+}
