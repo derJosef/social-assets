@@ -146,6 +146,15 @@ def call_model(messages, *, max_tokens=3100):
 def select_times(today):
     # Only proposals! UTC conversion uses actual Europe/Berlin DST.
     floor=max(today + timedelta(days=14), date(2026,11,2))
+    # Avoid previously documented proposed publishing slots.
+    for file in (ROOT/"campaign-manifests").glob("*.json"):
+        try:
+            previous=json.loads(file.read_text(encoding="utf-8"))
+            for timing in previous.get("posting_times",{}).values():
+                last_day=datetime.fromisoformat(timing["local"]).astimezone(TIMEZONE).date()
+                floor=max(floor,last_day+timedelta(days=7))
+        except (OSError,ValueError,KeyError,TypeError):
+            continue
     targets=[("linkedin",2,16),("facebook",1,19),("instagram",2,18)]
     out={}
     for target,weekday,hour in targets:
