@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'scripts/buffer_draft.py'
+      - 'scripts/autonomous_campaign_gate.py'
+      - 'scripts/social_visual_from_spec.py'
       - 'tests/**'
       - '.github/workflows/buffer-tests.yml'
       - '.github/workflows/buffer-auto-drafts.yml'
@@ -26,7 +28,7 @@ jobs:
           persist-credentials: false
 
       - name: Syntaxcheck
-        run: python3 -B -m py_compile scripts/buffer_draft.py tests/test_buffer_draft.py
+        run: python3 -B -m py_compile scripts/buffer_draft.py scripts/autonomous_campaign_gate.py scripts/social_visual_from_spec.py tests/test_buffer_draft.py tests/test_autonomous_campaign_gate.py
 
       - name: Offline-Regressionsprüfungen
         env:
