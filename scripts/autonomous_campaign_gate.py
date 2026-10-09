@@ -88,8 +88,9 @@ def check_campaign(post_paths: list[str], today: date | None = None, verify_imag
         require(u.netloc.lower() not in ("github.com", "raw.githubusercontent.com", "buffer.com"),
                 "Keine bloessen Asset-/Plattformlinks als Recherchequellen")
         domains.add(u.netloc.lower())
-        date.fromisoformat(source["published_at"])
-        require(date.fromisoformat(source["checked_at"]) <= today, "Quellenabruf in der Zukunft")
+        published = date.fromisoformat(source["published_at"])
+        source_checked = date.fromisoformat(source["checked_at"])
+        require(published <= source_checked <= today, "Unplausible Quelle: Publikations- oder Abrufdatum")
     require(len(domains) >= 2, "Mindestens zwei voneinander getrennte Quellen-Domains")
     checks = manifest["checks"]
     require(isinstance(checks, dict) and set(checks) == set(REQUIRED_CHECKS)
@@ -149,8 +150,8 @@ def check_campaign(post_paths: list[str], today: date | None = None, verify_imag
         require(local.astimezone(timezone.utc) == proposed
                 and proposed.astimezone(tz).isoformat(timespec="seconds") == local.isoformat(timespec="seconds"),
                 "Fehler bei Europe/Berlin-Zeitzone oder Sommerzeit")
-        require(proposed > datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc),
-                "Terminvorschlag liegt in der Vergangenheit")
+        require(proposed > datetime.now(timezone.utc) + timedelta(minutes=10),
+                "Terminvorschlag muss mindestens zehn Minuten in der Zukunft liegen")
     return {"campaign": campaign, "targets": list(TARGETS), "image_sha256": digest,
             "status": "eligible_for_draft_only", "scheduling": "proposal_only"}
 
