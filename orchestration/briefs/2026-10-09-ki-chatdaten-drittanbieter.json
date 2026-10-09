@@ -21,5 +21,44 @@
   "posting_sources": [
     "https://buffer.com/resources/best-time-to-post-on-linkedin/",
     "https://sproutsocial.com/insights/best-times-to-post-on-linkedin/"
-  ]
+  ],
+  "prepared_content": {
+    "posts": {
+      "linkedin": "Dein KI-Agent kennt vielleicht Kundennamen, Rechnungen und interne Abläufe. Aber weißt du, welche Drittdienste Informationen aus dem Chat tatsächlich erhalten?\n\nEine Untersuchung von IMDEA Networks zu ausgewählten KI-Chatdiensten zeigt: In getesteten Verbraucher-Websites und Android-Apps konnten gesprächsbezogene Informationen an externe Dienste übertragen werden. Je nach Anwendung waren das beispielsweise Metadaten oder einzelne Inhalte. Daraus folgt nicht, dass jeder Anbieter vollständige Chats weitergibt – und auch nicht, dass dieselben Datenflüsse für Enterprise- oder API-Verträge gelten.\n\nFür Unternehmen ist das ein guter Anlass, drei Fragen vor dem Einsatz eines KI-Agenten zu stellen:\n\n1. DATEN: Welche vertraulichen Informationen dürfen überhaupt in den Prozess gelangen?\n2. DATENFLÜSSE: Welche Plattformen, Telemetrie- und Drittanbieter-Dienste erhalten dabei Informationen?\n3. KONTROLLE: Wie sind Rollen, Verträge, Protokollierung und Freigaben geregelt?\n\nEine Datenschutzerklärung allein ersetzt keine konkrete technische und vertragliche Prüfung. Gerade wenn ein Agent eigenständig Dokumente liest und Aktionen ausführt, müssen Datenwege und Verantwortlichkeiten nachvollziehbar sein.\n\nWie prüfst du heute, welche Daten dein eingesetzter KI-Dienst tatsächlich weitergibt?\n\nQuelle: IMDEA Networks, „Your conversations with AI may not be as private as you think“; Hintergrundbericht: BASIC thinking, 08.10.2026.\n\n#KIAgenten #Datenschutz #KIimMittelstand #Governance",
+      "facebook": "Du lässt einen KI-Agenten Rechnungen oder Kundenanfragen bearbeiten. Wer kann die dabei verwendeten Informationen außer deinem Unternehmen sehen?\n\nForscher von IMDEA Networks haben ausgewählte Verbraucher-KI-Chats untersucht und Datenflüsse zu Drittanbietern beobachtet. Wichtig: Das ist kein Beleg dafür, dass alle KI-Anbieter komplette Gesprächsverläufe verkaufen. Unternehmens- und API-Angebote müssen separat geprüft werden.\n\nFür die Praxis helfen drei Kontrollen:\n\n• Welche Daten darf der Agent lesen und verarbeiten?\n• An welche Dienste werden Inhalte oder Metadaten übertragen?\n• Sind Berechtigungen, Verträge und Freigaben sauber geregelt?\n\nMein Ansatz: Erst die tatsächlichen Datenwege nachvollziehen, dann den Agenten für den Arbeitsprozess freigeben.\n\nHast du bei deinen KI-Werkzeugen schon einmal die Drittanbieter-Verbindungen geprüft?\n\nQuellen: IMDEA Networks; BASIC thinking vom 08.10.2026.\n\n#KIAgenten #Datenschutz #Mittelstand",
+      "instagram": "WER LIEST BEI DEINEM KI-CHAT MIT?\n\nEin KI-Agent kann sensible Geschäftsinformationen verarbeiten. Aber wohin fließen sie?\n\nEine Untersuchung von IMDEA Networks hat bei ausgewählten Verbraucher-KI-Diensten Übertragungen gesprächsbezogener Daten an Dritte festgestellt.\n\nDas bedeutet NICHT, dass alle KI-Produkte vollständige Chatverläufe weitergeben. Unternehmenslösungen und APIs müssen gesondert bewertet werden.\n\nDREI PRÜFFRAGEN:\n01 Welche Daten verarbeitet der Agent?\n02 Welche Drittanbieter erhalten Informationen?\n03 Wer kontrolliert Zugriff und Freigaben?\n\nDatenschutz beginnt nicht erst mit einem Vertrag – auch die technischen Datenwege zählen.\n\nWas würdest du vor einem KI-Agenten-Einsatz zuerst überprüfen?\n\nQuellen: IMDEA Networks, BASIC thinking (08.10.2026).\n\n#KIimUnternehmen #KIAgenten #Datenschutz"
+    },
+    "visual": {
+      "badge": "KI & DATENSCHUTZ",
+      "headline": "WER LIEST MIT?",
+      "subtitle": "Datenflüsse von KI-Agenten prüfen.",
+      "cards": [
+        {
+          "title": "DATEN",
+          "description": "Welche Informationen fließen ein?"
+        },
+        {
+          "title": "DRITTSYSTEME",
+          "description": "Welche Dienste erhalten Daten?"
+        },
+        {
+          "title": "KONTROLLE",
+          "description": "Wer prüft Rechte und Verträge?"
+        }
+      ],
+      "closing": "Nicht nur vertrauen. Datenwege prüfen."
+    },
+    "six_hats": {
+      "white": "IMDEA Networks untersuchte konkrete Verbraucher-KI-Dienste; pauschale Aussagen zu Enterprise-Produkten wären nicht belegt.",
+      "red": "Die Frage nach vertraulichen Kundendaten ist nachvollziehbar, ohne einzelne Anbieter unnötig anzugreifen.",
+      "black": "Kein allgemeiner Beweis für vollständige Chatweitergabe; keine pauschalen Rechtswidrigkeits- oder Produktbehauptungen.",
+      "yellow": "Drei überprüfbare Kontrollpunkte helfen mittelständischen Unternehmen beim sicheren Einsatz von KI-Agenten.",
+      "green": "Datenflüsse als praktische Prüfkette aus Datenkategorien, Drittanbietern und Freigabeverantwortung darstellen.",
+      "blue": "Drei eigenständige Plattformtexte, ein geprüftes Original-Logo-Bild und Terminplanung ohne Buffer-Veröffentlichung."
+    },
+    "risks": [
+      "Die Studie betrifft bestimmte Consumer-Web-/Android-Dienste und ist nicht automatisch auf API- oder Enterprise-Angebote übertragbar.",
+      "Ein beobachteter Drittanbieter-Datenfluss beweist für sich genommen keine rechtswidrige Verarbeitung. Vertrags- und Produktspezifika bleiben gesondert zu prüfen."
+    ]
+  }
 }
