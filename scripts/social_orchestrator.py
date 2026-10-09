@@ -14,6 +14,7 @@ import re
 import sys
 import urllib.parse
 import urllib.request
+import urllib.error
 from datetime import date, datetime, timedelta, time, timezone
 from html.parser import HTMLParser
 from pathlib import Path
@@ -115,7 +116,7 @@ def call_model(messages, *, max_tokens=3100):
         token=os.environ.get("GITHUB_TOKEN","")
         require(bool(token),"Kein OpenAI-Secret oder GitHub-Models-Token verfügbar")
         api="https://models.github.ai/inference/chat/completions"
-        model=os.environ.get("SOCIAL_GITHUB_MODEL","openai/gpt-4.1-mini")
+        model=os.environ.get("SOCIAL_GITHUB_MODEL","openai/gpt-4o-mini")
     payload={"model":model,"messages":messages,"temperature":0.2,"max_tokens":max_tokens,
              "response_format":{"type":"json_object"}}
     data=json.dumps(payload).encode()
@@ -156,8 +157,7 @@ def assess_generated(g):
         v=g["posts"][t]
         require(isinstance(v,str) and 250<=len(v)<= (2200 if t=="instagram" else 3000),
                 f"{t} Text fehlt, zu kurz oder zu lang")
-        require("http" not in v or all("https://" in x for x in v.split("http")[1:]),
-                "Ungeprüfte Links im Text")
+        require(not re.search(r"(?<!s)http://",v), "Unsichere HTTP-Links im Beitrag")
     require(isinstance(g["six_hats"],dict) and set(g["six_hats"]) ==
             {"white","red","black","yellow","green","blue"}
             and all(isinstance(v,str) and len(v)>24 for v in g["six_hats"].values()),
