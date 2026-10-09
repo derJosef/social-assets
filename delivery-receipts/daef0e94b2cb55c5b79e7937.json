@@ -2,6 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-09-ein-agent-drei-tests-linkedin.json",
   "target": "linkedin",
   "draft_sha256": "0fab3c33e8c657399334c70b8d54a99da63f3312b1587b2361cb3814e749f859",
-  "state": "pending_manual_reconciliation_on_failure",
-  "github_run_id": "37898575725"
+  "state": "draft_created",
+  "github_run_id": "37898575725",
+  "buffer_post_id": "6ac8961e7d9f9f33012bc9cd"
 }
