@@ -2,6 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-09-ki-chatdaten-drittanbieter-linkedin.json",
   "target": "linkedin",
   "draft_sha256": "309c8dfa8190320e1cbd6015f2df4957516a451ce9304f57a64df9deadf32aad",
-  "state": "pending_manual_reconciliation_on_failure",
-  "github_run_id": "37926453890"
+  "state": "draft_created",
+  "github_run_id": "37926453890",
+  "buffer_post_id": "6ac8d5a926e224ee545ee6b5"
 }
