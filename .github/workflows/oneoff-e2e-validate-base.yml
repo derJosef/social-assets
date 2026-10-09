@@ -26,13 +26,15 @@ jobs:
           mkdir -p media/source-images
           BASE='media/source-images/2026-10-09-ein-agent-drei-tests-base.png'
           OUTPUT='media/images/2026-10-09-ein-agent-drei-tests-branded-test.png'
-          [[ ! -e "$BASE" ]]
-          cp drafts/.visual-e2e-base.png "$BASE"
+          if [[ ! -e "$BASE" ]]; then cp drafts/.visual-e2e-base.png "$BASE"; fi
           python scripts/logo_composite.py verify "$OUTPUT" "$BASE" \
             --original media/brand/logo-pauderer-original.png \
             --heading-corner top-left --heading-box 58,138,700,365
+          echo "FINAL_SHA256: $(sha256sum "$OUTPUT")"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -- "$BASE"
-          git commit -m 'assets: preserve verifiable logo-free source for tested visual'
-          git push origin HEAD:main
+          if ! git diff --cached --quiet; then
+            git commit -m 'assets: preserve verifiable logo-free source for tested visual'
+            git push origin HEAD:main
+          fi
