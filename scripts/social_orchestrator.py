@@ -47,7 +47,8 @@ def load_brief(path):
     file = (ROOT/path).resolve(strict=True)
     require(file.is_relative_to(ROOT) and file.is_file(), "ungültiger Auftragsdateipfad")
     j = json.loads(file.read_text(encoding="utf-8"))
-    require(isinstance(j, dict) and set(j) == {"format_version","brand","campaign_id","topic","sources","posting_sources","execution_mode"},
+    fields={"format_version","brand","campaign_id","topic","sources","posting_sources","execution_mode"}
+    require(isinstance(j, dict) and set(j) in (fields, fields | {"prepared_content"}),
             "Brief-Schema ungültig")
     cid = Path(path).stem
     require(j["format_version"] == 1 and j["brand"] == "ai-agent-builder"
