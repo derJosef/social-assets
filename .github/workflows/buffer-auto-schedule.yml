@@ -1,76 +1,153 @@
-name: Buffer – freigegebene Entwürfe automatisch terminieren
+name: Buffer – nur manuell freigegebene Veröffentlichung
 
+# Eine neue Datei in ready-to-schedule löst NIE mehr automatisch eine Veröffentlichung aus.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'ready-to-schedule/*.json'
+  workflow_dispatch:
+    inputs:
+      request_file:
+        description: 'Vorhandene ready-to-schedule/*.json (v2)'
+        type: string
+        required: true
 
 permissions:
-  contents: write # Nur für einmalige Terminierungsbelege.
-
+  contents: read
 concurrency:
-  group: buffer-schedule-single-flight
+  group: buffer-publish-approval
   cancel-in-progress: false
 
 jobs:
-  schedule-existing-drafts:
-    name: Nur neue, einzeln freigegebene Termine übernehmen
+  plan:
+    name: Terminanfrage ohne Buffer-Schlüssel prüfen
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    outputs:
+      request: ${{ steps.review.outputs.request }}
+      request_sha: ${{ steps.review.outputs.request_sha }}
+      draft: ${{ steps.review.outputs.draft }}
+      draft_sha: ${{ steps.review.outputs.draft_sha }}
+      post_id: ${{ steps.review.outputs.post_id }}
     steps:
-      - name: Repository mit Git-Historie auschecken
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
         with:
-          fetch-depth: 0
+          ref: main
           persist-credentials: false
-
-      - name: Offline-Sicherheitstests
-        run: python3 -m unittest discover -s tests -p 'test_buffer_schedule.py' -v
-
-      - name: Neue, explizit freigegebene Terminierungsdateien ermitteln
-        id: added
-        env:
-          BEFORE_SHA: ${{ github.event.before }}
+      - name: Freigabegegenstand festhalten
+        id: review
         shell: bash
+        env:
+          REQUEST: ${{ inputs.request_file }}
         run: |
           set -euo pipefail
-          if [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
-            echo "Kein zuverlässiger Vergleichs-Commit. Sicherer Stopp." >&2
-            exit 1
-          fi
-          temp_file="$(mktemp)"
-          trap 'rm -f "$temp_file"' EXIT
-          git diff --no-renames --diff-filter=A --name-only -z "$BEFORE_SHA" "$GITHUB_SHA" -- ready-to-schedule/ > "$temp_file"
-          mapfile -d '' -t added < "$temp_file"
-          count=0
-          for file in "${added[@]}"; do
-            if [[ "$file" == ready-to-schedule/*.json && "$file" != ready-to-schedule/*/* ]]; then
-              python3 scripts/buffer_schedule.py --request "$file" --dry-run
-              count=$((count + 1))
-            fi
-          done
-          echo "Neue bestätigte Terminierungsanfragen: $count"
-          echo "count=$count" >> "$GITHUB_OUTPUT"
+          [[ "$REQUEST" =~ ^ready-to-schedule/[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}\.json$ ]] || exit 1
+          python3 scripts/buffer_schedule.py --request "$REQUEST" --dry-run
+          python3 - "$REQUEST" <<'PY'
+          import hashlib,os,sys
+          from pathlib import Path
+          sys.path.insert(0,"scripts")
+          from buffer_schedule import inspect_request
+          info=inspect_request(sys.argv[1])
+          with open(os.environ["GITHUB_OUTPUT"],"a") as f:
+              for name,val in [("request",info["request_file"]),("request_sha",info["request_sha256"]),
+                               ("draft",info["draft_file"]),
+                               ("draft_sha",hashlib.sha256(Path(info["draft_file"]).read_bytes()).hexdigest()),
+                               ("post_id",info["post_id"])]:
+                  f.write(f"{name}={val}\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("## Veröffentlichung – deine ausdrückliche Bestätigung erforderlich\n")
+              for label,val in [("Ziel",info["target"]),("Buffer-ID",info["post_id"]),
+                                ("Geplanter UTC-Termin",info["due_at"]),
+                                ("Entwurf",info["draft_file"]),("Entwurf SHA",hashlib.sha256(Path(info["draft_file"]).read_bytes()).hexdigest()),
+                                ("Anfrage SHA",info["request_sha256"])]:
+                  f.write(f"- {label}: {val}\n")
+              f.write("\n**Noch NICHT in Buffer terminiert.**\n")
+          PY
 
-      - name: Vorhandene Buffer-Entwürfe terminieren
-        if: steps.added.outputs.count != '0'
+  publish:
+    name: Publish nur nach GitHub-Environment-Genehmigung
+    needs: plan
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    environment: buffer-publish
+    permissions:
+      contents: write
+    timeout-minutes: 10
+    steps:
+      - name: Environment und unveränderlichen Publisher-Code verlangen
+        shell: bash
         env:
-          BEFORE_SHA: ${{ github.event.before }}
-          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          PINNED: ${{ vars.BUFFER_PUBLISHER_SHA }}
+          GATE: ${{ secrets.BUFFER_PUBLISH_GATE }}
+          TOKEN: ${{ secrets.BUFFER_PUBLISH_API_KEY }}
+        run: |
+          set -euo pipefail
+          [[ "$PINNED" =~ ^[a-f0-9]{40}$ ]] || { echo "BUFFER_PUBLISHER_SHA nicht eingerichtet" >&2; exit 1; }
+          [[ "$GATE" == authorized-by-protected-environment ]] || { echo "Environment-Freigabe fehlt" >&2; exit 1; }
+          test -n "$TOKEN" || { echo "Environment-Buffer-Schlüssel fehlt" >&2; exit 1; }
+
+      - name: Vertrauenswürdigen Publisher laden (festgepinnter Commit)
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ vars.BUFFER_PUBLISHER_SHA }}
+          persist-credentials: false
+          path: trusted
+
+      - name: Freigabedaten vom Main laden, niemals Skripte ausführen
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+          path: data
+
+      - name: Genehmigten Antrag und Entwurf mit Hash erneut abgleichen
+        shell: bash
+        env:
+          PINNED: ${{ vars.BUFFER_PUBLISHER_SHA }}
+          REQUEST: ${{ needs.plan.outputs.request }}
+          REQUEST_SHA: ${{ needs.plan.outputs.request_sha }}
+          DRAFT: ${{ needs.plan.outputs.draft }}
+          DRAFT_SHA: ${{ needs.plan.outputs.draft_sha }}
+          POST_ID: ${{ needs.plan.outputs.post_id }}
+        run: |
+          set -euo pipefail
+          [[ "$(git -C trusted rev-parse HEAD)" == "$PINNED" ]] || exit 1
+          for p in "$REQUEST" "$DRAFT"; do
+            [[ "$p" =~ ^(ready-to-schedule|ready-for-buffer)/[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}\.json$ ]] || exit 1
+            mkdir -p "trusted/$(dirname "$p")"
+            cp -- "data/$p" "trusted/$p"
+          done
+          [[ "$(sha256sum "trusted/$REQUEST" | cut -d' ' -f1)" == "$REQUEST_SHA" ]] || exit 1
+          [[ "$(sha256sum "trusted/$DRAFT" | cut -d' ' -f1)" == "$DRAFT_SHA" ]] || exit 1
+          RECEIPT="$(cd trusted && python3 - "$DRAFT" <<'PY'
+          import sys
+          sys.path.insert(0,"scripts")
+          from buffer_draft import receipt_path
+          print(receipt_path(sys.argv[1]))
+          PY
+          )"
+          [[ "$RECEIPT" =~ ^delivery-receipts/[a-f0-9]{24}\.json$ ]] || exit 1
+          mkdir -p trusted/delivery-receipts
+          cp -- "data/$RECEIPT" "trusted/$RECEIPT"
+          cd trusted
+          python3 scripts/buffer_schedule.py --request "$REQUEST" --dry-run
+          python3 - "$REQUEST" "$POST_ID" <<'PY'
+          import sys
+          sys.path.insert(0,"scripts")
+          from buffer_schedule import inspect_request
+          info=inspect_request(sys.argv[1])
+          if info["post_id"] != sys.argv[2]:
+              raise ValueError("Post-ID zwischen Planung und Freigabe verändert")
+          PY
+
+      - name: Bestehenden Beitrag nach deiner Genehmigung terminieren
+        working-directory: trusted
+        shell: bash
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_PUBLISH_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          PUBLISH_APPROVAL_GATE: ${{ secrets.BUFFER_PUBLISH_GATE }}
           BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
           BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_FACEBOOK_CHANNEL_ID }}
           BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_INSTAGRAM_CHANNEL_ID }}
-          GITHUB_TOKEN: ${{ github.token }}
-        shell: bash
+          REQUEST: ${{ needs.plan.outputs.request }}
         run: |
           set -euo pipefail
-          temp_file="$(mktemp)"
-          trap 'rm -f "$temp_file"' EXIT
-          git diff --no-renames --diff-filter=A --name-only -z "$BEFORE_SHA" "$GITHUB_SHA" -- ready-to-schedule/ > "$temp_file"
-          mapfile -d '' -t added < "$temp_file"
-          for file in "${added[@]}"; do
-            if [[ "$file" == ready-to-schedule/*.json && "$file" != ready-to-schedule/*/* ]]; then
-              python3 scripts/buffer_schedule.py --request "$file" --schedule
-            fi
-          done
+          python3 scripts/buffer_schedule.py --request "$REQUEST" --schedule
