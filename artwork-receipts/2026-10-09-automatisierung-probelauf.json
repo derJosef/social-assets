@@ -1,0 +1,16 @@
+{
+  "campaign_id": "2026-10-09-automatisierung-probelauf",
+  "brand": "ai-agent-builder",
+  "status": "verified_image_only",
+  "base": "media/source-images/2026-10-09-automatisierung-probelauf-base.png",
+  "final": "media/images/2026-10-09-automatisierung-probelauf-branded.png",
+  "sha256": "8eac2686c09525e932d990798ae02876a2e27783bf471681c19b0ad9c601389a",
+  "heading_corner": "top-left",
+  "heading_box": [
+    58,
+    145,
+    688,
+    328
+  ],
+  "logo_original_sha256": "15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0"
+}
