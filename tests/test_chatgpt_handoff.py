@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"scripts"))
 from validate_chatgpt_handoff import validate
+from social_orchestrator import Blocked
 
 def sample():
     return {
@@ -49,23 +50,23 @@ class ContractTests(unittest.TestCase):
         self.assertFalse(r["automatic_publication"])
     def test_model_generation_not_accepted_as_subscription_handoff(self):
         del self.record["prepared_content"];self.write()
-        with self.assertRaisesRegex(ValueError,"fertig redigierte"):
+        with self.assertRaisesRegex(Blocked,"fertig redigierte"):
             validate(self.path,self.root)
     def test_wrong_brand_rejected(self):
         self.record["brand"]="picturefix";self.write()
-        with self.assertRaises(ValueError):
+        with self.assertRaises((ValueError,Blocked)):
             validate(self.path,self.root)
     def test_missing_channel_rejected(self):
         del self.record["prepared_content"]["posts"]["instagram"];self.write()
-        with self.assertRaises(ValueError):
+        with self.assertRaises((ValueError,Blocked)):
             validate(self.path,self.root)
     def test_duplicate_campaign_blocked(self):
         (self.root/"campaign-manifests").mkdir()
         (self.root/"campaign-manifests/2026-10-09-bridge-contract-test.json").write_text("{}")
-        with self.assertRaisesRegex(ValueError,"existiert|Kampagnen"):
+        with self.assertRaisesRegex(Blocked,"existiert|Kampagnen"):
             validate(self.path,self.root)
     def test_no_path_traversal(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises((ValueError,Blocked)):
             validate("orchestration/briefs/../bad.json",self.root)
 
 if __name__=="__main__":
