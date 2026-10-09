@@ -108,7 +108,7 @@ jobs:
           if [[ "$SOURCE_MODE" == smoketest ]]; then
             [[ "$INPUT_HEADING_CORNER" == top-left ]] || { echo 'Smoketest requires heading top-left' >&2; exit 1; }
             SOURCE='drafts/.visual-e2e-base.png'
-            OUTPUT='media/images/2026-10-09-ein-agent-drei-tests-branded-test.png'
+            OUTPUT="${RUNNER_TEMP}/social-visual-smoketest-${GITHUB_RUN_ID}.png"
             HEADING_BOX='58,138,700,365'
             python scripts/social_visual_e2e_20261008.py
           elif [[ "$SOURCE_MODE" == existing ]]; then
@@ -135,6 +135,7 @@ jobs:
           test -s "$OUTPUT"
           sha256sum "$OUTPUT"
           echo "FINAL_IMAGE=$OUTPUT" >> "$GITHUB_ENV"
+          echo "SOURCE_MODE=$SOURCE_MODE" >> "$GITHUB_ENV"
           echo "Verified: $OUTPUT"
 
       - name: Upload verified image artifact
@@ -145,7 +146,8 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Commit only verified image (never send to Buffer)
+      - name: Commit only verified user-supplied image (never send to Buffer)
+        if: env.SOURCE_MODE == 'existing'
         shell: bash
         run: |
           set -euo pipefail
