@@ -1,0 +1,23 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-09-automatisierung-probelauf",
+  "badge": "KI IM BETRIEB",
+  "headline": "QUALITAET IST EIN PROZESS.",
+  "subtitle": "Vom Dokument bis zum kontrollierten Ergebnis.",
+  "cards": [
+    {
+      "title": "QUELLEN",
+      "description": "Herkunft und Belege pruefen"
+    },
+    {
+      "title": "PROZESS",
+      "description": "Grenzen und Ausnahmen testen"
+    },
+    {
+      "title": "ABNAHME",
+      "description": "Ergebnis nachvollziehbar sichern"
+    }
+  ],
+  "closing": "Erst belegen. Dann automatisieren."
+}
