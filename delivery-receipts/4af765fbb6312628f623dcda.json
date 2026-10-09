@@ -2,6 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-09-ki-chatdaten-drittanbieter-instagram.json",
   "target": "instagram",
   "draft_sha256": "25d4effbb54d899f5915b0b9215d004f98351a1e88c12d31f1628ea01af41bbc",
-  "state": "pending_manual_reconciliation_on_failure",
-  "github_run_id": "37926453890"
+  "state": "draft_created",
+  "github_run_id": "37926453890",
+  "buffer_post_id": "6ac8d5ae26e224ee545ee809"
 }
