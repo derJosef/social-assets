@@ -1,0 +1,70 @@
+{
+  "started_at": "2026-10-09T11:53:04.744843+00:00",
+  "mode": "drafts",
+  "state": "buffer_drafts_verified",
+  "steps": {
+    "brief": {
+      "status": "PASS",
+      "detail": ""
+    },
+    "primary_source_fetch": {
+      "status": "PASS",
+      "detail": "3 Quellen"
+    },
+    "time_studies": {
+      "status": "PASS",
+      "detail": "2 Studien"
+    },
+    "editorial_input_and_structure": {
+      "status": "PASS",
+      "detail": "Bereits redaktionell erstellte Textvorlage"
+    },
+    "autonomous_model_generation": {
+      "status": "NOT_RUN",
+      "detail": "Kein Modellaufruf – alternative Eingabe"
+    },
+    "brand_image_and_campaign_gate": {
+      "status": "PASS",
+      "detail": ""
+    }
+  },
+  "campaign": "2026-10-09-ki-chatdaten-drittanbieter",
+  "files": {
+    "artwork": "artwork-requests/2026-10-09-ki-chatdaten-drittanbieter.json",
+    "base": "media/source-images/2026-10-09-ki-chatdaten-drittanbieter-base.png",
+    "final": "media/images/2026-10-09-ki-chatdaten-drittanbieter-branded.png",
+    "receipt": "artwork-receipts/2026-10-09-ki-chatdaten-drittanbieter.json",
+    "manifest": "campaign-manifests/2026-10-09-ki-chatdaten-drittanbieter.json",
+    "plan": "drafts/2026-10-09-ki-chatdaten-drittanbieter-plan.md",
+    "posts": [
+      "ready-for-buffer/auto-2026-10-09-ki-chatdaten-drittanbieter-linkedin.json",
+      "ready-for-buffer/auto-2026-10-09-ki-chatdaten-drittanbieter-facebook.json",
+      "ready-for-buffer/auto-2026-10-09-ki-chatdaten-drittanbieter-instagram.json"
+    ]
+  },
+  "finished_at": "2026-10-09T11:53:10.844815+00:00",
+  "buffer_verification": {
+    "status": "PASS",
+    "posts": {
+      "linkedin": {
+        "post_id": "6ac8d5a926e224ee545ee6b5",
+        "status": "draft",
+        "dueAt": null
+      },
+      "facebook": {
+        "post_id": "6ac8d5ab26e224ee545ee761",
+        "status": "draft",
+        "dueAt": null
+      },
+      "instagram": {
+        "post_id": "6ac8d5ae26e224ee545ee809",
+        "status": "draft",
+        "dueAt": null
+      }
+    }
+  },
+  "github_run_id": "37926453890",
+  "github_run_url": "https://github.com/derJosef/social-assets/actions/runs/37926453890",
+  "job_status": "success",
+  "receipt_at": "2026-10-09T11:53:19.957169+00:00"
+}
