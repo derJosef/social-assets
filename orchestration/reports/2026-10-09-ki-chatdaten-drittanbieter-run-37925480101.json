@@ -1,0 +1,25 @@
+{
+  "started_at": "2026-10-09T11:43:34.468789+00:00",
+  "mode": "smoke",
+  "state": "smoke_pass",
+  "steps": {
+    "brief": {
+      "status": "PASS",
+      "detail": ""
+    },
+    "collision_check": {
+      "status": "PASS",
+      "detail": ""
+    },
+    "network_and_model": {
+      "status": "NOT_RUN",
+      "detail": "Trockenlauf ohne externe API"
+    }
+  },
+  "campaign": "2026-10-09-ki-chatdaten-drittanbieter",
+  "finished_at": "2026-10-09T11:43:34.470107+00:00",
+  "github_run_id": "37925480101",
+  "github_run_url": "https://github.com/derJosef/social-assets/actions/runs/37925480101",
+  "job_status": "success",
+  "receipt_at": "2026-10-09T11:43:34.522804+00:00"
+}
