@@ -1,0 +1,9 @@
+{
+  "test_id": "CHATGPT-GITHUB-NORMAL-CHAT-003",
+  "execution_context": "interactive ChatGPT conversation",
+  "branch": "bridge-probe/003",
+  "source": "connected GitHub app",
+  "purpose": "confirm branch-scoped write/read without touching main, GitHub Actions or Buffer",
+  "buffer_called": false,
+  "publishing_called": false
+}
