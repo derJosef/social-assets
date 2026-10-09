@@ -74,10 +74,11 @@ def inspect_request(request_file: str, now: datetime | None = None) -> dict:
         raise ValueError("Freigabedatei ist zu groß.")
     request = json.loads(request_bytes)
     if not isinstance(request, dict) or set(request) != {
-        "format_version", "target", "draft_file", "publish_at_utc", "approved_for_scheduling"
+        "format_version", "target", "draft_file", "publish_at_utc",
+        "approved_for_scheduling", "post_id", "draft_sha256"
     }:
-        raise ValueError("Unbekanntes Freigabeformat.")
-    if request["format_version"] != 1 or request["approved_for_scheduling"] is not True:
+        raise ValueError("Unbekanntes Freigabeformat; v2 mit Post-ID und Entwurfs-Hash nötig.")
+    if request["format_version"] != 2 or request["approved_for_scheduling"] is not True:
         raise ValueError("Explizite Terminierungsfreigabe fehlt.")
     target = request["target"]
     draft_file = request["draft_file"]
@@ -88,8 +89,8 @@ def inspect_request(request_file: str, now: datetime | None = None) -> dict:
         raise ValueError("Veröffentlichungszeit muss ISO-8601 UTC mit Sekunden und Z sein.")
     due_dt = datetime.strptime(due, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
     current = now or datetime.now(timezone.utc)
-    if due_dt <= current + timedelta(minutes=2):
-        raise ValueError("Veröffentlichungszeit ist nicht mindestens zwei Minuten in der Zukunft.")
+    if due_dt < current + timedelta(hours=24):
+        raise ValueError("Veröffentlichungszeit muss mindestens 24 Stunden in der Zukunft liegen.")
 
     draft_raw = local_file(draft_file).read_bytes()
     draft = json.loads(draft_raw)
@@ -104,6 +105,11 @@ def inspect_request(request_file: str, now: datetime | None = None) -> dict:
             or not isinstance(delivery.get("buffer_post_id"), str)
             or not delivery["buffer_post_id"]):
         raise ValueError("Kein passender, bestätigter Buffer-Entwurf vorhanden.")
+    if (not isinstance(request["post_id"], str)
+            or request["post_id"] != delivery["buffer_post_id"]
+            or not isinstance(request["draft_sha256"], str)
+            or request["draft_sha256"] != delivery["draft_sha256"]):
+        raise ValueError("Freigabe passt nicht zur Buffer-Post-ID und zum unveränderten Entwurf.")
 
     digest = hashlib.sha256(request_file.encode("utf-8")).hexdigest()[:24]
     return {
@@ -121,6 +127,12 @@ def inspect_request(request_file: str, now: datetime | None = None) -> dict:
 
 
 def schedule(info: dict) -> None:
+    # A manual workflow dispatch with protected environment is obligatory.
+    # The environment protection still requires GitHub Settings configuration.
+    if os.environ.get("PUBLISH_APPROVAL_GATE") != "authorized-by-protected-environment":
+        raise RuntimeError("PUBLISH_APPROVAL_GATE fehlt: keine geschützte Publikationsfreigabe.")
+    if os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch":
+        raise RuntimeError("Buffer-Terminierung nur über manuell angestoßenen Workflow.")
     if os.environ.get("GITHUB_REPOSITORY") != REPOSITORY or os.environ.get("GITHUB_REF") != "refs/heads/main":
         raise RuntimeError("Terminierung nur durch GitHub Actions auf social-assets/main.")
     token = os.environ.get("BUFFER_API_KEY", "")
