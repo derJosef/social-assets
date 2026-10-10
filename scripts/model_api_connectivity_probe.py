@@ -2,7 +2,7 @@
 """Read-only, small GitHub Models connectivity probe. No Buffer and no user data.
 
 No token, model text, headers containing credentials, or project prompts
-are printed or persisted. Makes at most three HTTP requests.
+are printed or persisted. Makes at most four HTTP requests.
 """
 from __future__ import annotations
 
@@ -85,6 +85,7 @@ def main():
     if os.environ.get("GITHUB_REF") != "refs/heads/social-model-connectivity-20261010":
         raise SystemExit("Must run only on isolated branch")
     results = [
+        request("github_rest_control", "GET", "https://api.github.com/rate_limit", token),
         request("authenticated_catalog", "GET", CATALOG, token),
         request("minimal_chat_json", "POST", INFERENCE, token, {
             "model": "openai/gpt-4o-mini",
@@ -112,13 +113,14 @@ def main():
         "model": "openai/gpt-4o-mini",
         "buffer_calls": 0,
         "repository_writes": 0,
+        "https_proxy_present": bool(os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")),
         "requests": results,
     }
     dest = Path("/tmp/github-model-connection-diagnostic.json")
     dest.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     for result in results:
         print(json.dumps(result, sort_keys=True))
-    success = results[1].get("json_valid") is True and results[1].get("choices_count", 0) > 0
+    success = results[2].get("json_valid") is True and results[2].get("choices_count", 0) > 0
     print("MODEL_PROBE_RESULT:", "RESPONSE_OK" if success else "STILL_BLOCKED")
     # A blocked diagnosis is a successful diagnostic execution. It is not a
     # confirmation that the autonomous model pipeline works.
