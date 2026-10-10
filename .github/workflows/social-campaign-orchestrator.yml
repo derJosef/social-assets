@@ -92,6 +92,13 @@ jobs:
           echo "RUN_MODE=$MODE" >> "$GITHUB_ENV"
           echo "CAMPAIGN=$CAMPAIGN" >> "$GITHUB_ENV"
 
+      - name: Variante A – fertige ChatGPT-Texte und 4:5-Bildfreigabe vor Netzwerk prüfen
+        if: steps.request.outputs.mode == 'drafts'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/prepared_brief_preflight.py --brief "$BRIEF"
+
       - name: Inter-Schrift nur für die echte Bildproduktion beziehen
         if: steps.request.outputs.mode == 'drafts'
         shell: bash
