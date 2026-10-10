@@ -1,37 +1,47 @@
-# Automatische Terminierung – getrennt von der Entwurfserstellung
+# Veröffentlichung vorhandener Buffer-Entwürfe – technische Freigabe
 
-## Ziel und Freigabegrenze
+**Version für PR #2 (noch NICHT produktiv, 10.10.2026).** Der Ausgangsstand bleibt bis zu Josefs gesondertem Merge unverändert. Die erfolgreiche ursprüngliche Kampagne vom 08.10.2026 ist im Abschnitt „Abnahme“ historisch dokumentiert; das frühere automatische Verfahren wird dadurch nicht empfohlen.
 
-**Ergänzung vom 09.10.2026:** Die Dauerberechtigung für AI Agent Builder erlaubt eigenständige Themenwahl, Draft-Erstellung und **Terminplanung** (Vorschläge in `campaign-manifests/`). Sie erlaubt **nicht**, Buffer-Entwürfe auf `scheduled` zu setzen, solange Josef nicht ausdrücklich die spätere Veröffentlichung freigegeben hat. Denn Buffers `editPost(mode: customScheduled, saveToDraft: false)` bewirkt eine automatische Veröffentlichung am Termin. Die bestehende Freigabeschranke für `ready-to-schedule/` wird bewusst nicht gelockert. Siehe [AUTONOMOUS_BUFFER_POLICY.md](AUTONOMOUS_BUFFER_POLICY.md).
+## Trennung: Entwürfe versus tatsächliche Veröffentlichung
 
+- **Dauerberechtigung:** ChatGPT darf für **AI Agent Builder** recherchieren, Texte/Bilder erstellen und qualitativ geprüfte Beiträge als unveröffentlichte Buffer-Entwürfe ablegen (Status `draft`, `dueAt=null`). Vorschläge für Veröffentlichungstermine gehören ins Manifest, nicht in die Buffer-Warteschlange.
+- **Separate menschliche Freigabe:** Terminierung mit `editPost(saveToDraft:false)` kann eine spätere **automatische Veröffentlichung** auslösen. Daher **nie** aufgrund einer Datei, eines GitHub-Commits, eines Agentenauftrags oder einer statischen Bestätigungsvariable terminieren.
+- Der neue `.github/workflows/buffer-auto-schedule.yml` reagiert im PR **nur noch auf ausdrücklich gestartetes `workflow_dispatch`** mit Parameter `request_file` – nicht auf `push`.
+- Ein zusätzlicher `publish`-Job darf erst nach einem **geschützten GitHub-Environment `buffer-publish` mit unabhängiger Required-Reviewer-Genehmigung** laufen. Der Job muss über die echte GitHub Approvals API den konkreten GitHub-Run prüfen. **Ohne tatsächliche API-Bestätigung erfolgt keine Buffer-Aktion.**
 
-Der bestehende Workflow `buffer-auto-drafts.yml` erstellt ausschließlich **Buffer-Entwürfe**.
-Der hier ergänzte Workflow `buffer-auto-schedule.yml` kann einen **bereits vorhandenen** Buffer-Entwurf erst **nach einer zweiten, ausdrücklichen Freigabe von Josef** automatisch für einen festen Termin in die Veröffentlichungswarteschlange übernehmen.
+## Freigabedatei – Format 2
 
-**Achtung:** Sobald eine Terminierungsanfrage verarbeitet wurde, plant Buffer die Veröffentlichung **automatisch** zur angegebenen Uhrzeit. Ohne Veröffentlichungserlaubnis darf daher **keine** Datei unter `ready-to-schedule/` angelegt oder committet werden. Einen Entwurf anzulegen oder einen Termin zu recherchieren, ist noch keine solche Erlaubnis.
+Die Datei unter `ready-to-schedule/<eindeutige-id>.json` dokumentiert den gewünschten *Kandidaten*. **Ihr Commit ist selbst keine Freigabe und löst keine Terminierung aus.**
 
-GitHub-Repository `derJosef/social-assets` bleibt öffentlich: keine vertraulichen Informationen in JSON, Commit-Nachrichten oder Belegen speichern. PersonalOS ist keine Schreibfläche dieser Integration.
+```json
+{
+  "format_version": 2,
+  "target": "linkedin",
+  "draft_file": "ready-for-buffer/auto-2026-10-09-ki-chatdaten-drittanbieter-linkedin.json",
+  "publish_at_utc": "2026-11-19T15:00:00Z",
+  "approved_for_scheduling": true,
+  "post_id": "6ac8d5a926e224ee545ee6b5",
+  "draft_sha256": "<64-stelliger SHA-256 der exakt freizugebenden JSON-Datei>"
+}
+```
 
-## Ablauf für Agenten
+**Das ist ein Formatbeispiel, keine Freigabe oder verifizierte Terminempfehlung.** Den Platzhalter nie ungeprüft live verwenden.
 
-1. Text und Medien in `drafts/` vorbereiten, Postingzeiten recherchieren, mit Europe/Berlin und UTC dokumentieren.
-2. Nach ausdrücklicher **Entwurfsfreigabe** die drei JSON-Dateien unter `ready-for-buffer/` übertragen. GitHub Actions erstellt Buffer-Entwürfe und bestätigt sie unter `delivery-receipts/`.
-3. Josef erhält eine eindeutige Übersicht: Plattform, Beitrag und konkreter Veröffentlichungstermin. Die **Termine und die automatische Veröffentlichung müssen separat freigegeben** werden.
-4. Erst dann je Kanal eine neue, eindeutige Datei unter `ready-to-schedule/` committen, zum Beispiel:
+Das Programm verifiziert: vollständiges JSON-Format, gültige Post-ID (24 Kleinbuchstaben-Hexziffern), ursprünglichen Empfangsbeleg, identischen Dateihash, gleichen Kanal und Buffer-Text, `draft`-Status, 24 Stunden Vorlauf sowie passenden UTC-Termin. Bei API-Unsicherheit bleibt ein `pending`-Beleg; nicht blind wiederholen.
 
-   ```json
-   {
-     "format_version": 1,
-     "target": "linkedin",
-     "draft_file": "ready-for-buffer/2026-10-08-linkedin-offene-ki-modelle-klare-kontrolle.json",
-     "publish_at_utc": "2026-10-09T13:00:00Z",
-     "approved_for_scheduling": true
-   }
-   ```
+## Manuelle Aktivierung – nur nach eigener ausdrücklicher Veröffentlichungserlaubnis
 
-5. **Nur neue Dateien** lösen automatische Terminierung aus. Eine Textänderung oder erneute Ausführung kann denselben Auftrag nicht wiederholen. Das Skript liest den originalen Buffer-Entwurfsbeleg und editiert genau dessen vorhandene Post-ID; es erzeugt **keinen zweiten Post**.
-6. Der Workflow prüft vor dem API-Aufruf Kanal, ursprünglichen Entwurf, unveränderten Text, Status `draft`, mindestens zwei Minuten Vorlauf und die exakte UTC-Zeit. Nach erfolgreicher API-Antwort muss der Termin übereinstimmen. Es entsteht ein Beleg unter `schedule-receipts/`.
-7. Bei unklaren API-Fehlern bleibt der Beleg auf `pending_manual_reconciliation_on_failure`. **Nicht automatisch wiederholen**; erst Status in Buffer prüfen. Die Reservierung schützt vor Doppelaktionen.
+1. Freigabekandidat und Quellen redaktionell prüfen, originale Buffer-Post-ID und Bild/Text mit Josef abstimmen.
+2. Gegebenenfalls die korrekt ausgefüllte neue Format-2-Datei in `ready-to-schedule/` speichern. Das **löst keine GitHub Action aus**.
+3. GitHub Actions `Buffer – nur manuell freigegebene Veröffentlichung` gezielt über `Run workflow` / `workflow_dispatch` auf `main` mit dieser Datei starten.
+4. Der `plan`-Job ist geheimnisfrei und zeigt Plattform, Post-ID, Textvorschau, Bild-URL, UTC-Termin und Prüfsummen; das ist der **Freigabegegenstand**.
+5. Der `publish`-Job wartet auf den erforderlichen unabhängigen GitHub-Reviewer. Die erlaubten Logins stehen in der Repo-Variable `BUFFER_APPROVER_LOGINS`. Der Reviewer darf **weder `github.actor` noch `github.triggering_actor`** sein. GitHub muss den Genehmigungsstatus `approved` für **genau `buffer-publish` in diesem Run** zurückmelden. Fehlende oder unbekannte API-Antwort → Abbruch.
+6. Nur **explizit gepinnter Publisher-Code** (`BUFFER_PUBLISHER_SHA`) verarbeitet die Daten. Der tatsächliche `BUFFER_PUBLISH_API_KEY` wird erst im finalen Veröffentlichungsschritt als Environment-Secret eingelesen. Der Code prüft die GitHub-Approval-API dort unmittelbar erneut.
+7. Die einmalige Bearbeitung des existierenden Beitrags und eine nachprüfbare Bestätigung von Buffer werden unter `schedule-receipts/` dokumentiert. Ein tatsächliches Publizieren durch die Zielplattform wird dadurch nicht garantiert.
+
+**Voraussetzungen, noch nicht live nachgewiesen:** Eigenständiger menschlicher Reviewer (separates GitHub-Konto, nicht dem ChatGPT-Connector verbunden), `Prevent self-review` aktiviert, `buffer-publish` ausdrücklich konfiguriert und auf `main` beschränkt; Repo-Variablen `BUFFER_PUBLISHER_SHA` und `BUFFER_APPROVER_LOGINS`; Environment-Secret `BUFFER_PUBLISH_API_KEY`. Die alte Konstante `BUFFER_PUBLISH_GATE` ist entfernt. In die Dokumentation oder ins Repository gehören **keine API-Schlüssel**.
+
+**Verbleibendes Risiko P0:** Andere Workflows verwenden weiterhin den gemeinsamen `BUFFER_API_KEY` aus den Repo-Secrets und führen veränderbare Skripte auf `main` aus. Vor Produktivfreigabe muss Josef getrennte Berechtigungen/Secrets und Branch-Schutz (Maßnahme M4/E1–E7) entscheiden. Der neue Terminierungs-Workflow alleine ist **kein vollständiger Schutz vor einem Agenten mit uneingeschränkten GitHub-Schreibrechten**.
 
 ## Abnahme – 08.10.2026
 
@@ -53,21 +63,16 @@ Die Planung erfolgt **in Europe/Berlin** und wird für die API explizit in UTC u
 | Facebook | 14.10.2026 09:00 | `2026-10-14T07:00:00Z` |
 | Instagram | 14.10.2026 18:00 | `2026-10-14T16:00:00Z` |
 
-**Diese Tabelle ist nur der unverbindliche Kampagnenvorschlag.** Sie aktiviert selbst keine Terminierung. Der Auftrag muss nach aktueller Quellenprüfung weiterhin ausdrücklich freigegeben werden.
+**Historische Beispieltermine aus der vorangegangenen Kampagne.** Der aktuelle Ablauf aktiviert solche Termine niemals allein durch eine Datei oder einen Commit.
 
-## Technische Details
+## Technische Details und Offline-Test
 
-`scripts/buffer_schedule.py` verwendet die vorhandene Buffer-API-Verbindung und das GitHub-Secret `BUFFER_API_KEY`. Es prüft zuerst das existierende Buffer-Post-Objekt und verwendet anschließend `editPost` mit `mode: customScheduled`, `dueAt` in UTC und `saveToDraft: false`. Buffers API verlangt beim Bearbeiten zusätzlich den **identischen Text sowie die ursprünglichen Medien- und Plattformmetadaten**; diese stammen aus der freigegebenen JSON-Datei. Es wird **kein zweiter Post** erstellt. Nach der Entwurfsübertragung keine manuellen Medienänderungen direkt in Buffer durchführen, ohne zuvor die Freigabedatei abzugleichen.
-
-Offline-Test:
-
-```bash
-python3 -m unittest discover -s tests -v
-```
-
-Optionaler Offline-Trockenlauf **nachdem** eine Freigabedatei erstellt wurde:
+- `scripts/buffer_schedule.py` unterstützt den Trockenlauf `--dry-run` ohne Netzwerkzugriff. Der echte Aufruf `--schedule` verlangt die Zustimmung aus dem GitHub-Run und prüft den zugehörigen Buffer-Entwurf.
+- `scripts/publish_approval.py` fragt lesend die GitHub-Runtime-Approvals ab; das Fehlerverhalten ist strikt sperrend.
+- Das Einrichten von GitHub-Environments und Repository-Secrets erfolgt **nicht** durch das Einchecken dieser Dateien; das muss Josef gesondert konfigurieren und kontrollieren.
 
 ```bash
+python3 -B -m unittest discover -s tests -v
 python3 scripts/buffer_schedule.py --request ready-to-schedule/beitrag.json --dry-run
 ```
 
