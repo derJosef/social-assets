@@ -1,0 +1,79 @@
+name: One-time six Buffer posts text and draft reconciliation (read only)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/buffer-refresh-reconcile-once.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  compare-live-texts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Strict live read-only reconciliation, six exact IDs
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, os, sys, urllib.request
+          sys.path.insert(0,'scripts')
+          from buffer_draft import buffer_graphql
+          query='''query InspectPostText($id: PostId!) {
+            post(input:{id:$id}) { id text channelId status dueAt }
+          }'''
+          cases=[
+              ('linkedin','6ac9e964c4de2d2b121be215','6aca9d9fd9cab260a7d7b34c'),
+              ('facebook','6ac9e967b07d37ac9764aac6','6aca9d99bba9419ccb148eba'),
+              ('instagram','6ac9e96ac4de2d2b121be2e2','6aca9d9cf91f772d45a67ff7'),
+          ]
+          expected_img='https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-10-kundenmail-pruefpunkt-portfolio-v2-logo-only.png'
+          report={'campaign':'2026-10-10-kundenmail-kein-befehl-005',
+                  'verification':'pre_delete_read_only',
+                  'publication_status':'not_scheduled_not_published',
+                  'posts':{}}
+          token=os.environ.get('BUFFER_API_KEY','')
+          assert token,'Missing Buffer token'
+          for channel,old_id,new_id in cases:
+              old_data=json.loads(Path(f'ready-for-buffer/auto-2026-10-10-kundenmail-kein-befehl-005-{channel}.json').read_text())
+              new_data=json.loads(Path(f'ready-for-buffer/replace-2026-10-10-kundenmail-kein-befehl-005-v2-{channel}.json').read_text())
+              assert old_data['target']==new_data['target']==channel
+              assert old_data['text']==new_data['text'],f'Text changed on GitHub: {channel}'
+              assert new_data['media']['type']=='images' and len(new_data['media']['images'])==1
+              assert new_data['media']['images'][0]['url']==expected_img
+              old=buffer_graphql(token,query,{'id':old_id}).get('post')
+              new=buffer_graphql(token,query,{'id':new_id}).get('post')
+              for id,post in ((old_id,old),(new_id,new)):
+                  assert isinstance(post,dict) and post.get('id')==id,f'Unknown post {id}'
+                  assert post['status']=='draft' and post['dueAt'] is None,f'Post not safe draft {id}'
+                  assert post['text']==old_data['text'],f'Buffer text mismatches source: {id}'
+                  assert isinstance(post['channelId'],str) and post['channelId'], 'Missing channel'
+              assert old['channelId']==new['channelId'],f'Buffer channel mismatch for {channel}'
+              text_hash=hashlib.sha256(old_data['text'].encode('utf-8')).hexdigest()
+              report['posts'][channel]={
+                'old_id':old_id,'new_id':new_id,'channel_id':old['channelId'],
+                'text_sha256':text_hash,
+                'text_identity':'exact_buffer_and_repository',
+                'status_old':'draft','status_new':'draft',
+                'dueAt_old':None,'dueAt_new':None,
+                'new_media_url':expected_img
+              }
+              print('PASS',channel,'old',old_id,'new',new_id,'texts exact, draft, no dueAt, same channel')
+          Path('buffer-refresh-reconciliation.json').write_text(json.dumps(report,indent=2)+'\n')
+          print('RECONCILIATION_PASS: Six live drafts, exact texts and channels; no Buffer mutations')
+          PY
+      - name: Save independent read-only reconciliation as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: buffer-kundenmail-refresh-pre-delete
+          path: buffer-refresh-reconciliation.json
+          retention-days: 30
+          if-no-files-found: error
