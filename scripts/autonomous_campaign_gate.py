@@ -100,18 +100,51 @@ def check_campaign(post_paths: list[str], today: date | None = None, verify_imag
     require(isinstance(entries, dict) and set(entries) == set(TARGETS)
             and set(entries.values()) == set(post_paths), "Post-Zuordnung im Manifest falsch")
     image = manifest["image"]
-    require(isinstance(image, dict) and set(image) == {
-        "final", "base", "sha256", "heading_corner", "heading_box"
-    }, "Unvollstaendiger Bildnachweis")
+    require(isinstance(image, dict), "Unvollstaendiger Bildnachweis")
+    legacy_keys={"final","base","sha256","heading_corner","heading_box"}
+    new_keys=legacy_keys | {"layout","review_spec","source_sha256"}
+    require(set(image) in (legacy_keys,new_keys),
+            "Unerwartete Bildmetadaten: kein ungeprueftes Layout zulassen")
     require(isinstance(image["final"], str) and PATH_IMG_RE.fullmatch(image["final"]),
             "Finales Bild muss PNG unter media/images/ sein")
     require(isinstance(image["base"], str) and PATH_BASE_RE.fullmatch(image["base"]),
             "Logo-freies Basisbild unter media/source-images/ erforderlich")
-    require(image["heading_corner"] in HEADING_CORNERS
-            and isinstance(image["heading_box"], list)
-            and len(image["heading_box"]) == 4
-            and all(type(v) is int and v >= 0 for v in image["heading_box"]),
-            "Heading-Box/Ecke fehlt oder ungueltig")
+    new_format=set(image)==new_keys
+    if new_format:
+        from social_portfolio_scene import validate_spec
+        review_path=image["review_spec"]
+        require(isinstance(review_path,str) and review_path==f"visual-reviews/{campaign}.json",
+                "Review muss exakt zur Kampagne gehoeren")
+        source_spec=json.loads(require_file(review_path).read_text(encoding="utf-8"))
+        try:
+            source=validate_spec(source_spec,ROOT)
+        except (ValueError,OSError) as e:
+            raise ValueError(f"Visuelle Quellfreigabe ungueltig: {e}") from e
+        require(source_spec["layout"]==image["layout"],
+                "Review-Layout und Manifest widersprechen sich")
+        require(image["layout"] in ("logo_only","headline"),
+                "Unbekannter 4:5-Modus")
+        require(image["source_sha256"]==source_spec["source_sha256"]
+                and hashlib.sha256(source.read_bytes()).hexdigest()==image["source_sha256"],
+                "Unguenstiger Bildquellenfingerabdruck")
+        from PIL import Image
+        with Image.open(require_file(image["final"])) as fp:
+            require(fp.size==(1080,1350),"4:5-PNG muss 1080x1350 sein")
+        if image["layout"]=="logo_only":
+            require(image["heading_corner"] is None and image["heading_box"] is None,
+                    "Logo-only braucht keine Fake-Ueberschrift")
+        else:
+            require(image["heading_corner"] in HEADING_CORNERS
+                    and isinstance(image["heading_box"],list)
+                    and len(image["heading_box"])==4
+                    and all(type(v) is int and v>=0 for v in image["heading_box"]),
+                    "Headline muss korrektes Bounding-Box-Format haben")
+    else:
+        require(image["heading_corner"] in HEADING_CORNERS
+                and isinstance(image["heading_box"], list)
+                and len(image["heading_box"]) == 4
+                and all(type(v) is int and v >= 0 for v in image["heading_box"]),
+                "Legacy Heading-Box/Ecke fehlt")
     final = require_file(image["final"])
     require_file(image["base"])
     digest = hashlib.sha256(final.read_bytes()).hexdigest()
@@ -121,10 +154,11 @@ def check_campaign(post_paths: list[str], today: date | None = None, verify_imag
         cmd = [
             sys.executable, str(ROOT / "scripts/logo_composite.py"), "verify",
             image["final"], image["base"], "--original",
-            "media/brand/logo-pauderer-original.png", "--heading-corner",
-            image["heading_corner"], "--heading-box",
-            ",".join(str(n) for n in image["heading_box"]),
+            "media/brand/logo-pauderer-original.png"
         ]
+        if not new_format or image["layout"]=="headline":
+            cmd.extend(["--heading-corner",image["heading_corner"],
+                        "--heading-box",",".join(str(n) for n in image["heading_box"])])
         subprocess.run(cmd, cwd=ROOT, check=True)
     for target in TARGETS:
         filename = entries[target]
