@@ -1,0 +1,74 @@
+{
+  "started_at": "2026-10-10T07:29:34.310087+00:00",
+  "mode": "drafts",
+  "state": "buffer_drafts_verified",
+  "steps": {
+    "brief": {
+      "status": "PASS",
+      "detail": ""
+    },
+    "fetch_warning_0": {
+      "status": "WARNING",
+      "detail": "Blocked"
+    },
+    "primary_source_fetch": {
+      "status": "PASS",
+      "detail": "2 Quellen"
+    },
+    "time_studies": {
+      "status": "PASS",
+      "detail": "6 Studien"
+    },
+    "editorial_input_and_structure": {
+      "status": "PASS",
+      "detail": "Bereits redaktionell erstellte Textvorlage"
+    },
+    "autonomous_model_generation": {
+      "status": "NOT_RUN",
+      "detail": "Kein Modellaufruf – alternative Eingabe"
+    },
+    "brand_image_and_campaign_gate": {
+      "status": "PASS",
+      "detail": ""
+    }
+  },
+  "campaign": "2026-10-10-kundenmail-kein-befehl-005",
+  "files": {
+    "artwork": "artwork-requests/2026-10-10-kundenmail-kein-befehl-005.json",
+    "base": "media/source-images/2026-10-10-kundenmail-kein-befehl-005-base.png",
+    "final": "media/images/2026-10-10-kundenmail-kein-befehl-005-branded.png",
+    "receipt": "artwork-receipts/2026-10-10-kundenmail-kein-befehl-005.json",
+    "manifest": "campaign-manifests/2026-10-10-kundenmail-kein-befehl-005.json",
+    "plan": "drafts/2026-10-10-kundenmail-kein-befehl-005-plan.md",
+    "posts": [
+      "ready-for-buffer/auto-2026-10-10-kundenmail-kein-befehl-005-linkedin.json",
+      "ready-for-buffer/auto-2026-10-10-kundenmail-kein-befehl-005-facebook.json",
+      "ready-for-buffer/auto-2026-10-10-kundenmail-kein-befehl-005-instagram.json"
+    ]
+  },
+  "finished_at": "2026-10-10T07:29:37.722024+00:00",
+  "buffer_verification": {
+    "status": "PASS",
+    "posts": {
+      "linkedin": {
+        "post_id": "6ac9e964c4de2d2b121be215",
+        "status": "draft",
+        "dueAt": null
+      },
+      "facebook": {
+        "post_id": "6ac9e967b07d37ac9764aac6",
+        "status": "draft",
+        "dueAt": null
+      },
+      "instagram": {
+        "post_id": "6ac9e96ac4de2d2b121be2e2",
+        "status": "draft",
+        "dueAt": null
+      }
+    }
+  },
+  "github_run_id": "38034584558",
+  "github_run_url": "https://github.com/derJosef/social-assets/actions/runs/38034584558",
+  "job_status": "success",
+  "receipt_at": "2026-10-10T07:29:47.737582+00:00"
+}
