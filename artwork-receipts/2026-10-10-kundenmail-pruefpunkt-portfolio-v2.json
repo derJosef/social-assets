@@ -1,0 +1,18 @@
+{
+  "campaign": "2026-10-10-kundenmail-kein-befehl-005",
+  "artwork_id": "2026-10-10-kundenmail-pruefpunkt-portfolio-v2",
+  "status": "verified_image_only_no_buffer",
+  "image_path": "media/images/2026-10-10-kundenmail-pruefpunkt-portfolio-v2-logo-only.png",
+  "base_path": "media/source-images/2026-10-10-kundenmail-pruefpunkt-portfolio-v2-base.png",
+  "source_path": "media/source-images/2026-10-10-kundenmail-pruefpunkt-portfolio-1080x1350.png",
+  "source_sha256": "626966b2022754ff953219d298fb2af226d4c6223920d118a9e96871ce208555",
+  "final_sha256": "9103a36e4239a433244acaddab7d3f1af6308e5dac5e4238656ed60b70a95230",
+  "logo_only": true,
+  "image_size": [
+    1080,
+    1350
+  ],
+  "logo_verification": "personalos_canonical_verify_0",
+  "manual_source_review": "visual-reviews/2026-10-10-kundenmail-pruefpunkt-portfolio-v2.json",
+  "publication_status": "not_scheduled_not_published"
+}
