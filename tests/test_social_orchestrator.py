@@ -59,6 +59,23 @@ class OrchestratorTests(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
+    def test_retired_github_models_never_calls_network(self):
+        # A GITHUB_TOKEN is NOT an inference-provider token anymore.
+        with patch.dict(m.os.environ,{"OPENAI_API_KEY":"","GITHUB_TOKEN":"test-only"},clear=False), \
+             patch.object(m.urllib.request,"urlopen",side_effect=AssertionError("no model API allowed")):
+            with self.assertRaisesRegex(m.Blocked,"GitHub Models"):
+                m.call_model([{"role":"user","content":"Return a word"}])
+
+    def test_unconfigured_auto_copy_stops_before_source_fetch(self):
+        obj=brief("drafts")
+        self.path.write_text(json.dumps(obj),encoding="utf-8")
+        with patch.dict(m.os.environ,{"OPENAI_API_KEY":"","GITHUB_TOKEN":"test-only"},clear=False), \
+             patch.object(m,"fetch_evidence",side_effect=AssertionError("do not fetch sources")):
+            with self.assertRaisesRegex(m.Blocked,"GitHub Models"):
+                m.prepare(self.name,"drafts",str(self.root/"no-model-report.json"))
+        report=json.loads((self.root/"no-model-report.json").read_text())
+        self.assertEqual(report["state"],"blocked")
+
     def test_smoke_has_no_external_side_effects(self):
         with patch.object(m,"fetch_evidence",side_effect=AssertionError("unexpected network")), \
              patch.object(m,"call_model",side_effect=AssertionError("unexpected inference")):
