@@ -1,0 +1,18 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "source": "media/source-images/2026-10-10-kundenmail-pruefpunkt-portfolio-1080x1350.png",
+  "source_sha256": "626966b2022754ff953219d298fb2af226d4c6223920d118a9e96871ce208555",
+  "layout": "logo_only",
+  "heading": null,
+  "visual_review": {
+    "no_people": true,
+    "no_robot": true,
+    "no_foreign_logo": true,
+    "no_generated_text": true,
+    "plausible_details": true,
+    "matches_topic": true,
+    "heading_and_logo_space": true
+  },
+  "review_evidence": "ChatGPT Sichtprüfung am 10.10.2026 des unveränderten 1080x1350-Rohmotivs: Links eingehende E-Mail und Dokumente, mittig ein sichtbarer Haken als Kontroll-/Freigabepunkt, rechts danach eine technische CAD-Arbeitsstation; illustrativer Datenfluss passend zum Kundenmail-/Freigabe-Thema. Technisch plausible B2B-Bildwelt, Navy/Petrol, keine sichtbaren Menschen, keine Roboter, keine erkennbaren Fremdlogos und keine lesbaren generierten Texte oder Bildtitel. Unten rechts ausreichend ruhige Fläche für die Original-Pauderer-Logoebene. Dies ist nur eine menschlich interpretierte illustrative Darstellung, kein Nachweis einer tatsächlich ausgeführten IT-Sicherheitsprüfung."
+}
