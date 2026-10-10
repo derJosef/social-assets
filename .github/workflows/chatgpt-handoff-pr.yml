@@ -34,6 +34,14 @@ jobs:
           fetch-depth: 0
           path: submission
 
+      - name: Python und erforderliche Strukturprüfungsbibliothek
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Pillow für vorhandene Grafikschemaprüfung
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow>=11,<13'
+
       - name: Exakt eine neue Brief-Datei sicher übernehmen
         shell: bash
         env:
