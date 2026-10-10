@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-10",
+  "campaign": "2026-10-10-kundenmail-kein-befehl-005",
+  "purpose": "Replace 3 old Buffer drafts by 3 verified image-only new drafts; preserve exact platform texts",
+  "github_run_id": "38083623721",
+  "status": "reserved_before_first_deletion",
+  "confirmed_deleted": 0,
+  "items": [
+    {
+      "target": "linkedin",
+      "old_id": "6ac9e964c4de2d2b121be215",
+      "replacement_id": "6aca9d9fd9cab260a7d7b34c",
+      "buffer_channel_id": "6aac167eea19ca0bde6ada5b",
+      "text_sha256": "5127ab7adcb6bbe2ceb2a6c149efa13dadfb3f069bb65d89b02a6b7c486983ef",
+      "status_old_preflight": "draft",
+      "status_new_preflight": "draft",
+      "dueAt_old_preflight": null,
+      "dueAt_new_preflight": null,
+      "media_url_new": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-10-kundenmail-pruefpunkt-portfolio-v2-logo-only.png",
+      "media_sha256": "9103a36e4239a433244acaddab7d3f1af6308e5dac5e4238656ed60b70a95230",
+      "deletion": "pending"
+    },
+    {
+      "target": "facebook",
+      "old_id": "6ac9e967b07d37ac9764aac6",
+      "replacement_id": "6aca9d99bba9419ccb148eba",
+      "buffer_channel_id": "6ac781e46a5c39ccb64fe01c",
+      "text_sha256": "f96a2ef613ba160bc729d510d2c17e066d879524563a320ff447112fe5d65b18",
+      "status_old_preflight": "draft",
+      "status_new_preflight": "draft",
+      "dueAt_old_preflight": null,
+      "dueAt_new_preflight": null,
+      "media_url_new": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-10-kundenmail-pruefpunkt-portfolio-v2-logo-only.png",
+      "media_sha256": "9103a36e4239a433244acaddab7d3f1af6308e5dac5e4238656ed60b70a95230",
+      "deletion": "pending"
+    },
+    {
+      "target": "instagram",
+      "old_id": "6ac9e96ac4de2d2b121be2e2",
+      "replacement_id": "6aca9d9cf91f772d45a67ff7",
+      "buffer_channel_id": "6ac79a686a5c39ccb650f94b",
+      "text_sha256": "c4c85a8f5fe531d4cda08ce68fd39d18ea5cceab5917014f5e1376ef9f36da70",
+      "status_old_preflight": "draft",
+      "status_new_preflight": "draft",
+      "dueAt_old_preflight": null,
+      "dueAt_new_preflight": null,
+      "media_url_new": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-10-kundenmail-pruefpunkt-portfolio-v2-logo-only.png",
+      "media_sha256": "9103a36e4239a433244acaddab7d3f1af6308e5dac5e4238656ed60b70a95230",
+      "deletion": "pending"
+    }
+  ]
+}
