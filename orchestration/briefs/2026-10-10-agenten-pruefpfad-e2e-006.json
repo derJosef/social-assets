@@ -19,5 +19,26 @@
     "https://blog.hootsuite.com/best-time-to-post-on-linkedin/"
   ],
   "execution_mode": "drafts",
-  "image_review": "visual-reviews/2026-10-10-agenten-pruefpfad-e2e-006.json"
+  "image_review": "visual-reviews/2026-10-10-agenten-pruefpfad-e2e-006.json",
+  "prepared_content": {
+    "posts": {
+      "linkedin": "Ein KI-Agent liest technische Unterlagen und bereitet den nächsten CAD-Arbeitsschritt vor. Aber was ist passiert, bevor das Ergebnis auf dem Bildschirm erscheint?\n\nEin nachvollziehbarer Prüfpfad hilft, wichtige Schritte zu kontrollieren: Welche Dokumente lagen zugrunde? Welche Werkzeuge wurden eingesetzt? Wo hat ein Mensch das Ergebnis geprüft?\n\nMicrosoft beschreibt, dass beim Tracing von KI-Agenten Werkzeugaufrufe, Zwischenschritte und Laufzeitdaten sichtbar werden können. NIST stellt Risikobewertung und fortlaufende Kontrolle in den Mittelpunkt seines freiwilligen KI-Risikomanagement-Rahmens.\n\nSolche Protokolle sind keine Qualitätsgarantie. Besonders wichtig: Nicht jede vertrauliche Eingabe gehört in einen technischen Log.\n\nWelche Entscheidung eines KI-Agenten müsstest du in deinem Betrieb später nachvollziehen können?\n\nQuellen: NIST AI Risk Management Framework (2023); Microsoft Foundry, Tracing and data handling (2026).",
+      "facebook": "Ein KI-Agent verarbeitet technische Dokumente und schlägt einen Arbeitsschritt vor. Das klingt praktisch. Doch kannst du später nachvollziehen, welche Informationen er verwendet hat und wer das Ergebnis freigegeben hat?\n\nDafür kann ein Prüfpfad sinnvoll sein: Eingaben und wichtige Aktionen gezielt dokumentieren, Verantwortlichkeiten festlegen und vor verbindlichen Schritten einen menschlichen Kontrollpunkt einbauen.\n\nNIST behandelt das Risikomanagement von KI-Systemen. Microsoft erläutert, welche Diagnosedaten beim sogenannten Tracing anfallen können. Dabei ist Datenschutz wichtig: Protokolle sollten möglichst keine unnötigen Kundendaten enthalten.\n\nWelche Aufgabe würdest du automatisieren, welche Entscheidung selbst freigeben?\n\nQuellen: NIST AI RMF; Microsoft Foundry, Tracing and data handling.",
+      "instagram": "WAS HAT DEIN KI-AGENT GEMACHT?\n\nEin Agent liest Dokumente und bereitet einen technischen CAD-Schritt vor. Das Ergebnis sieht gut aus. Doch kannst du die wichtigen Schritte überprüfen?\n\nDrei Fragen für einen nachvollziehbaren Ablauf:\n\n01 QUELLEN: Welche Unterlagen wurden verarbeitet?\n02 KONTROLLE: Welche Werkzeuge wurden verwendet, wo hat ein Mensch geprüft?\n03 DATENSCHUTZ: Welche Informationen dürfen nicht im Protokoll landen?\n\nEin Ablaufprotokoll macht ein Ergebnis nicht automatisch richtig. Es kann aber helfen, Fehler zu untersuchen und Verantwortlichkeiten zu klären.\n\nNIST beschreibt KI-Risikomanagement als fortlaufende Aufgabe. Microsoft erklärt, welche Daten bei Agenten-Tracing anfallen können.\n\nWelche Freigabe würdest du nie allein einer KI überlassen?\n\nQuellen: NIST AI RMF (2023), Microsoft Foundry (2026).\n#KIAgenten #Mittelstand #Nachvollziehbarkeit"
+    },
+    "visual": null,
+    "six_hats": {
+      "white": "NIST behandelt Risikomanagement; Microsoft beschreibt Agenten-Tracing mit Werkzeugaufrufen, Zwischenschritten und Laufzeitinformationen.",
+      "red": "Ein technisch nicht mehr nachvollziehbarer Entscheidungsschritt erzeugt auch bei guten Ergebnissen verständliche Unsicherheit.",
+      "black": "Technische Logs beweisen keine fachliche Korrektheit und können sensible Dokumenteninhalte preisgeben.",
+      "yellow": "Gezielt erfasste Ablaufschritte können Fehlersuche, Freigaben und Verantwortlichkeiten nachvollziehbarer machen.",
+      "green": "Der Bildfluss vom Dokument über einen sichtbaren Kontrollpunkt zur CAD-Arbeit illustriert die Kontrollkette ohne echte Telemetrie zu behaupten.",
+      "blue": "Die drei vorbereiteten Texte werden nur lokal im GitHub-Test geprüft; Modellgenerierung und sämtliche Buffer-Aktionen sind deaktiviert."
+    },
+    "risks": [
+      "Die Szene ist illustrativ und zeigt kein tatsächlich vorhandenes Auditprotokoll.",
+      "Tracing kann sensible Inhalte erfassen; rechtliche Pflichten werden nicht pauschal behauptet.",
+      "Ein nachvollziehbarer Prüfpfad ersetzt keine menschliche fachliche Abnahme."
+    ]
+  }
 }
