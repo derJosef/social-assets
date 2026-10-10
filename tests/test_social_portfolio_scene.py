@@ -112,6 +112,37 @@ class SceneTests(unittest.TestCase):
         with self.assertRaises(m.InvalidScene):
             m.validate_spec(self.spec, self.root)
 
+    def test_end_to_end_logo_only_original_logo_no_font_required(self):
+        import shutil
+        # The source is synthetic; these true-valued test fixtures do not
+        # authorize any production image or any Buffer mutation.
+        fixture = dict(self.spec, layout="logo_only", heading=None)
+        spec_dir = self.root / "visual-reviews"
+        spec_dir.mkdir()
+        spec_path = spec_dir / "synthetic-logo-only.json"
+        spec_path.write_text(json.dumps(fixture), encoding="utf-8")
+        scripts = self.root / "scripts"
+        scripts.mkdir()
+        source_script = Path(m.__file__).resolve().parents[0] / "logo_composite.py"
+        shutil.copy2(source_script, scripts / "logo_composite.py")
+        original = Path(m.__file__).resolve().parents[1] / "media/brand/logo-pauderer-original.png"
+        base = self.root / "media/source-images/logo-only-render-base.png"
+        final = self.root / "media/images/logo-only-render-branded.png"
+        result = m.build(spec_path, self.root, base, final,
+                         self.root / "deliberately-missing-font.ttf", original)
+        self.assertEqual(result["heading_box"], None)
+        self.assertEqual(result["layout"], "logo_only")
+        self.assertEqual(result["logo_qa"]["canonical_checks_passed"], 9)
+        self.assertEqual(result["logo_qa"]["logo_corner"], "bottom-right")
+        self.assertEqual(result["size"], [1080, 1350])
+        self.assertTrue(final.is_file())
+        with Image.open(base) as raw:
+            # No title/dimming veil was put onto the source.
+            self.assertEqual(raw.getpixel((100, 100)), (7, 17, 31))
+        with self.assertRaises(FileExistsError):
+            m.build(spec_path, self.root, base, final,
+                    self.root / "deliberately-missing-font.ttf", original)
+
     def test_no_buffer_or_publishing_operations(self):
         source = Path(m.__file__).read_text(encoding="utf-8")
         self.assertNotIn("deletePost(", source)
