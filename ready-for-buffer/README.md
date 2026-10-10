@@ -14,4 +14,10 @@ Jede **neu hinzugefügte** Datei `ready-for-buffer/*.json` startet automatisch d
 - Der bestehende Testentwurf wurde bereits übertragen und soll **nicht** hierher kopiert werden.
 - Weitere Details: [Anleitung](../docs/BUFFER_DRAFTS.md).
 
-Noch kein automatischer Live-Test dieses neuen Triggers durchgeführt.
+Der GitHub-Entwurfsweg wurde im zentralen Orchestrator-Lauf #37926453890 erfolgreich getestet. Der neue manuelle Veröffentlichungs-Gate-Entwurf aus PR #2 ist noch nicht produktiv und noch nicht live erprobt.
+
+## Keine Veröffentlichungsfreigabe durch diesen Ordner
+
+Eine Datei unter `ready-for-buffer/` löst ausschließlich eine **Draft-Erstellung** aus. Sie stellt niemals eine Freigabe zur Terminierung oder Veröffentlichung dar. Auch ein gespeicherter Postingzeitvorschlag reicht nicht.
+
+Der in [PR #2](https://github.com/derJosef/social-assets/pull/2) vorgeschlagene zukünftige Weg zur Terminierung nutzt einen bewusst gestarteten `workflow_dispatch`, eine Format-v2-Anfragedatei mit Post-ID und Datei-Hash, ein geschütztes GitHub-Environment und eine über die GitHub-Approvals-API nachgewiesene unabhängige Prüfung. GitHub-Settings sowie der gemeinsame Buffer-Zugang bleiben bis zur gesonderten Freigabe kritische Voraussetzungen. Siehe [Terminierungsanleitung](../docs/BUFFER_SCHEDULING.md).
