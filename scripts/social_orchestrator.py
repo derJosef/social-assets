@@ -48,12 +48,25 @@ def load_brief(path):
     require(file.is_relative_to(ROOT) and file.is_file(), "ungültiger Auftragsdateipfad")
     j = json.loads(file.read_text(encoding="utf-8"))
     fields={"format_version","brand","campaign_id","topic","sources","posting_sources","execution_mode"}
-    require(isinstance(j, dict) and set(j) in (fields, fields | {"prepared_content"}),
+    allowed = fields | {"image_review"}
+    require(isinstance(j,dict) and set(j) in (allowed,allowed | {"prepared_content"}),
             "Brief-Schema ungültig")
     cid = Path(path).stem
     require(j["format_version"] == 1 and j["brand"] == "ai-agent-builder"
             and j["campaign_id"] == cid, "Kampagnenkennung oder Marke stimmt nicht")
     require(j["execution_mode"] in ("smoke","drafts"), "Ausführungsmodus muss smoke/drafts sein")
+    # An autonomous image MUST be grounded in a previously reviewed, SHA-pinned
+    # 4:5 source. The old three-card square renderer is intentionally disabled.
+    review_path = j.get("image_review")
+    require(isinstance(review_path,str) and review_path == f"visual-reviews/{cid}.json",
+            "4:5-Review mit gleichem Kampagnenkürzel erforderlich; keine ungeprüfte Karten-Grafik")
+    # Reject unverifiable image instructions even in a smoke invocation; smoke
+    # itself does not call any model nor read remote URLs.
+    from social_portfolio_scene import validate_spec
+    review = ROOT / review_path
+    require(review.is_file(), "Review-Datei fehlt")
+    source_spec = json.loads(review.read_text(encoding="utf-8"))
+    validate_spec(source_spec,ROOT)
     require(isinstance(j["topic"], str) and 30 <= len(j["topic"]) <= 550, "konkretes Thema erforderlich")
     require(isinstance(j["sources"], list) and 2 <= len(j["sources"]) <= 6, "2-6 Inhaltquellen erforderlich")
     domains = set()
@@ -168,6 +181,8 @@ def select_times(today):
 
 def assess_generated(g):
     require(isinstance(g,dict) and set(g)=={"posts","visual","six_hats","risks"}, "LLM-Antwortstruktur ungültig")
+    require(g["visual"] is None,
+            "Bei geprüftem 4:5-Bild darf das Modell keinen neuen Grafikentwurf erzeugen")
     require(isinstance(g["posts"],dict) and set(g["posts"])==set(TARGETS), "3 Plattformtexte fehlen")
     for t in TARGETS:
         v=g["posts"][t]
@@ -179,18 +194,8 @@ def assess_generated(g):
             and all(isinstance(v,str) and len(v)>24 for v in g["six_hats"].values()),
             "6-Hüte-Prüfung unvollständig")
     require(isinstance(g["risks"],list),"Risiken müssen dokumentiert werden")
-    visual=g["visual"]
-    require(isinstance(visual,dict) and set(visual)=={"badge","headline","subtitle","cards","closing"},
-            "Bildspezifikation unvollständig")
-    require(isinstance(visual["cards"],list) and len(visual["cards"])==3,
-            "Bild muss genau drei Prüf-/Prozesskarten haben")
-    from social_visual_from_spec import check_string
-    for p,l in [("badge",26),("headline",65),("subtitle",92),("closing",76)]:
-        check_string(visual[p],l,p)
-    for card in visual["cards"]:
-        require(isinstance(card,dict) and set(card)=={"title","description"}, "Kartenstruktur")
-        check_string(card["title"],22,"title")
-        check_string(card["description"],56,"description")
+    # Visual composition comes exclusively from the human-reviewed and
+    # fingerprinted image_review file, never from generative three-card text.
 
 def paths_for(c):
     return {
@@ -216,30 +221,22 @@ def write_json(file,obj):
     file.write_text(json.dumps(obj,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
 
 def create_packages(brief, evidences, g):
-    from PIL import ImageFont
-    from social_visual_from_spec import render_background
-    import subprocess
+    from social_portfolio_scene import build
     c=brief["campaign_id"]
     p=available(c)
-    visual={"format_version":1,"brand":"ai-agent-builder","campaign_id":c,**g["visual"]}
-    write_json(ROOT/p["artwork"],visual)
-    font="/tmp/Inter.ttf"
-    require(Path(font).is_file(),"Schrift Inter fehlt – ImageGen-/Fallback nicht zulässig")
-    bbox=render_background(visual,ROOT/p["base"],Path(font))
+    font=Path("/tmp/Inter.ttf")
     logo=ROOT/"media/brand/logo-pauderer-original.png"
     require(hashlib.sha256(logo.read_bytes()).hexdigest()==SHA_LOGO,"Original-Logo Hash falsch")
-    def run(*args):
-        subprocess.run([sys.executable,"scripts/logo_composite.py",*args],
-                       cwd=ROOT,check=True)
-    run("compose",p["base"],p["final"],"--original","media/brand/logo-pauderer-original.png",
-        "--heading-corner","top-left","--frame","on","--margin-ratio","0.05","--stroke-ratio","0.03")
-    run("verify",p["final"],p["base"],"--original","media/brand/logo-pauderer-original.png",
-        "--heading-corner","top-left","--heading-box",",".join(map(str,bbox)))
-    digest=hashlib.sha256((ROOT/p["final"]).read_bytes()).hexdigest()
+    verified=build(ROOT/brief["image_review"],ROOT,ROOT/p["base"],ROOT/p["final"],font,logo)
+    digest=verified["sha256"]
+    source_spec=json.loads((ROOT/brief["image_review"]).read_text(encoding="utf-8"))
     write_json(ROOT/p["receipt"],{
         "campaign_id":c,"brand":"ai-agent-builder","status":"verified_image_only",
-        "base":p["base"],"final":p["final"],"sha256":digest,"heading_corner":"top-left",
-        "heading_box":list(bbox),"logo_original_sha256":SHA_LOGO
+        "base":p["base"],"final":p["final"],"sha256":digest,
+        "layout":verified["layout"],"image_review":brief["image_review"],
+        "source_sha256":verified["source_sha256"],
+        "logo_original_sha256":SHA_LOGO,
+        "manual_review":verified["logo_qa"].get("source_visual_review","separate-review")
     })
     today=datetime.now(timezone.utc).date()
     times=select_times(today)
@@ -252,7 +249,10 @@ def create_packages(brief, evidences, g):
           "novelty","claims_with_sources","language_and_cta","six_hats",
           "privacy_and_rights","brand_image","posting_time_research")},
       "image":{"final":p["final"],"base":p["base"],"sha256":digest,
-               "heading_corner":"top-left","heading_box":list(bbox)},
+               "layout":verified["layout"],"review_spec":brief["image_review"],
+               "source_sha256":verified["source_sha256"],
+               "heading_corner":"top-left" if verified["layout"]=="headline" else None,
+               "heading_box":verified["heading_box"]},
       "posts":{t:f"ready-for-buffer/auto-{c}-{t}.json" for t in TARGETS},
       "posting_times":times
     }
@@ -261,7 +261,7 @@ def create_packages(brief, evidences, g):
         write_json(ROOT/manifest["posts"][t],{
             "format_version":2,"target":t,"text":g["posts"][t],
             "media":{"type":"images","images":[{"url":url,
-              "alt_text":g["visual"]["headline"]+" – drei Prozessschritte, Originalmarke unten rechts."}]}
+              "alt_text":"Technische Darstellung zum Thema "+brief["topic"][:165]+"; Original-Pauderer-Logo unten rechts."}]}
         })
     write_json(ROOT/p["manifest"],manifest)
     plan=["# "+c,"","## Faktenquellen",""]
@@ -274,7 +274,7 @@ def create_packages(brief, evidences, g):
     plan += ["","## Methodenhinweis",
              "Quellentexte automatisiert abgerufen, Text-/Faktenprüfung durch Modell und Strukturregeln; keine menschliche Fachabnahme.",
              "Postingzeiten sind unveröffentlichte Planungswerte. Kein Buffer-Status scheduled erlaubt.",
-             "Kampagnenbild wurde gegen die originale Logo-Datei pixelgenau verifiziert."]
+             "Kampagnenbild aus zuvor visuell geprüfter, SHA-fixierter 4:5-Quelle mit kanonischem Original-Logo-Compositor."]
     (ROOT/p["plan"]).parent.mkdir(parents=True,exist_ok=True)
     (ROOT/p["plan"]).write_text("\n".join(plan)+"\n",encoding="utf-8")
     sys.path.insert(0,str(ROOT/"scripts"))
@@ -297,6 +297,7 @@ def prepare(brief_path,mode,report_path):
             available(brief["campaign_id"])
             note("collision_check","PASS")
             note("network_and_model","NOT_RUN","Trockenlauf ohne externe API")
+            note("image_review","PASS","Geprüfte 4:5-Quelldatei und SHA vorhanden")
             report["state"]="smoke_pass"
             return report
         require(mode=="drafts","Nur smoke oder drafts erlaubt")
@@ -329,7 +330,7 @@ Nur wirklich belegte, klar begrenzte Aussagen, keine pauschalen Anbieter-Anschul
 Schreibe Du-Ansprache für B2B, Mittelstand. Keine Copyright-Textkopien. Niemals Freigabe zur Veröffentlichung erteilen.
 Liefere NUR JSON mit genau vier Schlüsseln:
 posts: Objekt linkedin/facebook/instagram, jeweils eigenständiger fertiger deutscher Text mit CTA.
-visual: Objekt badge/headline/subtitle/cards (genau 3 Objekte title/description)/closing. Überschrift oben links; unten rechts freier Platz.
+visual: null. Das bereits fachlich geprüfte 4:5-Motiv wird separat eingesetzt. Du darfst KEIN neues Bild, keine drei Karten und keine Bildüberschrift anfordern.
 six_hats: Objekt white/red/black/yellow/green/blue mit konkreten Aussagen >24 Zeichen.
 risks: Liste verbleibender fachlicher Risiken, keine falsche Sicherheit.
 Quellenhinweise in Beiträgen nennen, aber keine unbelegten quantitativen Zahlen.
