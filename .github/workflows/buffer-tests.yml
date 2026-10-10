@@ -20,12 +20,20 @@ jobs:
   test:
     name: Keine Buffer-Zugangsdaten und keine API-Aufrufe
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - name: Quelltext laden
         uses: actions/checkout@v5
         with:
           persist-credentials: false
+
+      - name: Python für Bild- und Buffer-Tests vorbereiten
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Ausschließlich Offline-Bildtest-Abhängigkeiten installieren
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow>=11,<13' 'numpy>=2,<3'
 
       - name: Syntaxcheck
         run: python3 -B -m py_compile scripts/buffer_draft.py scripts/autonomous_campaign_gate.py scripts/social_visual_from_spec.py tests/test_buffer_draft.py tests/test_autonomous_campaign_gate.py
