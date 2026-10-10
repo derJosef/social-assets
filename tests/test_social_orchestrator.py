@@ -162,7 +162,9 @@ class OrchestratorTests(unittest.TestCase):
                  "risks":[]}
         m.assess_generated(content)
         sources={s["url"]:"Synthetic evidence fixture" for s in br["sources"]}
-        with patch.object(gate,"ROOT",self.root), patch.object(buffer_draft,"ROOT",self.root):
+        # The shared suite can import the same module under two names.
+        # Bind precisely the function object called by the gate.
+        with patch.object(gate,"ROOT",self.root), patch.dict(gate.read_draft.__globals__,{"ROOT":self.root}):
             p=m.create_packages(br,sources,content)
         from PIL import Image
         with Image.open(self.root/p["final"]) as rendered:
