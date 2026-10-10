@@ -166,10 +166,25 @@ def main():
     parser.add_argument("--logo", type=Path, default=Path("media/brand/logo-pauderer-original.png"))
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
-    if not args.spec.is_relative_to(root):
-        raise InvalidScene("Specification must be inside repository")
-    print(json.dumps(build(args.spec, root, args.base, args.final,
-                           args.font, args.logo), ensure_ascii=False))
+    spec_path = (root / args.spec).resolve()
+    base_path = (root / args.base).resolve()
+    final_path = (root / args.final).resolve()
+    logo_path = (root / args.logo).resolve()
+    if not spec_path.is_relative_to(root) or not re.fullmatch(
+        r"visual-reviews/[a-z0-9][a-z0-9_.-]*\.json", spec_path.relative_to(root).as_posix()
+    ):
+        raise InvalidScene("Review specification must be under visual-reviews/")
+    for destination, directory in ((base_path, "media/source-images/"),
+                                   (final_path, "media/images/")):
+        if not destination.is_relative_to(root):
+            raise InvalidScene("Output must remain inside the asset repository")
+        relative = destination.relative_to(root).as_posix()
+        if not relative.startswith(directory) or not re.fullmatch(
+            r"[a-z0-9][a-z0-9_.-]*\.png", relative[len(directory):]
+        ):
+            raise InvalidScene("Only new PNG outputs in the approved media directories")
+    print(json.dumps(build(spec_path, root, base_path, final_path,
+                           args.font, logo_path), ensure_ascii=False))
 
 
 if __name__ == "__main__":
