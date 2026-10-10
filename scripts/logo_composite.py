@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 """Deterministisches Logo-Compositing und Pruefung fuer Social-Media-Grafiken.
 
-Gehoert zum Skill `meine-marke`. Die Regeln stehen in SKILL.md (Abschnitt Logo)
+Gehoert zum Skill `josefs-marke`. Die Regeln stehen in SKILL.md (Abschnitt Logo)
 und in references/social-media/DESIGN.md; dieses Skript fuehrt sie technisch aus.
 Es verwendet ausschliesslich Pillow und NumPy, keine generative KI.
 
     compose  Original-Logo laden, proportional skalieren, optional weissen
              Aussenrahmen aus der Logomaske erzeugen, in der diagonal gegenueber
-             liegenden Ecke zur Hauptueberschrift einsetzen.
+             liegenden Ecke zur Hauptueberschrift einsetzen. Fuer Bildposts
+             ohne jede Beschriftung (Logo-only) mit --logo-corner statt
+             --heading-corner: das Logo steht dann in der gewaehlten Ecke.
     verify   Fertige Grafik gegen die Regeln pruefen. Exit 0 = freigabefaehig,
              1 = nicht freigabefaehig, 2 = Pruefung unvollstaendig.
+             Bei Logo-only-Grafiken entfaellt die Ueberschriftspruefung, alle
+             Logo-Pruefungen laufen unveraendert.
 """
 from __future__ import annotations
 
@@ -48,7 +52,7 @@ class LogoError(Exception):
 class Placement:
     """Alle Parameter, die ein Compositing eindeutig und reproduzierbar machen."""
 
-    heading_corner: str
+    heading_corner: str | None  # None nur bei Logo-only (keine Ueberschrift im Bild)
     logo_width: int
     logo_height: int
     margin: int
@@ -57,6 +61,9 @@ class Placement:
     gap: int
     canvas_width: int
     canvas_height: int
+    # Nur Logo-only. Standardwerte halten aeltere PNG-Metadaten ladbar.
+    logo_only: bool = False
+    logo_only_corner: str | None = None
 
     @property
     def pad(self) -> int:
@@ -68,6 +75,8 @@ class Placement:
 
     @property
     def logo_corner(self) -> str:
+        if self.logo_only:
+            return self.logo_only_corner
         return OPPOSITE[self.heading_corner]
 
     def box(self) -> tuple[int, int, int, int]:
@@ -101,7 +110,7 @@ def load_original(path: Path = DEFAULT_ORIGINAL, check_hash: bool = True) -> Ima
             raise LogoError(
                 f"Pruefsumme weicht ab ({found}). Entweder ist die Datei nicht das freigegebene "
                 "Original oder das Logo wurde bewusst erneuert; dann ORIGINAL_SHA256 und die "
-                "Regel in meine-marke aktualisieren."
+                "Regel in josefs-marke aktualisieren."
             )
     image = Image.open(path)
     if image.size != ORIGINAL_SIZE:
@@ -199,15 +208,24 @@ def luminance(image: Image.Image) -> float:
 
 def make_placement(
     canvas: tuple[int, int],
-    heading_corner: str,
+    heading_corner: str | None,
     logo_width_ratio: float = 0.16,
     margin_ratio: float = 0.05,
     frame: bool = True,
     stroke_ratio: float = 0.03,
     gap: int = 0,
+    logo_corner: str | None = None,
 ) -> Placement:
-    if heading_corner not in CORNERS:
-        raise LogoError(f"Unbekannte Ecke {heading_corner!r}; erlaubt: {', '.join(CORNERS)}")
+    """Standard: `heading_corner` gesetzt, das Logo steht diagonal gegenueber.
+
+    Logo-only: `heading_corner=None` und `logo_corner` gesetzt. Beides zugleich oder
+    keines von beiden ist ein Fehler; es gibt keine Platzhalter-Ueberschrift.
+    """
+    if (heading_corner is None) == (logo_corner is None):
+        raise LogoError("Entweder heading_corner (Standard) oder logo_corner (Logo-only) angeben, nicht beides und nicht keines.")
+    chosen = heading_corner if heading_corner is not None else logo_corner
+    if chosen not in CORNERS:
+        raise LogoError(f"Unbekannte Ecke {chosen!r}; erlaubt: {', '.join(CORNERS)}")
     canvas_w, canvas_h = canvas
     logo_w = round(canvas_w * logo_width_ratio)
     logo_h = max(1, round(logo_w * ORIGINAL_SIZE[1] / ORIGINAL_SIZE[0]))
@@ -221,6 +239,8 @@ def make_placement(
         gap=gap if frame else 0,
         canvas_width=canvas_w,
         canvas_height=canvas_h,
+        logo_only=heading_corner is None,
+        logo_only_corner=logo_corner,
     )
 
 
@@ -239,23 +259,24 @@ def composite(base: Image.Image, layer: Image.Image, placement: Placement) -> Im
 def compose_file(
     base_path: Path,
     out_path: Path,
-    heading_corner: str,
+    heading_corner: str | None,
     original_path: Path = DEFAULT_ORIGINAL,
     logo_width_ratio: float = 0.16,
     margin_ratio: float = 0.05,
     frame: str = "auto",
     stroke_ratio: float = 0.03,
     gap: int = 0,
+    logo_corner: str | None = None,
 ) -> Placement:
     original = load_original(original_path)
     base = Image.open(base_path).convert("RGBA")
-    placement = make_placement(base.size, heading_corner, logo_width_ratio, margin_ratio, True, stroke_ratio, gap)
+    placement = make_placement(base.size, heading_corner, logo_width_ratio, margin_ratio, True, stroke_ratio, gap, logo_corner)
     if frame == "auto":
         x0, y0, x1, y1 = placement.box()
         use_frame = luminance(base.crop((x0, y0, x1, y1))) < 128
-        placement = make_placement(base.size, heading_corner, logo_width_ratio, margin_ratio, use_frame, stroke_ratio, gap)
+        placement = make_placement(base.size, heading_corner, logo_width_ratio, margin_ratio, use_frame, stroke_ratio, gap, logo_corner)
     elif frame == "off":
-        placement = make_placement(base.size, heading_corner, logo_width_ratio, margin_ratio, False, stroke_ratio, gap)
+        placement = make_placement(base.size, heading_corner, logo_width_ratio, margin_ratio, False, stroke_ratio, gap, logo_corner)
     elif frame != "on":
         raise LogoError("frame muss auto, on oder off sein.")
     layer = build_logo_layer(original, placement.logo_width, placement.frame, placement.stroke, placement.gap)
@@ -364,13 +385,26 @@ def verify(
                   f"{'left' if center_x < placement.canvas_width / 2 else 'right'}")
     else:
         actual = "nicht gefunden"
-    add("Logo diagonal gegenueber der Hauptueberschrift",
-        in_corner and corner == OPPOSITE[placement.heading_corner] and actual == corner,
-        f"Ueberschrift {placement.heading_corner}, erwartet Logo {corner}, gemessen im Bild {actual}, "
-        f"Randabstand {near_x}/{near_y} px")
+    if placement.logo_only:
+        add("Logo in der festgelegten Ecke (Logo-only)",
+            in_corner and corner in CORNERS and actual == corner,
+            f"festgelegt {corner}, gemessen im Bild {actual}, Randabstand {near_x}/{near_y} px")
+    else:
+        add("Logo diagonal gegenueber der Hauptueberschrift",
+            in_corner and corner == OPPOSITE[placement.heading_corner] and actual == corner,
+            f"Ueberschrift {placement.heading_corner}, erwartet Logo {corner}, gemessen im Bild {actual}, "
+            f"Randabstand {near_x}/{near_y} px")
 
     # 9. Ueberschrift
-    if heading_box is None:
+    if placement.logo_only:
+        # Keine Platzhalter-Ueberschrift: Eine Box waere ein Widerspruch zum Modus.
+        add("Logo-only: keine Ueberschrift angegeben", heading_box is None,
+            "heading_box fehlt wie vorgesehen" if heading_box is None
+            else "heading_box angegeben: Grafik mit Ueberschrift im Standardmodus (--heading-corner) erzeugen")
+        # Maschinell nicht pruefbar; bleibt Teil der Rohmotivpruefung in DESIGN.md.
+        checks.append(Check("Basisbild ohne Schrift und ohne Fremdlogo", "manual",
+                            "nicht maschinell pruefbar: Rohmotivpruefung in DESIGN.md (Ebenen und Pruefung des Rohmotivs)"))
+    elif heading_box is None:
         checks.append(Check("Ueberschrift sichtbar, ohne Ueberlagerung, in der Ueberschriftsecke", "skipped",
                             "heading_box fehlt: Pruefung unvollstaendig"))
     else:
@@ -400,6 +434,8 @@ def verify_files(
     if raw is None:
         raise LogoError(f"Keine Placement-Angaben im PNG ({PNG_KEY}); Grafik wurde nicht mit compose erzeugt.")
     placement = Placement(**json.loads(raw))
+    if heading_corner and placement.logo_only:
+        raise LogoError("Logo-only-Grafik hat keine Ueberschriftsecke; --heading-corner nicht angeben.")
     if heading_corner and heading_corner != placement.heading_corner:
         placement = Placement(**{**asdict(placement), "heading_corner": heading_corner})
     checks = verify(final, Image.open(base_path), placement, original, heading_box)
@@ -429,7 +465,11 @@ def main(argv: list[str] | None = None) -> int:
     comp = sub.add_parser("compose", help="Logo in die diagonal gegenueberliegende Ecke einsetzen")
     comp.add_argument("base", type=Path, help="Bild aus der KI-Bildgenerierung (ohne Logo)")
     comp.add_argument("out", type=Path, help="fertiges PNG")
-    comp.add_argument("--heading-corner", required=True, choices=CORNERS)
+    corner = comp.add_mutually_exclusive_group(required=True)
+    corner.add_argument("--heading-corner", choices=CORNERS,
+                        help="Standard: Ecke der Hauptueberschrift, das Logo steht diagonal gegenueber")
+    corner.add_argument("--logo-corner", choices=CORNERS,
+                        help="Logo-only: Ecke fuer das Logo in einem Bild ohne jede Beschriftung")
     comp.add_argument("--original", type=Path, default=DEFAULT_ORIGINAL)
     comp.add_argument("--logo-width-ratio", type=float, default=0.16)
     comp.add_argument("--margin-ratio", type=float, default=0.05)
@@ -449,7 +489,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "compose":
             placement = compose_file(args.base, args.out, args.heading_corner, args.original,
                                      args.logo_width_ratio, args.margin_ratio, args.frame,
-                                     args.stroke_ratio, args.gap)
+                                     args.stroke_ratio, args.gap, args.logo_corner)
             print(json.dumps(asdict(placement), indent=2))
             return 0
         code, checks = verify_files(args.final, args.base, args.original, args.heading_corner, args.heading_box)
@@ -458,6 +498,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     for check in checks:
         print(f"[{check.status.upper():7}] {check.name}: {check.detail}")
+    if code == 0 and any(c.status == "manual" for c in checks):
+        print("HINWEIS: Logo-only ist nur freigabefaehig, wenn das Basisbild die Rohmotivpruefung ohne Schrift bestanden hat.")
     print({0: "ERGEBNIS: freigabefaehig", 1: "ERGEBNIS: NICHT freigabefaehig, nicht an Buffer uebergeben",
            2: "ERGEBNIS: Pruefung unvollstaendig, nicht freigabefaehig"}[code])
     return code
