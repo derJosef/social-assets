@@ -40,8 +40,8 @@ def digest(path: Path) -> str:
 
 def validate_spec(spec: dict, root: Path) -> Path:
     if not isinstance(spec, dict) or set(spec) != {
-        "format_version", "brand", "source", "source_sha256", "heading",
-        "visual_review", "review_evidence"
+        "format_version", "brand", "source", "source_sha256", "layout",
+        "heading", "visual_review", "review_evidence"
     }:
         raise InvalidScene("Exact version-1 scene specification required")
     if spec["format_version"] != 1 or spec["brand"] != "ai-agent-builder":
@@ -49,10 +49,16 @@ def validate_spec(spec: dict, root: Path) -> Path:
     source = spec["source"]
     if not isinstance(source, str) or not SOURCE_RE.fullmatch(source):
         raise InvalidScene("Source must be an approved in-repository PNG path")
-    if not isinstance(spec["heading"], str) or not 5 <= len(spec["heading"]) <= 65:
-        raise InvalidScene("A short heading is required")
-    if any(c in spec["heading"] for c in "\r\n\t"):
-        raise InvalidScene("Heading must be one line in metadata")
+    if spec["layout"] not in ("headline", "logo_only"):
+        raise InvalidScene("Only headline and logo_only profiles are recognized")
+    heading = spec["heading"]
+    if spec["layout"] == "logo_only":
+        if heading is not None:
+            raise InvalidScene("Logo-only variant must have a genuinely absent heading")
+    elif not isinstance(heading, str) or not 5 <= len(heading) <= 65 or any(
+        c in heading for c in "\r\n\t"
+    ):
+        raise InvalidScene("Headline layout requires one nonempty, single-line heading")
     review = spec["visual_review"]
     if not isinstance(review, dict) or set(review) != set(REVIEW_KEYS):
         raise InvalidScene("Every visual review field must be provided")
@@ -97,15 +103,21 @@ def layout_heading(draw: ImageDraw.ImageDraw, heading: str, font: ImageFont.Free
     return lines
 
 
-def render_base(source_path: Path, dest: Path, heading: str, font_path: Path,
-                *, allow_existing: bool = False) -> tuple[int, int, int, int]:
+def render_base(source_path: Path, dest: Path, heading: str | None, font_path: Path,
+                *, allow_existing: bool = False) -> tuple[int, int, int, int] | None:
     if dest.exists() and not allow_existing:
         raise FileExistsError("Never overwrite a previous campaign image")
+    with Image.open(source_path) as original:
+        im = original.convert("RGB").resize(SIZE, Image.Resampling.LANCZOS)
+    if heading is None:
+        # True logo-only layout: do not insert heading, labels, dimming veil
+        # or placeholder box. Original-brand logo is composed separately.
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        im.save(dest, format="PNG")
+        return None
     if not font_path.is_file():
         raise InvalidScene("Inter font missing")
     font = ImageFont.truetype(str(font_path), 67)
-    with Image.open(source_path) as original:
-        im = original.convert("RGB").resize(SIZE, Image.Resampling.LANCZOS)
     # Contrast veil only over an intentionally quiet upper-left zone.
     veil = Image.new("RGBA", SIZE, (0, 0, 0, 0))
     layer = ImageDraw.Draw(veil, "RGBA")
@@ -147,14 +159,26 @@ def build(spec_path: Path, root: Path, base: Path, final: Path,
         call("compose", base, final, "--original", logo,
              "--heading-corner", "top-left",
              "--frame", "on", "--margin-ratio", "0.05", "--stroke-ratio", "0.03")
-        call("verify", final, base, "--original", logo,
-             "--heading-corner", "top-left",
-             "--heading-box", ",".join(map(str, bbox)))
-    except (subprocess.CalledProcessError, OSError):
+        if spec["layout"] == "logo_only":
+            # Explicit, fail-closed profile: the canonical verifier returns 2
+            # for absent headings; our independent gate checks every other
+            # named requirement, rejects unknown/skipped checks, and requires
+            # the original logo to be in the verified lower-right position.
+            from logo_only_gate import verify_logo_only
+            qa = verify_logo_only(final, base, logo)
+        else:
+            if bbox is None:
+                raise InvalidScene("Missing mandatory heading rectangle")
+            call("verify", final, base, "--original", logo,
+                 "--heading-corner", "top-left",
+                 "--heading-box", ",".join(map(str, bbox)))
+            qa = {"profile": "headline", "status": "verified_image_only"}
+    except (subprocess.CalledProcessError, OSError, ValueError):
         final.unlink(missing_ok=True)
         raise
-    return {"size": list(SIZE), "sha256": digest(final), "source_sha256": digest(source),
-            "heading_box": list(bbox), "status": "verified_image_only"}
+    return {"size": list(SIZE), "sha256": digest(final),
+            "source_sha256": digest(source), "heading_box": list(bbox) if bbox else None,
+            "layout": spec["layout"], "logo_qa": qa, "status": "verified_image_only"}
 
 
 def main():
