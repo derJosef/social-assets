@@ -123,15 +123,16 @@ def fetch_evidence(url):
 
 def call_model(messages, *, max_tokens=3100):
     openai=os.environ.get("OPENAI_API_KEY","").strip()
-    if openai:
-        api="https://api.openai.com/v1/chat/completions"
-        token=openai
-        model=os.environ.get("SOCIAL_OPENAI_MODEL","gpt-4.1-mini")
-    else:
-        token=os.environ.get("GITHUB_TOKEN","")
-        require(bool(token),"Kein OpenAI-Secret oder GitHub-Models-Token verfügbar")
-        api="https://models.github.ai/inference/chat/completions"
-        model=os.environ.get("SOCIAL_GITHUB_MODEL","openai/gpt-4o-mini")
+    # GitHub Models was fully retired on 2026-07-30. The defunct
+    # models.github.ai endpoint misleadingly responds HTTP 200 text/plain
+    # with "OK", never a completion. Refuse before touching the network.
+    require(bool(openai),
+            "GitHub Models ist seit 30.07.2026 eingestellt. "
+            "Ohne freigegebenen externen Textmodell-Zugang nur prepared_content nutzen. "
+            "Keinen kostenpflichtigen API-Schluessel automatisch einrichten.")
+    api="https://api.openai.com/v1/chat/completions"
+    token=openai
+    model=os.environ.get("SOCIAL_OPENAI_MODEL","gpt-4.1-mini")
     payload={"model":model,"messages":messages,"temperature":0.2,"max_tokens":max_tokens,
              "response_format":{"type":"json_object"}}
     data=json.dumps(payload).encode()
@@ -147,7 +148,7 @@ def call_model(messages, *, max_tokens=3100):
         except json.JSONDecodeError:
             raise Blocked(f"Modellantwort ist kein JSON-Objekt (HTTP 200, Bytes={len(raw)}, Content-Type={content_type[:60]})") from None
     except urllib.error.HTTPError as err:
-        raise Blocked(f"Modellanbieter HTTP {err.code} – GitHub Models oder API-Berechtigung prüfen") from None
+        raise Blocked(f"Textmodell-Anbieter HTTP {err.code} – API-Zugang oder Berechtigung prüfen") from None
     except urllib.error.URLError:
         raise Blocked("Modellanbieter nicht erreichbar") from None
     try:
@@ -301,6 +302,12 @@ def prepare(brief_path,mode,report_path):
             return report
         require(mode=="drafts","Nur smoke oder drafts erlaubt")
         available(brief["campaign_id"])
+        # Fail before source-fetch/network when autonomous text generation has
+        # no approved provider. prepared_content does not need any model token.
+        if "prepared_content" not in brief and not os.environ.get("OPENAI_API_KEY", "").strip():
+            raise Blocked("GitHub Models seit 30.07.2026 abgeschaltet; "
+                          "automatische Texte ohne freigegebenen Modellanbieter nicht verfügbar. "
+                          "Alternativ vorbereitete Texte via prepared_content einreichen.")
         evidences={}
         for source in brief["sources"]:
             try:
