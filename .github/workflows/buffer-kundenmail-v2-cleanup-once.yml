@@ -1,0 +1,45 @@
+name: One-time old customer-mail drafts replacement cleanup (exact three IDs)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cleanup-requests/2026-10-10-kundenmail-v2-replace-three-drafts.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: buffer-drafts-single-flight
+  cancel-in-progress: false
+
+jobs:
+  cleanup-exact-old-drafts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Confirm fresh unique one-time request and validate exact cleanup script
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          request='cleanup-requests/2026-10-10-kundenmail-v2-replace-three-drafts.json'
+          [[ ! "$BEFORE_SHA" =~ ^0+$ ]] || { echo 'Missing comparison SHA' >&2; exit 1; }
+          mapfile -t requests < <(git diff --no-renames --diff-filter=A --name-only "$BEFORE_SHA" "$GITHUB_SHA" -- cleanup-requests/)
+          [[ "${#requests[@]}" -eq 1 && "${requests[0]}" == "$request" ]] || {
+            echo 'The exact one-time request must be the only new cleanup request' >&2; exit 1;
+          }
+          python3 -B -m py_compile scripts/one_time_replace_kundenmail_drafts_v2.py scripts/buffer_draft.py
+          test ! -e cleanup-audit/2026-10-10-kundenmail-v2-image-replacement.json
+
+      - name: Replace exactly three superseded posts, reserve and append durable audit
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 -B -m scripts.one_time_replace_kundenmail_drafts_v2
