@@ -132,8 +132,10 @@ class SceneTests(unittest.TestCase):
                          self.root / "deliberately-missing-font.ttf", original)
         self.assertEqual(result["heading_box"], None)
         self.assertEqual(result["layout"], "logo_only")
-        self.assertEqual(result["logo_qa"]["canonical_checks_passed"], 9)
-        self.assertEqual(result["logo_qa"]["logo_corner"], "bottom-right")
+        self.assertEqual(result["logo_qa"]["validator"], "personalos_canonical")
+        self.assertEqual(result["logo_qa"]["profile"], "logo_only")
+        self.assertIs(result["logo_qa"]["logo_verified"], True)
+        self.assertEqual(result["logo_qa"]["source_visual_review"], "manual")
         self.assertEqual(result["size"], [1080, 1350])
         self.assertTrue(final.is_file())
         with Image.open(base) as raw:
