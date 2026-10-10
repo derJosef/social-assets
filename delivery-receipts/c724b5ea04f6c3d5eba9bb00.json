@@ -2,6 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-10-kundenmail-kein-befehl-005-linkedin.json",
   "target": "linkedin",
   "draft_sha256": "4664271ff7415d33df8f5d643ab5ba81305be708565525c7144824252ff43419",
-  "state": "pending_manual_reconciliation_on_failure",
-  "github_run_id": "38034584558"
+  "state": "draft_created",
+  "github_run_id": "38034584558",
+  "buffer_post_id": "6ac9e964c4de2d2b121be215"
 }
