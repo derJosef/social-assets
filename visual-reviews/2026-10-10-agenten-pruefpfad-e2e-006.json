@@ -1,0 +1,18 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "source": "media/source-images/2026-10-10-kundenmail-pruefpunkt-portfolio-1080x1350.png",
+  "source_sha256": "626966b2022754ff953219d298fb2af226d4c6223920d118a9e96871ce208555",
+  "layout": "logo_only",
+  "heading": null,
+  "visual_review": {
+    "no_people": true,
+    "no_robot": true,
+    "no_foreign_logo": true,
+    "no_generated_text": true,
+    "plausible_details": true,
+    "matches_topic": true,
+    "heading_and_logo_space": true
+  },
+  "review_evidence": "Bildsichtprüfung ChatGPT am 10.10.2026 für den NEUEN E2E-Test: Bereits vorhandenes 1080x1350-Rohmotiv lokal sichtbar geprüft und SHA256 unabhängig abgeglichen. In der linken Bildhälfte gestapelte Dokumente und Mail-Symbol, in der Mitte ein deutlicher Haken als Kontrollpunkt, rechts eine CAD-Montagebaugruppe auf technischen Bildschirmen; visuelle Überleitung von Information über Freigabe zur technischen Bearbeitung. Es wird NICHT behauptet, dass das Bild echte Software-Protokolle oder tatsächliche Audit-Telemetrie zeigt; es symbolisiert überprüfbare Bearbeitungsschritte. Dunkelblau/Petrol; keine sichtbaren Menschen, Roboter, erkennbaren Markenzeichen, lesbaren Textzeilen oder Logos. Unten rechts ist Raum für das Original-Pauderer-Logo. Quelle bewusst als Stil-/Pipeline-Regressionsmotiv aus vorherigem Durchlauf wiederverwendet: Dies ist ein NEUER Kampagnen-Test, keine unabhängige neue Bildgenerierung; keine Veröffentlichung oder Buffer-Freigabe."
+}
