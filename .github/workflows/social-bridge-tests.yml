@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - 'feature/chatgpt-bridge-safe-intake-20261009'
+      - main
   pull_request:
     paths:
       - '.github/workflows/buffer-auto-schedule.yml'
