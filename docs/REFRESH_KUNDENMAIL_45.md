@@ -64,3 +64,38 @@ python3 scripts/social_portfolio_scene.py \
 5. Alte und neue IDs sowie Text-Hash, Medien-URL und Audit in einem neuen datierten Report dokumentieren. Buffer-Link zum Review bereitstellen. **Keine automatische Terminierung oder Veröffentlichung.**
 
 **Referenz für gezielte Löschaktion:** [historischer Actions-Lauf 37792336656](https://github.com/derJosef/social-assets/actions/runs/37792336656); Audit \`cleanup-audit/2026-10-08-buffer-test-drafts.json\` (sechs vorher bestätigte Tests). Sicherheitslücke M4 ist ungeklärt und wird durch diesen Bild-Refresh nicht bearbeitet.
+
+## Alternative: Motiv ohne Bildtext, Original-Logo bleibt
+
+**Josefs ausdrückliche Präzisierung am 10.10.2026:** Solche hochwertigen B2B-Bildmotive dürfen **ohne weitere Beschriftung**, aber **mit dem unveränderten originalen Pauderer-Logo** gestaltet werden. Der Plattform-Postingtext bleibt separat vollständig und unverändert. Das ist eine **zusätzliche** AI-Agent-Builder-Gestaltungsoption; erklärende Karussell-Inhaltsfolien dürfen weiter Text haben.
+
+**Technischer Entwurf auf PR #3, noch nicht in Produktion freigegeben:**
+
+- `scripts/social_portfolio_scene.py` kennt `layout: "logo_only"` mit `heading: null`. Dabei wird weder Headline noch Titel-Veil noch Dummy-Textbox gerendert. Das Rohmotiv muss ohnehin dem Thema entsprechen, genau 4:5 vorliegen und die dokumentierte Bildsichtprüfung auf Fremdmarken, generierte Pseudo-Schrift, technische Fehler, ungewollte Personen/Roboter bestehen.
+- Das Original-Logo wird ausschließlich durch den bestehenden unveränderten `logo_composite.py compose` unten rechts platziert. `scripts/logo_only_gate.py` bildet einen **eigenen strengen Prüfungspfad** für den bewusst nicht vorhandenen Bildtext, ohne den kanonischen Kompositor umzuschreiben. Er verlangt das echte Original-Logo samt Prüfsumme, die korrekten 1080×1350, den weißen Außenrahmen, die Ecke unten rechts, echte PNG-Platzierungsmetadaten, Randabstände, unveränderte Pixel außerhalb der Logofläche und alle neun anwendbaren Prüfpunkte im kanonischen Validator. Die zehnte (unpassende) Überschriften-Prüfung wird **ausschließlich bei dem ausdrücklich deklarierten Profil** als „nicht anwendbar“ geführt. Sie wird **nicht** stillschweigend als erfolgreich ausgegeben. Veränderte/fehlende kanonische Prüfpunkte, unbekannte Skips und gefälschte Bildpixel führen zum Abbruch.
+- Bestehende `headline`-Variante bleibt getrennt. Für sie müssen `heading` und Inter weiterhin vorhanden sein. Das neue Review-Schema verlangt ausdrücklich `layout` mit einem der beiden Werte. Beispiel für die textfreie Variante:
+
+```json
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "layout": "logo_only",
+  "source": "media/source-images/<wirklich-geprueftes-motiv>.png",
+  "source_sha256": "<SHA256 des freigegebenen Originals>",
+  "heading": null,
+  "visual_review": {
+    "no_people": true,
+    "no_robot": true,
+    "no_foreign_logo": true,
+    "no_generated_text": true,
+    "plausible_details": true,
+    "matches_topic": true,
+    "heading_and_logo_space": true
+  },
+  "review_evidence": "<schriftliche und tatsächlich vorgenommene Bildsichtprüfung>"
+}
+```
+
+**Noch offene Geltung und Freigabe:** `derJosef/personalos/skills/josefs-marke/references/social-media/DESIGN.md` und die übergeordnete, kanonische Logo-Prüfung müssen durch den autorisierten PersonalOS-Agenten die von Josef beschlossene Logo-only-Option anerkennen oder das vorgeschlagene QA-Profil ausdrücklich fachlich prüfen. Zum letzten geprüften GitHub-Stand `e73814f` war das **nicht synchronisiert**. Der bisherige Pixelprüfpfad im PR ist ein **Testentwurf**, kein Ersatz für eine verbindliche Markenfreigabe. Keine Zusammenführung oder Buffer-Übertragung vor Abgleich.
+
+**Nicht als erledigt ausgeben:** Bisher ist kein für das konkrete Kundenmail-Thema final freigegebenes 4:5-Motiv binär ins Asset-Repository übertragen, kein Endbild mit dieser echten Quelle erstellt, keine neuen Buffer-Drafts geschaffen und kein alter Draft gelöscht. Der sichere Cutover ist weiterhin die vorstehende Austauschreihenfolge. Manche im Chat erzeugten Motivversionen enthalten unerwünschte App-Symbole oder Pseudo-Schrift und sind ungeeignet; die frühere Datenfluss-/CAD-Stilprobe ist allein wegen der Stilfreigabe noch keine fachliche Bildfreigabe für die Kundenmail-Kampagne.
