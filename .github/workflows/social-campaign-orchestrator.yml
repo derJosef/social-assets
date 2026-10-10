@@ -20,7 +20,6 @@ on:
 
 permissions:
   contents: write
-  models: read
 
 concurrency:
   group: social-campaign-orchestrator
@@ -107,7 +106,6 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.SOCIAL_OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}
-          SOCIAL_GITHUB_MODEL: openai/gpt-4o-mini
           REPORT_PATH: ${{ runner.temp }}/social-orchestrator-report.json
         run: |
           set -euo pipefail
