@@ -7,10 +7,16 @@ on:
       - 'scripts/buffer_draft.py'
       - 'scripts/autonomous_campaign_gate.py'
       - 'scripts/social_visual_from_spec.py'
+      - 'scripts/buffer_schedule.py'
+      - 'scripts/validate_chatgpt_handoff.py'
+      - 'scripts/publish_approval.py'
       - 'tests/**'
       - '.github/workflows/buffer-tests.yml'
       - '.github/workflows/buffer-auto-drafts.yml'
       - '.github/workflows/buffer-draft.yml'
+      - '.github/workflows/buffer-auto-schedule.yml'
+      - '.github/workflows/chatgpt-handoff-pr.yml'
+      - '.github/workflows/social-bridge-tests.yml'
   workflow_dispatch:
 
 permissions:
@@ -26,6 +32,13 @@ jobs:
         uses: actions/checkout@v5
         with:
           persist-credentials: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Pillow für vollständige Offline-Testreihe
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow>=11,<13'
 
       - name: Syntaxcheck
         run: python3 -B -m py_compile scripts/buffer_draft.py scripts/autonomous_campaign_gate.py scripts/social_visual_from_spec.py tests/test_buffer_draft.py tests/test_autonomous_campaign_gate.py
