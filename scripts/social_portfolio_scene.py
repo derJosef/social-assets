@@ -152,6 +152,7 @@ def build(spec_path: Path, root: Path, base: Path, final: Path,
     if not logo.is_file() or digest(logo) != LOGO_SHA:
         raise InvalidScene("Verified immutable Pauderer logo unavailable")
     bbox = render_base(source, base, spec["heading"], font)
+    final.parent.mkdir(parents=True, exist_ok=True)
     def call(*args):
         subprocess.run([sys.executable, str(root / "scripts/logo_composite.py"),
                         *map(str, args)], cwd=root, check=True)
