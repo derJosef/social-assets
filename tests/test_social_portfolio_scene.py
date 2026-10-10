@@ -23,6 +23,7 @@ class SceneTests(unittest.TestCase):
         Image.new("RGB", (1122, 1402), (7, 17, 31)).save(self.source)
         self.spec = {
             "format_version": 1, "brand": "ai-agent-builder",
+            "layout": "headline",
             "source": "media/source-images/test-scene.png",
             "source_sha256": hashlib.sha256(self.source.read_bytes()).hexdigest(),
             "heading": "WER GIBT DEN BEFEHL?",
@@ -86,6 +87,30 @@ class SceneTests(unittest.TestCase):
         self.assertLess(heading[3], 540)
         with self.assertRaises(FileExistsError):
             m.render_base(self.source, output, self.spec["heading"], font_path)
+
+    def test_logo_only_has_null_heading_not_dummy_text(self):
+        self.spec["layout"] = "logo_only"
+        self.spec["heading"] = None
+        self.assertEqual(m.validate_spec(self.spec, self.root), self.source)
+        output = self.root / "logo-only-base.png"
+        bbox = m.render_base(self.source, output, None, self.root / "nonexistent.ttf")
+        self.assertIsNone(bbox)
+        with Image.open(output) as image:
+            self.assertEqual(image.size, (1080, 1350))
+            # Base is uniform dark blue; no rendered headline or overlay.
+            self.assertEqual(image.getpixel((100, 100)), (7, 17, 31))
+            self.assertEqual(image.getpixel((400, 500)), (7, 17, 31))
+
+    def test_logo_only_refuses_fake_heading(self):
+        self.spec["layout"] = "logo_only"
+        self.spec["heading"] = "DUMMY"
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec, self.root)
+
+    def test_headline_rejects_absent_heading(self):
+        self.spec["heading"] = None
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec, self.root)
 
     def test_no_buffer_or_publishing_operations(self):
         source = Path(m.__file__).read_text(encoding="utf-8")
