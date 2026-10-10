@@ -1,0 +1,23 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-10-agenten-pruefpfad-e2e-006",
+  "topic": "Neue, rein hypothetische AI-Agent-Builder-Testkampagne für mittelständische Unternehmen und technische Betriebe: 'Wer hat was geprüft? Warum KI-Agenten nachvollziehbare Prüfpfade brauchen'. Beispiel: Dokumente werden eingelesen, ein technischer CAD-Arbeitsschritt vorbereitet, ein Mensch prüft vor Freigabe und ein geeignetes Protokoll macht ausgewählte Schritte rückverfolgbar. Schwerpunkt Nachvollziehbarkeit, Monitoring, Datenschutz und Verantwortlichkeiten statt Prompt Injection. NIST AI RMF und Microsoft Foundry Tracing als externe Orientierung, ohne Produkteinsatz oder Kundenerfolg zu behaupten. Kein Buffer, keine Veröffentlichung.",
+  "sources": [
+    {
+      "url": "https://www.nist.gov/itl/ai-risk-management-framework",
+      "published_at": "2023-01-26"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/azure/foundry/observability/concepts/trace-data",
+      "published_at": "2026-06-26"
+    }
+  ],
+  "posting_sources": [
+    "https://buffer.com/resources/best-time-to-post-on-linkedin/",
+    "https://sproutsocial.com/insights/best-times-to-post-on-linkedin/",
+    "https://blog.hootsuite.com/best-time-to-post-on-linkedin/"
+  ],
+  "execution_mode": "drafts",
+  "image_review": "visual-reviews/2026-10-10-agenten-pruefpfad-e2e-006.json"
+}
