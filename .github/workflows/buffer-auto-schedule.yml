@@ -40,7 +40,7 @@ jobs:
           [[ "$REQUEST" =~ ^ready-to-schedule/[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}\.json$ ]] || exit 1
           python3 scripts/buffer_schedule.py --request "$REQUEST" --dry-run
           python3 - "$REQUEST" <<'PY'
-          import hashlib,os,sys
+          import hashlib,html,json,os,sys
           from pathlib import Path
           sys.path.insert(0,"scripts")
           from buffer_schedule import inspect_request
@@ -50,15 +50,29 @@ jobs:
                                ("draft",info["draft_file"]),
                                ("draft_sha",hashlib.sha256(Path(info["draft_file"]).read_bytes()).hexdigest()),
                                ("post_id",info["post_id"])]:
+                  if not isinstance(val,str) or any(c in val for c in "\r\n"):
+                      raise ValueError("Unsicherer GitHub-Output: "+name)
                   f.write(f"{name}={val}\n")
-          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
-              f.write("## Veröffentlichung – deine ausdrückliche Bestätigung erforderlich\n")
-              for label,val in [("Ziel",info["target"]),("Buffer-ID",info["post_id"]),
+          def show(x, limit=400):
+              return html.escape(" ".join(str(x).split())[:limit], quote=True)
+          draft=json.loads(Path(info["draft_file"]).read_text(encoding="utf-8"))
+          image=""
+          if isinstance(draft.get("media"),dict):
+              imgs=draft["media"].get("images",[])
+              if isinstance(imgs,list) and imgs and isinstance(imgs[0],dict):
+                  image=imgs[0].get("url","")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+              f.write("## Veröffentlichung – unabhängige menschliche Genehmigung erforderlich\\n")
+              f.write("<pre>\\n")
+              for label,val in [("Plattform",info["target"]),("Buffer-Post-ID",info["post_id"]),
                                 ("Geplanter UTC-Termin",info["due_at"]),
-                                ("Entwurf",info["draft_file"]),("Entwurf SHA",hashlib.sha256(Path(info["draft_file"]).read_bytes()).hexdigest()),
-                                ("Anfrage SHA",info["request_sha256"])]:
-                  f.write(f"- {label}: {val}\n")
-              f.write("\n**Noch NICHT in Buffer terminiert.**\n")
+                                ("Entwurf",info["draft_file"]),("Bild-URL",image or "Kein Bild"),
+                                ("Textvorschau (400 Zeichen)",info["text"][:400]),
+                                ("Entwurf SHA-256",hashlib.sha256(Path(info["draft_file"]).read_bytes()).hexdigest()),
+                                ("Anfrage SHA-256",info["request_sha256"])]:
+                  f.write(show(label)+": "+show(val)+"\\n")
+              f.write("</pre>\\n")
+              f.write("**Noch NICHT in Buffer terminiert.**\\n")
           PY
 
   publish:
@@ -69,19 +83,18 @@ jobs:
     environment: buffer-publish
     permissions:
       contents: write
+      actions: read
     timeout-minutes: 10
     steps:
-      - name: Environment und unveränderlichen Publisher-Code verlangen
+      - name: Vertrauenswürdigen Publisher-Commit verlangen (ohne Buffer-Token)
         shell: bash
         env:
           PINNED: ${{ vars.BUFFER_PUBLISHER_SHA }}
-          GATE: ${{ secrets.BUFFER_PUBLISH_GATE }}
-          TOKEN: ${{ secrets.BUFFER_PUBLISH_API_KEY }}
+          APPROVERS: ${{ vars.BUFFER_APPROVER_LOGINS }}
         run: |
           set -euo pipefail
           [[ "$PINNED" =~ ^[a-f0-9]{40}$ ]] || { echo "BUFFER_PUBLISHER_SHA nicht eingerichtet" >&2; exit 1; }
-          [[ "$GATE" == authorized-by-protected-environment ]] || { echo "Environment-Freigabe fehlt" >&2; exit 1; }
-          test -n "$TOKEN" || { echo "Environment-Buffer-Schlüssel fehlt" >&2; exit 1; }
+          test -n "$APPROVERS" || { echo "BUFFER_APPROVER_LOGINS fehlt" >&2; exit 1; }
 
       - name: Vertrauenswürdigen Publisher laden (festgepinnter Commit)
         uses: actions/checkout@v5
@@ -96,6 +109,15 @@ jobs:
           ref: main
           persist-credentials: false
           path: data
+
+      - name: GitHub-Environment-Approval durch unabhängigen Prüfer verifizieren
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUFFER_APPROVER_LOGINS: ${{ vars.BUFFER_APPROVER_LOGINS }}
+        run: |
+          set -euo pipefail
+          python3 -B trusted/scripts/publish_approval.py
 
       - name: Genehmigten Antrag und Entwurf mit Hash erneut abgleichen
         shell: bash
@@ -143,7 +165,7 @@ jobs:
         env:
           BUFFER_API_KEY: ${{ secrets.BUFFER_PUBLISH_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}
-          PUBLISH_APPROVAL_GATE: ${{ secrets.BUFFER_PUBLISH_GATE }}
+          BUFFER_APPROVER_LOGINS: ${{ vars.BUFFER_APPROVER_LOGINS }}
           BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
           BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_FACEBOOK_CHANNEL_ID }}
           BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_INSTAGRAM_CHANNEL_ID }}
