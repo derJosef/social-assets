@@ -6,6 +6,7 @@ on:
       - social-e2e-rehearsal-20261010
     paths:
       - 'orchestration/briefs/2026-10-10-agenten-pruefpfad-e2e-006.json'
+      - '.github/workflows/social-e2e-rehearsal-20261010.yml'
 
 permissions:
   contents: read
@@ -49,7 +50,7 @@ jobs:
       - name: Run REAL source retrieval and REAL GitHub Models content generation
         shell: bash
         env:
-          GITHUB_TOKEN: \${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
           SOCIAL_GITHUB_MODEL: openai/gpt-4o-mini
         run: |
           set -euo pipefail
