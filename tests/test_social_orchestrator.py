@@ -171,7 +171,7 @@ class OrchestratorTests(unittest.TestCase):
         self.assertEqual(manifest["image"]["layout"],"logo_only")
         self.assertIsNone(manifest["image"]["heading_box"])
         self.assertNotIn("render_background",Path(m.__file__).read_text())
-        self.assertFalse((self.root/p["artwork"]).exists())
+        self.assertFalse((self.root/f"artwork-requests/{br['campaign_id']}.json").exists())
         for target in m.TARGETS:
             item=json.loads((self.root/manifest["posts"][target]).read_text())
             self.assertEqual(item["text"],posts[target])
