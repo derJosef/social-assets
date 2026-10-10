@@ -271,10 +271,19 @@ def create_packages(brief, evidences, g):
     plan += ["","## Offene Risiken",""]+[f"- {str(v)[:500]}" for v in g["risks"]]
     plan += ["","## Geplante Termine (NICHT in Buffer aktiviert)",""]
     plan += [f"- {t}: {times[t]['local']} Berlin / {times[t]['utc']} UTC" for t in TARGETS]
+    method_note = (
+        "Vorbereitete Redaktionstexte (prepared_content): externe Quellen wurden im Lauf "
+        "abgerufen und formale Strukturpruefungen durchgefuehrt. KEINE automatische "
+        "Modellgenerierung oder unabhaengige modellbasierte Faktenpruefung; "
+        "die redaktionelle fachliche Belegpruefung ist separat erforderlich."
+        if "prepared_content" in brief else
+        "Quellentexte automatisch abgerufen; Modellgenerierung und zweite "
+        "Modellpruefung bestanden. Das ist keine menschliche Fachabnahme."
+    )
     plan += ["","## Methodenhinweis",
-             "Quellentexte automatisiert abgerufen, Text-/Faktenprüfung durch Modell und Strukturregeln; keine menschliche Fachabnahme.",
-             "Postingzeiten sind unveröffentlichte Planungswerte. Kein Buffer-Status scheduled erlaubt.",
-             "Kampagnenbild aus zuvor visuell geprüfter, SHA-fixierter 4:5-Quelle mit kanonischem Original-Logo-Compositor."]
+             method_note,
+             "Postingzeiten sind unveroeffentlichte Planungswerte. Kein Buffer-Status scheduled erlaubt.",
+             "Kampagnenbild aus zuvor visuell gepruefter, SHA-fixierter 4:5-Quelle mit kanonischem Original-Logo-Compositor."]
     (ROOT/p["plan"]).parent.mkdir(parents=True,exist_ok=True)
     (ROOT/p["plan"]).write_text("\n".join(plan)+"\n",encoding="utf-8")
     sys.path.insert(0,str(ROOT/"scripts"))
