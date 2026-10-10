@@ -3,8 +3,8 @@
   "campaign": "2026-10-10-kundenmail-kein-befehl-005",
   "purpose": "Replace 3 old Buffer drafts by 3 verified image-only new drafts; preserve exact platform texts",
   "github_run_id": "38083623721",
-  "status": "reserved_before_first_deletion",
-  "confirmed_deleted": 0,
+  "status": "in_progress",
+  "confirmed_deleted": 1,
   "items": [
     {
       "target": "linkedin",
@@ -18,7 +18,7 @@
       "dueAt_new_preflight": null,
       "media_url_new": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-10-kundenmail-pruefpunkt-portfolio-v2-logo-only.png",
       "media_sha256": "9103a36e4239a433244acaddab7d3f1af6308e5dac5e4238656ed60b70a95230",
-      "deletion": "pending"
+      "deletion": "confirmed_by_buffer"
     },
     {
       "target": "facebook",
