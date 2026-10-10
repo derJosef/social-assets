@@ -33,16 +33,17 @@ Der bisherige `buffer-auto-schedule.yml`-Workflow reagiert auf Datei-Pushes nach
 - Nur **Publisher-Code aus dem unveränderlichen SHA** der Repository-Variable `BUFFER_PUBLISHER_SHA` darf mit dem Publishing-Key laufen. JSON-Anfrage und vorhandener Buffer-Entwurf werden getrennt als Daten von `main` gelesen, erneut hashgeprüft und gegen den bestätigten Delivery-Receipt validiert.
 - Anfragen benötigen **Format 2** mit `post_id` und `draft_sha256`. Freigaben mit altem Format 1 werden abgewiesen.
 - **Mindestens 24 Stunden Vorlauf** statt zwei Minuten.
-- Das Skript blockiert Publish-Aufrufe ohne `workflow_dispatch` oder ohne das Environment-Secret `BUFFER_PUBLISH_GATE`.
+- Das Skript blockiert Publish-Aufrufe ohne `workflow_dispatch` und ohne **echte, aktuelle GitHub-Approval-Bestätigung** eines Prüfers, der weder `github.actor` noch `github.triggering_actor` ist. Der API-Endpunkt `GET /repos/{owner}/{repo}/actions/runs/{run_id}/approvals` wird im Publisher-Code erneut geprüft. Die vorherige statische Konstante `BUFFER_PUBLISH_GATE` entfällt.
+- Die Plan-Zusammenfassung enthält nach Prüfung Plattform, Post-ID, Termin, **HTML-escaped Textvorschau und Bild-URL**. Ausgabeparameter aus GitHub-Daten dürfen keine Zeilenumbrüche enthalten.
 
 **Wichtig: Der Gate-Branch ist noch nicht freigegeben oder auf `main` aktiviert.** Er verhindert nicht, dass ein Schreiber auf einem weiterhin ungeschützten `main` über andere, weniger sichere Workflows Zugriff auf den **bisherigen gemeinsamen** `BUFFER_API_KEY` erhält. Das kann nur durch Secret-Trennung, Pfad-/Branchschutz beziehungsweise eingeschränkte App-Rechte nachhaltig gesichert werden.
 
 ### Erforderliche manuelle GitHub-Einstellungen VOR einem Merge
 
 1. GitHub App unter *Settings → Applications* prüfen: welche Berechtigungen kann sie zur Verwaltung von Actions, Deployments und Workflows ausüben? Die Agenten dürfen das spätere Genehmigungsgate nicht umgehen können.
-2. Für `buffer-publish` ein GitHub-Environment mit **Required reviewers** einrichten, als Prüfer einen tatsächlich kontrollierten menschlichen Zugang wählen und nur `main` als Deployment-Branch zulassen. Ein Review, den der auslösende Agent selbst genehmigen kann, erfüllt unser Sicherheitsziel nicht.
-3. Erst nach Review der konkreten Publisher-Skripte die Repository-Variable `BUFFER_PUBLISHER_SHA` auf deren **exakt genehmigten Commit-SHA** setzen.
-4. Environment-Secrets `BUFFER_PUBLISH_API_KEY` und `BUFFER_PUBLISH_GATE` setzen. Letzterer muss exakt den Wert `authorized-by-protected-environment` enthalten. Keine Secrets als JSON, Commit oder Chat-Nachricht hinterlegen. Kanal-IDs im Environment prüfen.
+2. Für `buffer-publish` ein GitHub-Environment mit **Required reviewers** einrichten: ein **zweites, nur einem Menschen gehörendes und nicht mit ChatGPT verbundenes GitHub-Konto**, `Prevent self-review` **AN**, nur `main` als Deployment-Branch. Eine automatisierbare Selbstgenehmigung unter `derJosef` erfüllt das Ziel nicht.
+3. Nach Review der Publisher-Skripte die Repository-Variable `BUFFER_PUBLISHER_SHA` auf den **exakt genehmigten Commit-SHA** auf `main` setzen. Die zusätzliche Variable `BUFFER_APPROVER_LOGINS` enthält ausschließlich die unabhängigen zugelassenen Reviewer-Logins.
+4. Environment-Secret **nur** `BUFFER_PUBLISH_API_KEY` setzen und die Kanal-IDs prüfen. `BUFFER_PUBLISH_GATE` wird **nicht** mehr eingerichtet (statische Konstante entfernt). Keine Secrets in Commits, Logs oder Chat-Nachrichten.
 5. Prüfen, ob Buffer getrennte Token-Berechtigungen für Drafts/Publish zulässt. Falls nicht, Zugriff auf den bestehenden gemeinsamen `BUFFER_API_KEY` in anderen Workflows als verbleibendes P0-Risiko behandeln. Kein produktives Merge, bevor das bewusst entschieden ist.
 
 Diese Einstellungen können von der normalen GitHub-Dateiverbindung **nicht** nachweislich konfiguriert werden. Dafür ist die GitHub-Oberfläche oder ein ausdrücklich autorisierter Administrationszugang nötig.
@@ -50,8 +51,9 @@ Diese Einstellungen können von der normalen GitHub-Dateiverbindung **nicht** na
 ## Tests
 
 - `.github/workflows/social-bridge-tests.yml`: sicherer Branch-CI-Test, nur `contents:read`, ohne Buffer-Secrets.
-- `tests/test_buffer_schedule.py`: Format 2, identische Post-ID und Entwurfs-SHA, Mindestvorlauf 24 Stunden, fehlendes Freigabe-Secret, falscher Eventtyp, Replay-Verhinderung.
+- `tests/test_buffer_schedule.py`: Format 2, 24-stellige Hex-Post-ID, Hash-Bindung, 24 Stunden Vorlauf, falscher Eventtyp, API-Freigabe verweigert, Replay-Verhinderung und Output-Injektionsregression.
 - `tests/test_chatgpt_handoff.py`: vollständige Vorlagen, fehlende Plattform, unerlaubte Marke, doppelte Kampagne, Pfadmanipulation.
+- `tests/test_publish_approval.py`: echte unabhängige Genehmigung; Status `pending/rejected`, falsche Identität, Selbstgenehmigung, falsches Environment, GitHub-Netzwerkfehler.
 - **Kein Live-Buffer-Test auf diesem Entwicklungsbranch**, keinerlei Terminierung oder Veröffentlichung.
 
 ## Ungeklärte Punkte
