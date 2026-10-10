@@ -141,6 +141,42 @@ class OrchestratorTests(unittest.TestCase):
         self.assertNotIn("render_background(",source)
         self.assertIn("social_portfolio_scene",source)
 
+    def test_offline_end_to_end_produces_three_drafts_and_verified_4x5_image(self):
+        import shutil
+        import autonomous_campaign_gate as gate
+        import buffer_draft
+        original=Path(m.__file__).resolve().parents[1]/"media/brand/logo-pauderer-original.png"
+        destination=self.root/"media/brand/logo-pauderer-original.png"
+        destination.parent.mkdir(parents=True)
+        shutil.copy2(original,destination)
+        scripts=self.root/"scripts"
+        scripts.mkdir()
+        shutil.copy2(Path(m.__file__).resolve().parent/"logo_composite.py",
+                     scripts/"logo_composite.py")
+        br=brief("drafts")
+        posts={k:("Dieses ist ein rein synthetischer Testbeitrag. " * 10)
+               for k in m.TARGETS}
+        content={"posts":posts,"visual":None,
+                 "six_hats":{k:"A documented synthetic offline test finding of adequate length"
+                            for k in ("white","red","black","yellow","green","blue")},
+                 "risks":[]}
+        m.assess_generated(content)
+        sources={s["url"]:"Synthetic evidence fixture" for s in br["sources"]}
+        with patch.object(gate,"ROOT",self.root), patch.object(buffer_draft,"ROOT",self.root):
+            p=m.create_packages(br,sources,content)
+        from PIL import Image
+        with Image.open(self.root/p["final"]) as rendered:
+            self.assertEqual(rendered.size,(1080,1350))
+        manifest=json.loads((self.root/p["manifest"]).read_text())
+        self.assertEqual(manifest["image"]["layout"],"logo_only")
+        self.assertIsNone(manifest["image"]["heading_box"])
+        self.assertNotIn("render_background",Path(m.__file__).read_text())
+        self.assertFalse((self.root/p["artwork"]).exists())
+        for target in m.TARGETS:
+            item=json.loads((self.root/manifest["posts"][target]).read_text())
+            self.assertEqual(item["text"],posts[target])
+            self.assertTrue(item["media"]["images"][0]["url"].endswith(p["final"]))
+
     def test_no_publish_or_schedule_mutation(self):
         text=Path(m.__file__).read_text(encoding="utf-8")
         self.assertNotIn("saveToDraft: false",text)
