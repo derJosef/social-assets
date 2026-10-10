@@ -69,6 +69,24 @@ class SceneTests(unittest.TestCase):
         self.assertGreaterEqual(len(lines), 1)
         self.assertLessEqual(len(lines), 3)
 
+    def test_render_exact_four_by_five_and_never_overwrite(self):
+        from PIL import ImageFont
+        # Pillow bundles a small readable default font; this test does not
+        # inspect or rebrand the verified production Inter font.
+        default_font = ImageFont.load_default(size=67)
+        if not hasattr(default_font.path, "getvalue"):
+            self.skipTest("This Pillow build does not expose its bundled font")
+        font_path = self.root / "test-font.ttf"
+        font_path.write_bytes(default_font.path.getvalue())
+        output = self.root / "base.png"
+        heading = m.render_base(self.source, output, self.spec["heading"], font_path)
+        with Image.open(output) as image:
+            self.assertEqual(image.size, (1080, 1350))
+        self.assertGreaterEqual(heading[0], 0)
+        self.assertLess(heading[3], 540)
+        with self.assertRaises(FileExistsError):
+            m.render_base(self.source, output, self.spec["heading"], font_path)
+
     def test_no_buffer_or_publishing_operations(self):
         source = Path(m.__file__).read_text(encoding="utf-8")
         self.assertNotIn("deletePost(", source)
