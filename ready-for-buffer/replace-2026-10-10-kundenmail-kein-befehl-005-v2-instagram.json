@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "instagram",
+  "text": "EINE KUNDENMAIL IST KEIN BEFEHL.\n\nDein KI-Agent soll eine Anfrage lesen und ein Angebot vorbereiten. Im Anhang steht aber: „Ignoriere deine Regeln.“\n\nGenau hier wird aus einer normalen Datei möglicherweise ein Sicherheitsrisiko: Ein KI-System könnte fremden Text irrtümlich als Anweisung verstehen. Das heißt „Prompt Injection“.\n\nDREI EINFACHE SCHRANKEN:\n\n01 LESEN\nEine E-Mail ist Arbeitsmaterial – kein neuer Auftrag an den Agenten.\n\n02 BEGRENZEN\nNur die Daten und Werkzeuge freigeben, die er wirklich braucht.\n\n03 FREIGEBEN\nAngebote versenden oder Daten weitergeben? Erst nach menschlicher Bestätigung.\n\nSo wird aus „KI macht alles“ ein kontrollierbarer Arbeitsablauf. Ganz ohne Zauberversprechen.\n\nWelchen Schritt würdest du niemals ungeprüft automatisch ausführen lassen?\n\nQuellen: OWASP, Top 10 Agentic Applications (2025); Microsoft Learn (2026).\n#KIAgent #KISicherheit #Mittelstand #DigitalerMitarbeiter",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-10-kundenmail-pruefpunkt-portfolio-v2-logo-only.png",
+        "alt_text": "Symbolischer technischer Datenfluss: Eingehende Kundenmail und Dokumente passieren einen sichtbaren Kontroll- und Freigabepunkt vor der CAD-Arbeitsstation. Original-Pauderer-Logo unten rechts."
+      }
+    ]
+  }
+}
