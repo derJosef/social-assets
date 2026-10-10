@@ -1,0 +1,62 @@
+name: One-time verified campaign source import (no Buffer)
+
+on:
+  push:
+    branches: [social-visual-45-refresh-20261010]
+    paths:
+      - '.github/workflows/social-approved-image-import-once.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: one-off-campaign-source-import-20261010
+  cancel-in-progress: false
+
+jobs:
+  import-source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Check out source review branch only
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: true
+          ref: social-visual-45-refresh-20261010
+          fetch-depth: 0
+
+      - name: Fetch only exact approved source bytes and verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          output='media/source-images/2026-10-10-kundenmail-pruefpunkt-portfolio-1080x1350.png'
+          [[ ! -e "$output" ]] || { echo 'Asset already exists; refusing overwrite'; exit 1; }
+          mkdir -p media/source-images
+          # Synthetic artwork, temporarily hosted through connected Adobe file transfer.
+          # Never use the URL without pinning its complete SHA256.
+          curl --fail --location --silent --show-error --retry 2 --retry-delay 2 \
+            --connect-timeout 15 --max-time 100 \
+            'https://at.adobe.com/xO2T0idargUydndd' -o "$output"
+          echo '626966b2022754ff953219d298fb2af226d4c6223920d118a9e96871ce208555  media/source-images/2026-10-10-kundenmail-pruefpunkt-portfolio-1080x1350.png' | sha256sum --check --status
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+          p=Path('media/source-images/2026-10-10-kundenmail-pruefpunkt-portfolio-1080x1350.png')
+          data=p.read_bytes()
+          assert data[:8]==b'\x89PNG\r\n\x1a\n', 'not a PNG'
+          assert data[12:16]==b'IHDR', 'missing PNG IHDR'
+          assert struct.unpack('>II',data[16:24])==(1080,1350), 'incorrect image dimensions'
+          print('Source image verified: exact bytes, 1080x1350, PNG signature')
+          PY
+
+      - name: Commit exactly one raw source image to isolated branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- media/source-images/2026-10-10-kundenmail-pruefpunkt-portfolio-1080x1350.png
+          [[ "$(git diff --cached --name-only | wc -l)" -eq 1 ]] || { echo 'Unexpected staged file set'; exit 1; }
+          git commit -m 'assets: import hash-verified portfolio-style customer-mail raw source'
+          git push origin HEAD:social-visual-45-refresh-20261010
+          echo 'PASS: Exact 4:5 raw PNG imported to draft branch only. No Buffer or production changes.' >> "$GITHUB_STEP_SUMMARY"
