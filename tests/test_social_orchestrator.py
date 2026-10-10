@@ -178,6 +178,7 @@ class OrchestratorTests(unittest.TestCase):
                             for k in ("white","red","black","yellow","green","blue")},
                  "risks":[]}
         m.assess_generated(content)
+        br["prepared_content"] = content
         sources={s["url"]:"Synthetic evidence fixture" for s in br["sources"]}
         # The shared suite can import the same module under two names.
         # Bind precisely the function object called by the gate.
@@ -190,6 +191,10 @@ class OrchestratorTests(unittest.TestCase):
         self.assertEqual(manifest["image"]["layout"],"logo_only")
         self.assertIsNone(manifest["image"]["heading_box"])
         self.assertNotIn("render_background",Path(m.__file__).read_text())
+        plan=(self.root/p["plan"]).read_text(encoding="utf-8")
+        self.assertIn("KEINE automatische",plan)
+        self.assertIn("unabhaengige modellbasierte Faktenpruefung",plan)
+        self.assertNotIn("Modellpruefung bestanden",plan)
         self.assertFalse((self.root/f"artwork-requests/{br['campaign_id']}.json").exists())
         for target in m.TARGETS:
             item=json.loads((self.root/manifest["posts"][target]).read_text())
