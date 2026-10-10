@@ -32,6 +32,8 @@ ROOT = Path(__file__).resolve().parents[1]
 REQUEST_RE = re.compile(r"^ready-to-schedule/[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}\.json$")
 DRAFT_RE = re.compile(r"^ready-for-buffer/[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}\.json$")
 UTC_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+POST_ID_RE = re.compile(r"^[0-9a-f]{24}$")
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 GET_POST = """
 query GetPost($id: PostId!) {
@@ -103,11 +105,13 @@ def inspect_request(request_file: str, now: datetime | None = None) -> dict:
             or delivery.get("target") != target
             or delivery.get("draft_sha256") != hashlib.sha256(draft_raw).hexdigest()
             or not isinstance(delivery.get("buffer_post_id"), str)
-            or not delivery["buffer_post_id"]):
+            or not POST_ID_RE.fullmatch(delivery["buffer_post_id"])):
         raise ValueError("Kein passender, bestätigter Buffer-Entwurf vorhanden.")
     if (not isinstance(request["post_id"], str)
+            or not POST_ID_RE.fullmatch(request["post_id"])
             or request["post_id"] != delivery["buffer_post_id"]
             or not isinstance(request["draft_sha256"], str)
+            or not SHA256_RE.fullmatch(request["draft_sha256"])
             or request["draft_sha256"] != delivery["draft_sha256"]):
         raise ValueError("Freigabe passt nicht zur Buffer-Post-ID und zum unveränderten Entwurf.")
 
