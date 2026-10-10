@@ -15,6 +15,8 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from publish_approval import verify_current_run
+
 # Sibling module is part of the existing social-assets integration.
 from buffer_draft import (  # type: ignore
     REPOSITORY,
@@ -32,6 +34,8 @@ ROOT = Path(__file__).resolve().parents[1]
 REQUEST_RE = re.compile(r"^ready-to-schedule/[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}\.json$")
 DRAFT_RE = re.compile(r"^ready-for-buffer/[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}\.json$")
 UTC_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+POST_ID_RE = re.compile(r"^[0-9a-f]{24}$")
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 GET_POST = """
 query GetPost($id: PostId!) {
@@ -74,10 +78,11 @@ def inspect_request(request_file: str, now: datetime | None = None) -> dict:
         raise ValueError("Freigabedatei ist zu groß.")
     request = json.loads(request_bytes)
     if not isinstance(request, dict) or set(request) != {
-        "format_version", "target", "draft_file", "publish_at_utc", "approved_for_scheduling"
+        "format_version", "target", "draft_file", "publish_at_utc",
+        "approved_for_scheduling", "post_id", "draft_sha256"
     }:
-        raise ValueError("Unbekanntes Freigabeformat.")
-    if request["format_version"] != 1 or request["approved_for_scheduling"] is not True:
+        raise ValueError("Unbekanntes Freigabeformat; v2 mit Post-ID und Entwurfs-Hash nötig.")
+    if request["format_version"] != 2 or request["approved_for_scheduling"] is not True:
         raise ValueError("Explizite Terminierungsfreigabe fehlt.")
     target = request["target"]
     draft_file = request["draft_file"]
@@ -88,8 +93,8 @@ def inspect_request(request_file: str, now: datetime | None = None) -> dict:
         raise ValueError("Veröffentlichungszeit muss ISO-8601 UTC mit Sekunden und Z sein.")
     due_dt = datetime.strptime(due, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
     current = now or datetime.now(timezone.utc)
-    if due_dt <= current + timedelta(minutes=2):
-        raise ValueError("Veröffentlichungszeit ist nicht mindestens zwei Minuten in der Zukunft.")
+    if due_dt < current + timedelta(hours=24):
+        raise ValueError("Veröffentlichungszeit muss mindestens 24 Stunden in der Zukunft liegen.")
 
     draft_raw = local_file(draft_file).read_bytes()
     draft = json.loads(draft_raw)
@@ -102,8 +107,15 @@ def inspect_request(request_file: str, now: datetime | None = None) -> dict:
             or delivery.get("target") != target
             or delivery.get("draft_sha256") != hashlib.sha256(draft_raw).hexdigest()
             or not isinstance(delivery.get("buffer_post_id"), str)
-            or not delivery["buffer_post_id"]):
+            or not POST_ID_RE.fullmatch(delivery["buffer_post_id"])):
         raise ValueError("Kein passender, bestätigter Buffer-Entwurf vorhanden.")
+    if (not isinstance(request["post_id"], str)
+            or not POST_ID_RE.fullmatch(request["post_id"])
+            or request["post_id"] != delivery["buffer_post_id"]
+            or not isinstance(request["draft_sha256"], str)
+            or not SHA256_RE.fullmatch(request["draft_sha256"])
+            or request["draft_sha256"] != delivery["draft_sha256"]):
+        raise ValueError("Freigabe passt nicht zur Buffer-Post-ID und zum unveränderten Entwurf.")
 
     digest = hashlib.sha256(request_file.encode("utf-8")).hexdigest()[:24]
     return {
@@ -121,8 +133,14 @@ def inspect_request(request_file: str, now: datetime | None = None) -> dict:
 
 
 def schedule(info: dict) -> None:
+    # Static flags are not proof of a human GitHub deployment approval.
+    if os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch":
+        raise RuntimeError("Buffer-Terminierung nur über manuell angestoßenen Workflow.")
     if os.environ.get("GITHUB_REPOSITORY") != REPOSITORY or os.environ.get("GITHUB_REF") != "refs/heads/main":
         raise RuntimeError("Terminierung nur durch GitHub Actions auf social-assets/main.")
+    # Recheck actual GitHub run approvals immediately before ANY Buffer API call.
+    # This is a live independent check, not a self-reported env marker.
+    approver = verify_current_run()
     token = os.environ.get("BUFFER_API_KEY", "")
     github_token = os.environ.get("GITHUB_TOKEN", "")
     if not token or not github_token:
@@ -143,6 +161,7 @@ def schedule(info: dict) -> None:
         "buffer_post_id": info["post_id"], "due_at": info["due_at"],
         "state": "pending_manual_reconciliation_on_failure",
         "github_run_id": os.environ.get("GITHUB_RUN_ID", "unknown"),
+        "independent_github_approver": approver,
     }
     receipt_sha = put_receipt(github_token, receipt, pending, f"buffer: reserve scheduling {info['request_file']}")
     # The reservation is deliberately irreversible on uncertain API results.

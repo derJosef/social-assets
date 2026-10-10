@@ -12,6 +12,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
 # The existing buffer_draft.py is imported next to buffer_schedule.py on GitHub.
 # For isolated offline tests, substitute only its stable helper API.
 helper = types.ModuleType("buffer_draft")
@@ -47,23 +49,24 @@ class ScheduleTests(unittest.TestCase):
         delivery = {
             "state": "draft_created", "draft_file": self.draft_file,
             "target": "linkedin", "draft_sha256": hashlib.sha256(raw).hexdigest(),
-            "buffer_post_id": "existing-draft-id",
+            "buffer_post_id": "a1b2c3d4e5f60718293a4b5c",
         }
-        (self.root / helper.receipt_path(self.draft_file)).write_text(json.dumps(delivery))
+        (self.root / helper.receipt_path(self.draft_file)).write_text(json.dumps(delivery), encoding="utf-8")
         self.request = {
-            "format_version": 1, "target": "linkedin", "draft_file": self.draft_file,
-            "publish_at_utc": "2026-10-09T13:00:00Z", "approved_for_scheduling": True,
+            "format_version": 2, "target": "linkedin", "draft_file": self.draft_file,
+            "publish_at_utc": "2026-10-10T18:00:00Z", "approved_for_scheduling": True,
+            "post_id": delivery["buffer_post_id"], "draft_sha256": delivery["draft_sha256"],
         }
         self.now = datetime(2026, 10, 8, 16, 0, tzinfo=timezone.utc)
         self.write_request()
 
     def write_request(self):
-        (self.root / self.request_file).write_text(json.dumps(self.request))
+        (self.root / self.request_file).write_text(json.dumps(self.request), encoding="utf-8")
 
     def test_valid_approved_request(self):
         i = module.inspect_request(self.request_file, self.now)
-        self.assertEqual(i["post_id"], "existing-draft-id")
-        self.assertEqual(i["due_at"], "2026-10-09T13:00:00Z")
+        self.assertEqual(i["post_id"], "a1b2c3d4e5f60718293a4b5c")
+        self.assertEqual(i["due_at"], "2026-10-10T18:00:00Z")
 
     def test_explicit_approval_required(self):
         self.request["approved_for_scheduling"] = False
@@ -77,6 +80,78 @@ class ScheduleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Zukunft"):
             module.inspect_request(self.request_file, self.now)
 
+    def test_less_than_24h_is_rejected(self):
+        self.request["publish_at_utc"] = "2026-10-09T15:59:00Z"
+        self.write_request()
+        with self.assertRaisesRegex(ValueError, "24 Stunden"):
+            module.inspect_request(self.request_file, self.now)
+
+    def test_post_id_bound_to_delivered_draft(self):
+        self.request["post_id"] = "different-post"
+        self.write_request()
+        with self.assertRaisesRegex(ValueError, "Post-ID"):
+            module.inspect_request(self.request_file, self.now)
+
+    def test_receipt_post_id_output_injection_is_rejected(self):
+        path = self.root / helper.receipt_path(self.draft_file)
+        receipt = json.loads(path.read_text(encoding="utf-8"))
+        receipt["buffer_post_id"] = "abc\\nrequest=ready-to-schedule/OTHER.json"
+        path.write_text(json.dumps(receipt), encoding="utf-8")
+        self.request["post_id"] = receipt["buffer_post_id"]
+        self.write_request()
+        with self.assertRaisesRegex(ValueError, "Buffer-Entwurf"):
+            module.inspect_request(self.request_file, self.now)
+
+    def test_request_post_id_output_injection_is_rejected(self):
+        self.request["post_id"] = "abc\\nrequest=ready-to-schedule/OTHER.json"
+        self.write_request()
+        with self.assertRaisesRegex(ValueError, "Post-ID"):
+            module.inspect_request(self.request_file, self.now)
+
+    def test_invalid_receipt_post_id_rejected_even_if_matched(self):
+        path = self.root / helper.receipt_path(self.draft_file)
+        receipt = json.loads(path.read_text(encoding="utf-8"))
+        receipt["buffer_post_id"] = "not-valid-post-id"
+        path.write_text(json.dumps(receipt), encoding="utf-8")
+        self.request["post_id"] = receipt["buffer_post_id"]
+        self.write_request()
+        with self.assertRaises(ValueError):
+            module.inspect_request(self.request_file, self.now)
+
+    def test_draft_hash_bound_to_delivered_draft(self):
+        self.request["draft_sha256"] = "0"*64
+        self.write_request()
+        with self.assertRaisesRegex(ValueError, "Post-ID"):
+            module.inspect_request(self.request_file, self.now)
+
+    def test_legacy_format_rejected(self):
+        self.request["format_version"] = 1
+        self.write_request()
+        with self.assertRaisesRegex(ValueError, "Freigabe|freigabe"):
+            module.inspect_request(self.request_file, self.now)
+
+    def test_publish_fails_without_real_environment_approval(self):
+        info = module.inspect_request(self.request_file, self.now)
+        with patch.dict(os.environ, {"GITHUB_REPOSITORY": helper.REPOSITORY,
+                                     "GITHUB_REF": "refs/heads/main",
+                                     "GITHUB_EVENT_NAME": "workflow_dispatch",
+                                     "BUFFER_API_KEY": "dummy", "GITHUB_TOKEN": "dummy"},
+                        clear=True):
+            with patch.object(module,"verify_current_run",side_effect=RuntimeError("Keine gültige Genehmigung")):
+                with self.assertRaisesRegex(RuntimeError, "Genehmigung"):
+                    module.schedule(info)
+
+    def test_publish_fails_on_push_event_even_with_guard(self):
+        info = module.inspect_request(self.request_file, self.now)
+        with patch.dict(os.environ, {"GITHUB_REPOSITORY": helper.REPOSITORY,
+                                     "GITHUB_REF": "refs/heads/main",
+                                     "GITHUB_EVENT_NAME": "push",
+                                     "PUBLISH_APPROVAL_GATE": "authorized-by-protected-environment",
+                                     "BUFFER_API_KEY": "dummy", "GITHUB_TOKEN": "dummy"},
+                        clear=True):
+            with self.assertRaisesRegex(RuntimeError, "manuell"):
+                module.schedule(info)
+
     def test_timestamp_must_be_utc(self):
         self.request["publish_at_utc"] = "2026-10-09T15:00:00+02:00"
         self.write_request()
@@ -88,7 +163,7 @@ class ScheduleTests(unittest.TestCase):
             module.inspect_request("ready-to-schedule/../ready-for-buffer/test-linkedin.json", self.now)
 
     def test_draft_change_rejected(self):
-        (self.root / self.draft_file).write_text('{"target":"linkedin","text":"geändert"}')
+        (self.root / self.draft_file).write_text('{"target":"linkedin","text":"geändert"}', encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "bestätigter"):
             module.inspect_request(self.request_file, self.now)
 
@@ -100,7 +175,7 @@ class ScheduleTests(unittest.TestCase):
 
     def test_existing_schedule_receipt_prevents_replay(self):
         info = module.inspect_request(self.request_file, self.now)
-        with patch.dict(os.environ, {"GITHUB_REPOSITORY": helper.REPOSITORY, "GITHUB_REF": "refs/heads/main", "BUFFER_API_KEY": "dummy", "GITHUB_TOKEN": "dummy"}), patch.object(module, "buffer_graphql", return_value={"post": {"id": "existing-draft-id", "channelId": "verified-channel", "status": "draft", "text": "Testtext ohne Geheimnisse"}}), patch.object(module, "fetch_receipt", return_value={"state": "scheduled"}), patch.object(module, "put_receipt") as write:
+        with patch.dict(os.environ, {"GITHUB_REPOSITORY": helper.REPOSITORY, "GITHUB_REF": "refs/heads/main", "GITHUB_EVENT_NAME": "workflow_dispatch", "BUFFER_API_KEY": "dummy", "GITHUB_TOKEN": "dummy"}), patch.object(module, "verify_current_run", return_value="second-reviewer"), patch.object(module, "buffer_graphql", return_value={"post": {"id": "a1b2c3d4e5f60718293a4b5c", "channelId": "verified-channel", "status": "draft", "text": "Testtext ohne Geheimnisse"}}), patch.object(module, "fetch_receipt", return_value={"state": "scheduled"}), patch.object(module, "put_receipt") as write:
             with self.assertRaisesRegex(RuntimeError, "existiert"):
                 module.schedule(info)
             write.assert_not_called()
@@ -108,13 +183,13 @@ class ScheduleTests(unittest.TestCase):
     def test_schedule_edits_same_post_without_reupload(self):
         info = module.inspect_request(self.request_file, self.now)
         actions = [
-            {"post": {"id": "existing-draft-id", "channelId": "verified-channel", "status": "draft", "text": "Testtext ohne Geheimnisse"}},
-            {"editPost": {"post": {"id": "existing-draft-id", "channelId": "verified-channel", "status": "buffer", "dueAt": "2026-10-09T13:00:00Z"}}},
+            {"post": {"id": "a1b2c3d4e5f60718293a4b5c", "channelId": "verified-channel", "status": "draft", "text": "Testtext ohne Geheimnisse"}},
+            {"editPost": {"post": {"id": "a1b2c3d4e5f60718293a4b5c", "channelId": "verified-channel", "status": "buffer", "dueAt": "2026-10-10T18:00:00Z"}}},
         ]
-        with patch.dict(os.environ, {"GITHUB_REPOSITORY": helper.REPOSITORY, "GITHUB_REF": "refs/heads/main", "BUFFER_API_KEY": "dummy", "GITHUB_TOKEN": "dummy"}), patch.object(module, "buffer_graphql", side_effect=actions) as api, patch.object(module, "fetch_receipt", return_value=None), patch.object(module, "put_receipt", return_value="sha") as receipt:
+        with patch.dict(os.environ, {"GITHUB_REPOSITORY": helper.REPOSITORY, "GITHUB_REF": "refs/heads/main", "GITHUB_EVENT_NAME": "workflow_dispatch", "BUFFER_API_KEY": "dummy", "GITHUB_TOKEN": "dummy"}), patch.object(module, "verify_current_run", return_value="second-reviewer"), patch.object(module, "buffer_graphql", side_effect=actions) as api, patch.object(module, "fetch_receipt", return_value=None), patch.object(module, "put_receipt", return_value="sha") as receipt:
             module.schedule(info)
             self.assertEqual(api.call_count, 2)
-            self.assertEqual(api.call_args.args[2], {"id": "existing-draft-id", "dueAt": "2026-10-09T13:00:00Z", "text": "Testtext ohne Geheimnisse", "assets": [], "metadata": None})
+            self.assertEqual(api.call_args.args[2], {"id": "a1b2c3d4e5f60718293a4b5c", "dueAt": "2026-10-10T18:00:00Z", "text": "Testtext ohne Geheimnisse", "assets": [], "metadata": None})
             self.assertEqual(receipt.call_count, 2)
             self.assertEqual(receipt.call_args.args[2]["state"], "scheduled")
 
