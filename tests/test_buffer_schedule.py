@@ -51,7 +51,7 @@ class ScheduleTests(unittest.TestCase):
             "target": "linkedin", "draft_sha256": hashlib.sha256(raw).hexdigest(),
             "buffer_post_id": "a1b2c3d4e5f60718293a4b5c",
         }
-        (self.root / helper.receipt_path(self.draft_file)).write_text(json.dumps(delivery))
+        (self.root / helper.receipt_path(self.draft_file)).write_text(json.dumps(delivery), encoding="utf-8")
         self.request = {
             "format_version": 2, "target": "linkedin", "draft_file": self.draft_file,
             "publish_at_utc": "2026-10-10T18:00:00Z", "approved_for_scheduling": True,
@@ -61,7 +61,7 @@ class ScheduleTests(unittest.TestCase):
         self.write_request()
 
     def write_request(self):
-        (self.root / self.request_file).write_text(json.dumps(self.request))
+        (self.root / self.request_file).write_text(json.dumps(self.request), encoding="utf-8")
 
     def test_valid_approved_request(self):
         i = module.inspect_request(self.request_file, self.now)
@@ -163,7 +163,7 @@ class ScheduleTests(unittest.TestCase):
             module.inspect_request("ready-to-schedule/../ready-for-buffer/test-linkedin.json", self.now)
 
     def test_draft_change_rejected(self):
-        (self.root / self.draft_file).write_text('{"target":"linkedin","text":"geändert"}')
+        (self.root / self.draft_file).write_text('{"target":"linkedin","text":"geändert"}', encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "bestätigter"):
             module.inspect_request(self.request_file, self.now)
 
