@@ -1,6 +1,6 @@
 # Ersatzlauf für die bestehenden Buffer-Entwürfe – nur neue Bilder
 
-**Status:** Vorbereitung auf separatem PR-Branch; noch kein Ersatzlauf, keine Buffer-Mutation und keine Freigabe zur Veröffentlichung.
+**Aktueller Status (10.10.2026):** **Einmaliger Buffer-Bildaustausch erfolgreich abgeschlossen:** drei neue Drafts mit unveränderten Texten erstellt, drei alte Drafts nach Live-Preflight exakt gelöscht, Audit bestätigt, drei neue Drafts nach Löschung erneut geprüft (`draft`, `dueAt:null`). Der PR enthält weiterhin nur die noch nicht gemergte Bildpipeline. Keine Terminierung oder Veröffentlichung. Die folgenden früheren Arbeitsschritte dokumentieren die damalige Vorbereitung.
 
 ## Unveränderliche redaktionelle Grundlage
 
@@ -112,3 +112,26 @@ Die anderen `headline`-Layouts benutzen weiterhin `--heading-corner` und die sic
 **Tests und Grenze:** [Draft-PR #3](https://github.com/derJosef/social-assets/pull/3) führt die vollständige übernommene PersonalOS-Testsuite und die zusätzlichen Scene-E2E-Tests in einem isolierten GitHub-Workflow **ohne Buffer-Zugangsdaten** aus. Kein Merge, keine Veröffentlichung und kein Buffer-Austausch vor bestandener QA sowie dem konkreten, thematisch geprüften Rohmotiv.
 
 **Nicht als erledigt ausgeben:** Bisher ist kein für das konkrete Kundenmail-Thema final freigegebenes 4:5-Motiv binär ins Asset-Repository übertragen, kein Endbild mit dieser echten Quelle erstellt, keine neuen Buffer-Drafts geschaffen und kein alter Draft gelöscht. Der sichere Cutover ist weiterhin die vorstehende Austauschreihenfolge. Manche im Chat erzeugten Motivversionen enthalten unerwünschte App-Symbole oder Pseudo-Schrift und sind ungeeignet; die frühere Datenfluss-/CAD-Stilprobe ist allein wegen der Stilfreigabe noch keine fachliche Bildfreigabe für die Kundenmail-Kampagne.
+
+
+## Abschlussnachweis – 10.10.2026
+
+**Ergebnis des einmaligen Vorgangs: DONE.** Alle drei ursprünglichen Plattformtexte (einschließlich Quellen, CTA und Hashtags) wurden wortwörtlich übernommen. Bild-URL und Alternativtext wurden aktualisiert, keine anderen Post-Eigenschaften. Ein einziges öffentliches 1080 × 1350 Original-Logo-Bild wird für die drei Kanäle verwendet.
+
+- **Bild:** [2026-10-10-kundenmail-pruefpunkt-portfolio-v2-logo-only.png](../media/images/2026-10-10-kundenmail-pruefpunkt-portfolio-v2-logo-only.png), SHA256 `9103a36e4239a433244acaddab7d3f1af6308e5dac5e4238656ed60b70a95230`. Rohmotiv-Übernahme SHA256 `626966b2022754ff953219d298fb2af226d4c6223920d118a9e96871ce208555`; [Art-Receipt](../artwork-receipts/2026-10-10-kundenmail-pruefpunkt-portfolio-v2.json). Rohmotiv kam für den einmaligen GitHub-Import über eine temporäre Adobe-Dateiverbindung. GitHub-Image-Import [Run 38082634118](https://github.com/derJosef/social-assets/actions/runs/38082634118), Logo-Render [Run 38082774496](https://github.com/derJosef/social-assets/actions/runs/38082774496), beide erfolgreich. Die Quelle ist visuell geprüft; eine illustrative Prozessdarstellung, kein echter Security-Beweis.
+- **Übernahme ins stabile `main`:** [Commit e00340b](https://github.com/derJosef/social-assets/commit/e00340b40407becdcbdd35c3d984e778ea9cfb4c), exakt fünf Assets/QA-Dateien, bytegleiche Prüfsummen.
+- **Textidentität und Erreichbarkeit:** [Offline-Prüfung 38083143991](https://github.com/derJosef/social-assets/actions/runs/38083143991): 3× exakte Originaltexte, öffentliches Bild `HTTP 200 / image/png`, kanonisches Original-Logo-Verify, Buffer-Draft-Dry-Run PASS.
+- **Buffer-Neuanlage:** [Run 38083224273](https://github.com/derJosef/social-assets/actions/runs/38083224273), `success`, Commmit `d61e749ce193fbf2814f84f6d4fedc8618e4e425`. Drei neue Buffer-Draft-IDs und je `draft_created`-Empfangsbeleg.
+- **Vorabstatus & Originaltext-Abgleich live:** [Statusdiagnose 38083381954](https://github.com/derJosef/social-assets/actions/runs/38083381954): sechs Posts vor Löschung `draft`, `dueAt=None`, gleiche Kanal-ID je Paar. [Read-only-Abgleich 38083458598](https://github.com/derJosef/social-assets/actions/runs/38083458598): alle sechs Posttexte **exakt gleich** mit den GitHub-Ausgangstexten, gleiche Buffer-Kanäle, keine Termine.
+- **Gezielte Löschung nur der drei ALTEN IDs:** [Run 38083623721](https://github.com/derJosef/social-assets/actions/runs/38083623721), `success`, drei `DELETE_CONFIRMED`, Audit unter [cleanup-audit/2026-10-10-kundenmail-v2-image-replacement.json](../cleanup-audit/2026-10-10-kundenmail-v2-image-replacement.json): `three_superseded_drafts_deleted`, `confirmed_deleted: 3`. Vor jeder Löschung nochmals live alter und neuer Post geprüft. Die alten Dateien im GitHub-Repository bleiben als historische Quellen, **nur** die alten Buffer-Posts wurden gelöscht.
+- **Abschlussstatus der drei NEUEN IDs:** [Live-Diagnose 38083691687](https://github.com/derJosef/social-assets/actions/runs/38083691687): alle drei weiterhin `draft`, `dueAt=None`. **Keine Veröffentlichung.**
+
+| Kanal | Gelöschter Alt-Post | Neuer, unterm. Buffer-Draft |
+| --- | --- | --- |
+| LinkedIn | `6ac9e964c4de2d2b121be215` | `6aca9d9fd9cab260a7d7b34c` |
+| Facebook | `6ac9e967b07d37ac9764aac6` | `6aca9d99bba9419ccb148eba` |
+| Instagram | `6ac9e96ac4de2d2b121be2e2` | `6aca9d9cf91f772d45a67ff7` |
+
+**Aufgeräumt:** Einmalige Media-Import-/Render- und Alt-Entwurfs-Löschworkflow-Dateien und deren einmaliges Script wurden nach Abschluss aus den aktiven Repository-Branches entfernt; im Git-Verlauf bleiben sie vollständig nachvollziehbar. Dauerhafte Original-Assets, Empfangsbelege, Prüffiles, Audit und generische PersonalOS-konforme 4:5-Szeneroutine im offenen Draft-PR bleiben erhalten.
+
+**Offen getrennt vom Kampagnenabschluss:** Draft-[PR #3](https://github.com/derJosef/social-assets/pull/3) mit der generischen, kanonischen Logo-only-Bildpipeline ist **noch nicht gemergt**. Ein erfolgreicher einmaliger Buffer-Austausch ist keine Freigabe für allgemeine produktive Workflow-Umbauten oder die Veröffentlichung dieser Drafts.
