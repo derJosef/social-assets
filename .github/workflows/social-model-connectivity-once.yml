@@ -5,6 +5,7 @@ on:
     branches: [social-model-connectivity-20261010]
     paths:
       - '.github/workflows/social-model-connectivity-once.yml'
+      - 'scripts/model_api_connectivity_probe.py'
 
 permissions:
   contents: read
@@ -21,7 +22,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-      - name: Three minimal GitHub Models probes (no Buffer)
+      - name: Four contrast-controlled GitHub API probes (no Buffer)
         env:
           GH_MODELS_PROBE_TOKEN: ${{ github.token }}
         run: python -B scripts/model_api_connectivity_probe.py
