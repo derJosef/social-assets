@@ -1,0 +1,125 @@
+name: E2E rehearsal – reviewed 4x5 image and real model, no Buffer
+
+on:
+  push:
+    branches:
+      - social-e2e-rehearsal-20261010
+    paths:
+      - 'orchestration/briefs/2026-10-10-agenten-pruefpfad-e2e-006.json'
+
+permissions:
+  contents: read
+  models: read
+
+concurrency:
+  group: ai-agent-builder-e2e-rehearsal-20261010
+  cancel-in-progress: false
+
+jobs:
+  actual-orchestrator-no-buffer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - name: Checkout read-only rehearsal branch (never main)
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install offline image tooling
+        run: python -m pip install --disable-pip-version-check --quiet 'Pillow>=11,<13' 'numpy>=2,<3'
+
+      - name: Enforce dry-run branch and no Buffer credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REF" == 'refs/heads/social-e2e-rehearsal-20261010' ]] || exit 1
+          test ! -e campaign-manifests/2026-10-10-agenten-pruefpfad-e2e-006.json
+          test ! -e ready-for-buffer/auto-2026-10-10-agenten-pruefpfad-e2e-006-linkedin.json
+          echo 'Safe dry-run branch; no contents-write, no Buffer token, no Buffer sender.'
+
+      - name: Complete offline regression (85 test suite, no Buffer)
+        run: |
+          python -B -m unittest discover -s tests -v
+
+      - name: Run REAL source retrieval and REAL GitHub Models content generation
+        shell: bash
+        env:
+          GITHUB_TOKEN: \${{ github.token }}
+          SOCIAL_GITHUB_MODEL: openai/gpt-4o-mini
+        run: |
+          set -euo pipefail
+          python -B scripts/social_orchestrator.py \
+            --brief orchestration/briefs/2026-10-10-agenten-pruefpfad-e2e-006.json \
+            --mode drafts \
+            --report /tmp/e2e-rehearsal-report.json
+
+      - name: Verify all eight local outputs; DO NOT send or commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          from PIL import Image
+          cid='2026-10-10-agenten-pruefpfad-e2e-006'
+          report=json.loads(Path('/tmp/e2e-rehearsal-report.json').read_text())
+          assert report['state']=='ready_for_draft_commit'
+          assert report['steps']['model_and_structure']['status']=='PASS'
+          assert report['steps']['independent_copy_audit']['status']=='PASS'
+          assert report['steps']['brand_image_and_campaign_gate']['status']=='PASS'
+          paths=[
+            f'media/source-images/{cid}-base.png',
+            f'media/images/{cid}-branded.png',
+            f'artwork-receipts/{cid}.json',
+            f'campaign-manifests/{cid}.json',
+            f'drafts/{cid}-plan.md'
+          ] + [f'ready-for-buffer/auto-{cid}-{c}.json' for c in ('linkedin','facebook','instagram')]
+          assert len(paths)==8 and all(Path(p).is_file() for p in paths)
+          with Image.open(paths[1]) as im:
+              assert im.size==(1080,1350)
+          manifest=json.loads(Path(paths[3]).read_text())
+          assert manifest['image']['layout']=='logo_only'
+          assert manifest['image']['heading_box'] is None
+          assert len(manifest['sources'])>=2
+          assert {x['target'] for x in (json.loads(Path(p).read_text()) for p in paths[5:])}=={'linkedin','facebook','instagram'}
+          assert not Path(f'artwork-requests/{cid}.json').exists()
+          result={
+            'campaign':cid,
+            'status':'rehearsal_local_only_no_buffer',
+            'model_generated':True,
+            'fact_sources_verified_count':len(manifest['sources']),
+            'four_by_five_size':[1080,1350],
+            'layout':manifest['image']['layout'],
+            'image_sha256':hashlib.sha256(Path(paths[1]).read_bytes()).hexdigest(),
+            'channels':['linkedin','facebook','instagram'],
+            'created_only_locally':paths,
+            'buffer_mutations':0,
+            'scheduled':False,
+            'published':False,
+          }
+          Path('/tmp/e2e-rehearsal-audit.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(result,ensure_ascii=False))
+          PY
+          echo 'PASS: Real source/model generation + canonical original-logo 4:5 + 3 local Buffer-schema drafts; NO Buffer API, no commit.' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload audit and locally generated outputs only as CI artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-agenten-pruefpfad-without-buffer
+          path: |
+            /tmp/e2e-rehearsal-report.json
+            /tmp/e2e-rehearsal-audit.json
+            media/source-images/2026-10-10-agenten-pruefpfad-e2e-006-base.png
+            media/images/2026-10-10-agenten-pruefpfad-e2e-006-branded.png
+            artwork-receipts/2026-10-10-agenten-pruefpfad-e2e-006.json
+            campaign-manifests/2026-10-10-agenten-pruefpfad-e2e-006.json
+            drafts/2026-10-10-agenten-pruefpfad-e2e-006-plan.md
+            ready-for-buffer/auto-2026-10-10-agenten-pruefpfad-e2e-006-*.json
+          if-no-files-found: warn
+          retention-days: 14
