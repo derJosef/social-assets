@@ -1,0 +1,16 @@
+{
+  "campaign_id": "2026-10-10-kundenmail-kein-befehl-005",
+  "brand": "ai-agent-builder",
+  "status": "verified_image_only",
+  "base": "media/source-images/2026-10-10-kundenmail-kein-befehl-005-base.png",
+  "final": "media/images/2026-10-10-kundenmail-kein-befehl-005-branded.png",
+  "sha256": "ba386dead7275074d1a415f3d5ba48f8d7b5f2b15c7276dc985fdc9ddcca68ee",
+  "heading_corner": "top-left",
+  "heading_box": [
+    58,
+    145,
+    845,
+    328
+  ],
+  "logo_original_sha256": "15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0"
+}

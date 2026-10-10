@@ -1,0 +1,58 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-10-kundenmail-kein-befehl-005",
+  "checked_at": "2026-10-10",
+  "sources": [
+    {
+      "url": "https://learn.microsoft.com/en-us/security/zero-trust/sfi/defend-indirect-prompt-injection",
+      "published_at": "2026-03-23",
+      "checked_at": "2026-10-10"
+    },
+    {
+      "url": "https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-generative-artificial-intelligence",
+      "published_at": "2024-07-26",
+      "checked_at": "2026-10-10"
+    }
+  ],
+  "checks": {
+    "novelty": true,
+    "claims_with_sources": true,
+    "language_and_cta": true,
+    "six_hats": true,
+    "privacy_and_rights": true,
+    "brand_image": true,
+    "posting_time_research": true
+  },
+  "image": {
+    "final": "media/images/2026-10-10-kundenmail-kein-befehl-005-branded.png",
+    "base": "media/source-images/2026-10-10-kundenmail-kein-befehl-005-base.png",
+    "sha256": "ba386dead7275074d1a415f3d5ba48f8d7b5f2b15c7276dc985fdc9ddcca68ee",
+    "heading_corner": "top-left",
+    "heading_box": [
+      58,
+      145,
+      845,
+      328
+    ]
+  },
+  "posts": {
+    "linkedin": "ready-for-buffer/auto-2026-10-10-kundenmail-kein-befehl-005-linkedin.json",
+    "facebook": "ready-for-buffer/auto-2026-10-10-kundenmail-kein-befehl-005-facebook.json",
+    "instagram": "ready-for-buffer/auto-2026-10-10-kundenmail-kein-befehl-005-instagram.json"
+  },
+  "posting_times": {
+    "linkedin": {
+      "local": "2026-12-02T16:00:00+01:00",
+      "utc": "2026-12-02T15:00:00Z"
+    },
+    "facebook": {
+      "local": "2026-12-08T19:00:00+01:00",
+      "utc": "2026-12-08T18:00:00Z"
+    },
+    "instagram": {
+      "local": "2026-12-09T18:00:00+01:00",
+      "utc": "2026-12-09T17:00:00Z"
+    }
+  }
+}

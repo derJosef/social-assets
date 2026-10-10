@@ -1,0 +1,23 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-10-kundenmail-kein-befehl-005",
+  "badge": "KI-AGENTEN IM ALLTAG",
+  "headline": "WER GIBT DEN BEFEHL?",
+  "subtitle": "Eine Kundenmail liefert Daten. Deine Freigabe steuert die Aktion.",
+  "cards": [
+    {
+      "title": "LESEN",
+      "description": "Kundenmail als Information behandeln"
+    },
+    {
+      "title": "BEGRENZEN",
+      "description": "Nur nötige Rechte und Werkzeuge"
+    },
+    {
+      "title": "FREIGEBEN",
+      "description": "Wichtige Aktionen erst bestätigen"
+    }
+  ],
+  "closing": "Erst prüfen. Dann handeln."
+}
