@@ -1,4 +1,4 @@
-name: E2E rehearsal – reviewed 4x5 image and real model, no Buffer
+name: E2E rehearsal – reviewed 4x5 image with prepared copy, no Buffer
 
 on:
   push:
@@ -6,11 +6,9 @@ on:
       - social-e2e-rehearsal-20261010
     paths:
       - 'orchestration/briefs/2026-10-10-agenten-pruefpfad-e2e-006.json'
-      - '.github/workflows/social-e2e-rehearsal-20261010.yml'
 
 permissions:
   contents: read
-  models: read
 
 concurrency:
   group: ai-agent-builder-e2e-rehearsal-20261010
@@ -47,11 +45,8 @@ jobs:
         run: |
           python -B -m unittest discover -s tests -v
 
-      - name: Run REAL source retrieval and REAL GitHub Models content generation
+      - name: Run real-source retrieval with prepared editorial copy
         shell: bash
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          SOCIAL_GITHUB_MODEL: openai/gpt-4o-mini
         run: |
           set -euo pipefail
           python -B scripts/social_orchestrator.py \
@@ -70,8 +65,8 @@ jobs:
           cid='2026-10-10-agenten-pruefpfad-e2e-006'
           report=json.loads(Path('/tmp/e2e-rehearsal-report.json').read_text())
           assert report['state']=='ready_for_draft_commit'
-          assert report['steps']['model_and_structure']['status']=='PASS'
-          assert report['steps']['independent_copy_audit']['status']=='PASS'
+          assert report['steps']['editorial_input_and_structure']['status']=='PASS'
+          assert report['steps']['autonomous_model_generation']['status']=='NOT_RUN'
           assert report['steps']['brand_image_and_campaign_gate']['status']=='PASS'
           paths=[
             f'media/source-images/{cid}-base.png',
@@ -92,7 +87,7 @@ jobs:
           result={
             'campaign':cid,
             'status':'rehearsal_local_only_no_buffer',
-            'model_generated':True,
+            'model_generated':False,
             'fact_sources_verified_count':len(manifest['sources']),
             'four_by_five_size':[1080,1350],
             'layout':manifest['image']['layout'],
@@ -106,7 +101,7 @@ jobs:
           Path('/tmp/e2e-rehearsal-audit.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
           print(json.dumps(result,ensure_ascii=False))
           PY
-          echo 'PASS: Real source/model generation + canonical original-logo 4:5 + 3 local Buffer-schema drafts; NO Buffer API, no commit.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PASS: Real source retrieval + prepared copy + canonical original-logo 4:5 + 3 local Buffer-schema drafts; NO Buffer API, no commit.' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload audit and locally generated outputs only as CI artifact
         if: always()
