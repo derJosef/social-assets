@@ -2,6 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-10-kundenmail-kein-befehl-005-facebook.json",
   "target": "facebook",
   "draft_sha256": "aab1fd5195e0fb7829e0522e01739a00b8dbe84d0f2990520590857ec67ebad3",
-  "state": "pending_manual_reconciliation_on_failure",
-  "github_run_id": "38034584558"
+  "state": "draft_created",
+  "github_run_id": "38034584558",
+  "buffer_post_id": "6ac9e967b07d37ac9764aac6"
 }
