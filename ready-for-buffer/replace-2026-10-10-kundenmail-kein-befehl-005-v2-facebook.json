@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "facebook",
+  "text": "Stell dir vor, ein digitaler Mitarbeiter bearbeitet Kundenanfragen. Er liest E-Mails und Anhänge und erstellt einen Antwortentwurf. Das spart Arbeit – aber die E-Mail kommt von außen.\n\nWas, wenn dort eine versteckte Aufforderung steht, interne Daten weiterzuschicken oder eine Regel zu ignorieren?\n\nEin KI-Agent kann solche fremden Texte mit echten Anweisungen verwechseln. Deshalb braucht er klare Grenzen. Das ist kein Grund, KI grundsätzlich abzulehnen – sondern ein Grund, sie vernünftig einzusetzen.\n\nMein einfacher Praxisansatz:\n\n• Die Kundenmail liefert Informationen, aber keine Befehle.\n• Der Agent darf nur das lesen und vorbereiten, was für seine Aufgabe nötig ist.\n• Bevor eine verbindliche Antwort oder ein Angebot das Haus verlässt, prüft ein Mensch den Vorgang.\n\nOWASP und Microsoft beschreiben diese Art von Risiko und empfehlen begrenzte Rechte sowie Freigaben für wichtige Aktionen.\n\nWelche Aufgabe würdest du einem digitalen Mitarbeiter sofort geben – und welche lieber selbst freigeben?\n\nQuellen: OWASP, Agentic AI Security (2025); Microsoft Learn (23.03.2026).\n#KIAgenten #Mittelstand #SichereAutomatisierung",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-10-kundenmail-pruefpunkt-portfolio-v2-logo-only.png",
+        "alt_text": "Symbolischer technischer Datenfluss: Eingehende Kundenmail und Dokumente passieren einen sichtbaren Kontroll- und Freigabepunkt vor der CAD-Arbeitsstation. Original-Pauderer-Logo unten rechts."
+      }
+    ]
+  }
+}
