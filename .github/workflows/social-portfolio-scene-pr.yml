@@ -7,6 +7,8 @@ on:
       - 'scripts/social_orchestrator.py'
       - 'scripts/autonomous_campaign_gate.py'
       - 'tests/test_social_orchestrator.py'
+      - 'scripts/prepared_brief_preflight.py'
+      - 'tests/test_prepared_brief_preflight.py'
       - 'tests/test_autonomous_campaign_gate.py'
       - '.github/workflows/social-campaign-orchestrator.yml'
       - 'scripts/logo_composite.py'
@@ -36,4 +38,5 @@ jobs:
           python -m unittest discover -s scripts -p 'test_logo_composite.py' -v
           python -m unittest discover -s tests -p 'test_social_portfolio_scene.py' -v
           python -m unittest discover -s tests -p 'test_social_orchestrator.py' -v
+          python -m unittest discover -s tests -p 'test_prepared_brief_preflight.py' -v
           python -m unittest discover -s tests -p 'test_autonomous_campaign_gate.py' -v
