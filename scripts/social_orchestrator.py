@@ -199,7 +199,6 @@ def assess_generated(g):
 
 def paths_for(c):
     return {
-       "artwork":f"artwork-requests/{c}.json",
        "base":f"media/source-images/{c}-base.png",
        "final":f"media/images/{c}-branded.png",
        "receipt":f"artwork-receipts/{c}.json",
