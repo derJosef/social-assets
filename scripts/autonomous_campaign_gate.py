@@ -110,6 +110,7 @@ def check_campaign(post_paths: list[str], today: date | None = None, verify_imag
     require(isinstance(image["base"], str) and PATH_BASE_RE.fullmatch(image["base"]),
             "Logo-freies Basisbild unter media/source-images/ erforderlich")
     new_format=set(image)==new_keys
+    require(new_format, "Altes 1:1-Drei-Karten-Bildformat ist nicht mehr fuer neue autonome Kampagnen erlaubt")
     if new_format:
         from social_portfolio_scene import validate_spec
         review_path=image["review_spec"]
