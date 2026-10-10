@@ -120,6 +120,13 @@ class AutonomousCampaignGateTests(unittest.TestCase):
         m.write_text(json.dumps(manifest))
         return paths,manifest,m
 
+    def test_old_square_card_manifest_is_blocked(self):
+        with tempfile.TemporaryDirectory() as td:
+            paths,manifest,m=self.create_fixture(td)
+            with patch.object(gate,"ROOT",Path(td)),patch.dict(gate.read_draft.__globals__,{"ROOT":Path(td)}):
+                with self.assertRaisesRegex(ValueError,"nicht mehr"):
+                    gate.check_campaign(list(paths.values()),today=date(2026,10,9),verify_image=False)
+
     def test_reviewed_logo_only_draft_gate_with_no_headline_box(self):
         with tempfile.TemporaryDirectory() as td:
             paths,manifest,m=self.create_reviewed_fixture(td)
@@ -152,7 +159,7 @@ class AutonomousCampaignGateTests(unittest.TestCase):
 
     def test_three_channel_preflight_passes_and_does_not_send(self):
         with tempfile.TemporaryDirectory() as td:
-            paths, manifest, _=self.create_fixture(td)
+            paths, manifest, _=self.create_reviewed_fixture(td)
             with patch.object(gate,"ROOT",Path(td)), patch.dict(gate.read_draft.__globals__,{"ROOT":Path(td)}):
                 r=gate.check_campaign(list(paths.values()),today=date(2026,10,9),verify_image=False)
             self.assertEqual(r["status"],"eligible_for_draft_only")
@@ -160,7 +167,7 @@ class AutonomousCampaignGateTests(unittest.TestCase):
 
     def test_missing_one_qa_attestation_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
-            paths, manifest, m=self.create_fixture(td)
+            paths, manifest, m=self.create_reviewed_fixture(td)
             manifest["checks"]["claims_with_sources"]=False
             m.write_text(json.dumps(manifest),encoding="utf-8")
             with patch.object(gate,"ROOT",Path(td)),patch.dict(gate.read_draft.__globals__,{"ROOT":Path(td)}):
@@ -169,7 +176,7 @@ class AutonomousCampaignGateTests(unittest.TestCase):
 
     def test_invalid_image_hash_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
-            paths, manifest, m=self.create_fixture(td)
+            paths, manifest, m=self.create_reviewed_fixture(td)
             manifest["image"]["sha256"]="0"*64
             m.write_text(json.dumps(manifest),encoding="utf-8")
             with patch.object(gate,"ROOT",Path(td)),patch.dict(gate.read_draft.__globals__,{"ROOT":Path(td)}):
@@ -178,7 +185,7 @@ class AutonomousCampaignGateTests(unittest.TestCase):
 
     def test_utc_dst_mismatch_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
-            paths, manifest, m=self.create_fixture(td)
+            paths, manifest, m=self.create_reviewed_fixture(td)
             manifest["posting_times"]["linkedin"]["utc"]="2026-11-04T14:00:00Z"
             m.write_text(json.dumps(manifest),encoding="utf-8")
             with patch.object(gate,"ROOT",Path(td)),patch.dict(gate.read_draft.__globals__,{"ROOT":Path(td)}):
@@ -188,7 +195,7 @@ class AutonomousCampaignGateTests(unittest.TestCase):
     def test_verification_failure_blocks_buffer(self):
         from subprocess import CalledProcessError
         with tempfile.TemporaryDirectory() as td:
-            paths, manifest, _=self.create_fixture(td)
+            paths, manifest, _=self.create_reviewed_fixture(td)
             with patch.object(gate,"ROOT",Path(td)),patch.dict(gate.read_draft.__globals__,{"ROOT":Path(td)}):
                 with patch.object(gate.subprocess,"run",side_effect=CalledProcessError(1,"logo verify")):
                     with self.assertRaises(CalledProcessError):
