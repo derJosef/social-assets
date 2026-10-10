@@ -157,23 +157,27 @@ def build(spec_path: Path, root: Path, base: Path, final: Path,
         subprocess.run([sys.executable, str(root / "scripts/logo_composite.py"),
                         *map(str, args)], cwd=root, check=True)
     try:
-        call("compose", base, final, "--original", logo,
-             "--heading-corner", "top-left",
-             "--frame", "on", "--margin-ratio", "0.05", "--stroke-ratio", "0.03")
         if spec["layout"] == "logo_only":
-            # Explicit, fail-closed profile: the canonical verifier returns 2
-            # for absent headings; our independent gate checks every other
-            # named requirement, rejects unknown/skipped checks, and requires
-            # the original logo to be in the verified lower-right position.
-            from logo_only_gate import verify_logo_only
-            qa = verify_logo_only(final, base, logo)
+            # Canonical PersonalOS v2.2: a *real* logo-only placement, not a
+            # fake headline corner and not a relaxed verifier. No heading box.
+            call("compose", base, final, "--original", logo,
+                 "--logo-corner", "bottom-right",
+                 "--frame", "on", "--margin-ratio", "0.05", "--stroke-ratio", "0.03")
+            call("verify", final, base, "--original", logo)
+            qa = {"profile": "logo_only", "validator": "personalos_canonical",
+                  "logo_verified": True, "source_visual_review": "manual",
+                  "review_evidence": spec["review_evidence"]}
         else:
             if bbox is None:
                 raise InvalidScene("Missing mandatory heading rectangle")
+            call("compose", base, final, "--original", logo,
+                 "--heading-corner", "top-left",
+                 "--frame", "on", "--margin-ratio", "0.05", "--stroke-ratio", "0.03")
             call("verify", final, base, "--original", logo,
                  "--heading-corner", "top-left",
                  "--heading-box", ",".join(map(str, bbox)))
-            qa = {"profile": "headline", "status": "verified_image_only"}
+            qa = {"profile": "headline", "validator": "personalos_canonical",
+                  "logo_verified": True}
     except (subprocess.CalledProcessError, OSError, ValueError):
         final.unlink(missing_ok=True)
         raise
