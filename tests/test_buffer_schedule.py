@@ -12,6 +12,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
 # The existing buffer_draft.py is imported next to buffer_schedule.py on GitHub.
 # For isolated offline tests, substitute only its stable helper API.
 helper = types.ModuleType("buffer_draft")
@@ -128,15 +130,16 @@ class ScheduleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Freigabe|freigabe"):
             module.inspect_request(self.request_file, self.now)
 
-    def test_publish_fails_without_environment_approval(self):
+    def test_publish_fails_without_real_environment_approval(self):
         info = module.inspect_request(self.request_file, self.now)
         with patch.dict(os.environ, {"GITHUB_REPOSITORY": helper.REPOSITORY,
                                      "GITHUB_REF": "refs/heads/main",
                                      "GITHUB_EVENT_NAME": "workflow_dispatch",
                                      "BUFFER_API_KEY": "dummy", "GITHUB_TOKEN": "dummy"},
                         clear=True):
-            with self.assertRaisesRegex(RuntimeError, "PUBLISH_APPROVAL_GATE"):
-                module.schedule(info)
+            with patch.object(module,"verify_current_run",side_effect=RuntimeError("Keine gültige Genehmigung")):
+                with self.assertRaisesRegex(RuntimeError, "Genehmigung"):
+                    module.schedule(info)
 
     def test_publish_fails_on_push_event_even_with_guard(self):
         info = module.inspect_request(self.request_file, self.now)
@@ -172,7 +175,7 @@ class ScheduleTests(unittest.TestCase):
 
     def test_existing_schedule_receipt_prevents_replay(self):
         info = module.inspect_request(self.request_file, self.now)
-        with patch.dict(os.environ, {"GITHUB_REPOSITORY": helper.REPOSITORY, "GITHUB_REF": "refs/heads/main", "GITHUB_EVENT_NAME": "workflow_dispatch", "PUBLISH_APPROVAL_GATE": "authorized-by-protected-environment", "BUFFER_API_KEY": "dummy", "GITHUB_TOKEN": "dummy"}), patch.object(module, "buffer_graphql", return_value={"post": {"id": "a1b2c3d4e5f60718293a4b5c", "channelId": "verified-channel", "status": "draft", "text": "Testtext ohne Geheimnisse"}}), patch.object(module, "fetch_receipt", return_value={"state": "scheduled"}), patch.object(module, "put_receipt") as write:
+        with patch.dict(os.environ, {"GITHUB_REPOSITORY": helper.REPOSITORY, "GITHUB_REF": "refs/heads/main", "GITHUB_EVENT_NAME": "workflow_dispatch", "BUFFER_API_KEY": "dummy", "GITHUB_TOKEN": "dummy"}), patch.object(module, "verify_current_run", return_value="second-reviewer"), patch.object(module, "buffer_graphql", return_value={"post": {"id": "a1b2c3d4e5f60718293a4b5c", "channelId": "verified-channel", "status": "draft", "text": "Testtext ohne Geheimnisse"}}), patch.object(module, "fetch_receipt", return_value={"state": "scheduled"}), patch.object(module, "put_receipt") as write:
             with self.assertRaisesRegex(RuntimeError, "existiert"):
                 module.schedule(info)
             write.assert_not_called()
@@ -183,7 +186,7 @@ class ScheduleTests(unittest.TestCase):
             {"post": {"id": "a1b2c3d4e5f60718293a4b5c", "channelId": "verified-channel", "status": "draft", "text": "Testtext ohne Geheimnisse"}},
             {"editPost": {"post": {"id": "a1b2c3d4e5f60718293a4b5c", "channelId": "verified-channel", "status": "buffer", "dueAt": "2026-10-10T18:00:00Z"}}},
         ]
-        with patch.dict(os.environ, {"GITHUB_REPOSITORY": helper.REPOSITORY, "GITHUB_REF": "refs/heads/main", "GITHUB_EVENT_NAME": "workflow_dispatch", "PUBLISH_APPROVAL_GATE": "authorized-by-protected-environment", "BUFFER_API_KEY": "dummy", "GITHUB_TOKEN": "dummy"}), patch.object(module, "buffer_graphql", side_effect=actions) as api, patch.object(module, "fetch_receipt", return_value=None), patch.object(module, "put_receipt", return_value="sha") as receipt:
+        with patch.dict(os.environ, {"GITHUB_REPOSITORY": helper.REPOSITORY, "GITHUB_REF": "refs/heads/main", "GITHUB_EVENT_NAME": "workflow_dispatch", "BUFFER_API_KEY": "dummy", "GITHUB_TOKEN": "dummy"}), patch.object(module, "verify_current_run", return_value="second-reviewer"), patch.object(module, "buffer_graphql", side_effect=actions) as api, patch.object(module, "fetch_receipt", return_value=None), patch.object(module, "put_receipt", return_value="sha") as receipt:
             module.schedule(info)
             self.assertEqual(api.call_count, 2)
             self.assertEqual(api.call_args.args[2], {"id": "a1b2c3d4e5f60718293a4b5c", "dueAt": "2026-10-10T18:00:00Z", "text": "Testtext ohne Geheimnisse", "assets": [], "metadata": None})
