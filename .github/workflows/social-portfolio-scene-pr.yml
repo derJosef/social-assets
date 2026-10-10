@@ -1,0 +1,39 @@
+name: Social Portfolio Scene – isolated PR checks
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/social_portfolio_scene.py'
+      - 'scripts/social_orchestrator.py'
+      - 'scripts/autonomous_campaign_gate.py'
+      - 'tests/test_social_orchestrator.py'
+      - 'tests/test_autonomous_campaign_gate.py'
+      - '.github/workflows/social-campaign-orchestrator.yml'
+      - 'scripts/logo_composite.py'
+      - 'scripts/test_logo_composite.py'
+      - 'tests/test_social_portfolio_scene.py'
+      - '.github/workflows/social-portfolio-scene-pr.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check 'Pillow>=11,<13' 'numpy>=2,<3'
+      - name: Offline scene validation without API secrets or Buffer calls
+        run: |
+          python -m py_compile scripts/social_portfolio_scene.py scripts/logo_composite.py scripts/test_logo_composite.py tests/test_social_portfolio_scene.py
+          python -m unittest discover -s scripts -p 'test_logo_composite.py' -v
+          python -m unittest discover -s tests -p 'test_social_portfolio_scene.py' -v
+          python -m unittest discover -s tests -p 'test_social_orchestrator.py' -v
+          python -m unittest discover -s tests -p 'test_autonomous_campaign_gate.py' -v

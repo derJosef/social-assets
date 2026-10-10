@@ -1,6 +1,6 @@
 """Tests fuer logo_composite: Seitenverhaeltnis, Position und gleichmaessiger Rahmen.
 
-Aufruf:  python -m unittest discover -s skills/meine-marke/scripts -p "test_logo_composite.py"
+Aufruf:  python -m unittest discover -s skills/josefs-marke/scripts -p "test_logo_composite.py"
 
 Die meisten Tests nutzen ein synthetisches Logo und laufen ueberall. Tests mit dem
 echten Original werden uebersprungen, wenn die Datei nicht erreichbar ist.
@@ -273,6 +273,148 @@ class FileRoundTripTests(unittest.TestCase):
             self.assertFalse(light.frame)
 
 
+class LogoOnlyTests(unittest.TestCase):
+    """Bildposts ohne jede Beschriftung: Logo in fester Ecke, keine Platzhalter-Ueberschrift."""
+
+    HEADING_CHECK = "Ueberschrift sichtbar, ohne Ueberlagerung, in der Ueberschriftsecke"
+    CORNER_CHECK = "Logo in der festgelegten Ecke (Logo-only)"
+
+    def setUp(self):
+        self.original = synthetic_logo()
+        self.base = gradient_base()
+
+    def build(self, corner="bottom-right", frame=True):
+        placement = lc.make_placement(self.base.size, None, frame=frame, logo_corner=corner)
+        layer = lc.build_logo_layer(self.original, placement.logo_width, placement.frame, placement.stroke, placement.gap)
+        return placement, lc.composite(self.base, layer, placement)
+
+    def checks(self, final, placement, heading_box=None):
+        return {c.name: c for c in lc.verify(final, self.base, placement, self.original, heading_box)}
+
+    def test_placement_has_no_heading_and_uses_chosen_corner(self):
+        for corner in lc.CORNERS:
+            placement = lc.make_placement((1080, 1350), None, logo_corner=corner)
+            self.assertTrue(placement.logo_only)
+            self.assertIsNone(placement.heading_corner)
+            self.assertEqual(placement.logo_corner, corner)
+            x0, y0, x1, y1 = placement.box()
+            self.assertEqual(x0 if corner.endswith("left") else 1080 - x1, placement.margin)
+            self.assertEqual(y0 if corner.startswith("top") else 1350 - y1, placement.margin)
+
+    def test_exactly_one_corner_argument_is_required(self):
+        with self.assertRaises(lc.LogoError):
+            lc.make_placement((1080, 1350), None)
+        with self.assertRaises(lc.LogoError):
+            lc.make_placement((1080, 1350), "top-left", logo_corner="bottom-right")
+        with self.assertRaises(lc.LogoError):
+            lc.make_placement((1080, 1350), None, logo_corner="middle")
+
+    def test_standard_placement_is_not_logo_only(self):
+        placement = lc.make_placement((1080, 1350), "top-left")
+        self.assertFalse(placement.logo_only)
+        self.assertIsNone(placement.logo_only_corner)
+        self.assertEqual(placement.logo_corner, "bottom-right")
+
+    def test_correct_logo_only_composite_has_no_failures_and_no_heading_check(self):
+        placement, final = self.build()
+        checks = self.checks(final, placement)
+        self.assertEqual([n for n, c in checks.items() if c.status == "fail"], [])
+        self.assertEqual([n for n, c in checks.items() if c.status == "skipped"], [])
+        self.assertNotIn(self.HEADING_CHECK, checks)
+        self.assertEqual(checks[self.CORNER_CHECK].status, "ok")
+        self.assertEqual(checks["Basisbild ohne Schrift und ohne Fremdlogo"].status, "manual")
+
+    def test_all_logo_checks_still_run(self):
+        placement, final = self.build()
+        checks = self.checks(final, placement)
+        for name in ("Originalvorlage", "Seitenverhaeltnis", "Bildgroesse",
+                     "Logo unveraendert (Innenformen, Farben, Rahmen)", "Uebrige Bildinhalte unveraendert",
+                     "Logo vollstaendig sichtbar", "Sicherheitsabstand zum Bildrand"):
+            self.assertEqual(checks[name].status, "ok", name)
+
+    def test_no_frame_variant_passes(self):
+        placement, final = self.build(frame=False)
+        checks = self.checks(final, placement)
+        self.assertEqual([n for n, c in checks.items() if c.status == "fail"], [])
+
+    def test_logo_in_other_corner_than_declared_fails(self):
+        placement, final = self.build("bottom-right")
+        wrong = lc.Placement(**{**placement.__dict__, "logo_only_corner": "top-left"})
+        self.assertEqual(self.checks(final, wrong)[self.CORNER_CHECK].status, "fail")
+
+    def test_heading_box_is_rejected_in_logo_only(self):
+        placement, final = self.build()
+        checks = self.checks(final, placement, heading_box=(54, 54, 700, 400))
+        self.assertEqual(checks["Logo-only: keine Ueberschrift angegeben"].status, "fail")
+
+    def test_stretched_logo_fails(self):
+        placement, _ = self.build()
+        layer = lc.build_logo_layer(self.original, placement.logo_width, placement.frame, placement.stroke, placement.gap)
+        squeezed = layer.resize((layer.width, round(layer.height * 0.8)), Image.LANCZOS)
+        final = self.base.convert("RGBA")
+        x0, y0, _, _ = placement.box()
+        final.alpha_composite(squeezed, (x0, y0))
+        self.assertEqual(self.checks(final, placement)["Logo unveraendert (Innenformen, Farben, Rahmen)"].status, "fail")
+
+    def test_text_or_other_change_outside_logo_fails(self):
+        placement, final = self.build()
+        ImageDraw.Draw(final).rectangle([100, 100, 400, 160], fill=(245, 247, 250, 255))  # nachtraeglich eingefuegte Zeile
+        self.assertEqual(self.checks(final, placement)["Uebrige Bildinhalte unveraendert"].status, "fail")
+
+    def test_margin_too_small_fails(self):
+        placement = lc.make_placement(self.base.size, None, margin_ratio=0.005, logo_corner="bottom-right")
+        layer = lc.build_logo_layer(self.original, placement.logo_width, placement.frame, placement.stroke, placement.gap)
+        final = lc.composite(self.base, layer, placement)
+        self.assertEqual(self.checks(final, placement)["Sicherheitsabstand zum Bildrand"].status, "fail")
+
+    def test_old_png_metadata_without_logo_only_fields_still_loads(self):
+        import json
+        from dataclasses import asdict
+        legacy = asdict(lc.make_placement((1080, 1350), "top-left"))
+        legacy.pop("logo_only")
+        legacy.pop("logo_only_corner")
+        placement = lc.Placement(**json.loads(json.dumps(legacy)))
+        self.assertFalse(placement.logo_only)
+        self.assertEqual(placement.logo_corner, "bottom-right")
+
+    def test_missing_heading_box_in_standard_mode_stays_incomplete(self):
+        placement = lc.make_placement(self.base.size, "top-left")
+        layer = lc.build_logo_layer(self.original, placement.logo_width, placement.frame, placement.stroke, placement.gap)
+        final = lc.composite(self.base, layer, placement)
+        checks = self.checks(final, placement)
+        self.assertEqual(checks[self.HEADING_CHECK].status, "skipped")
+        self.assertNotIn("Basisbild ohne Schrift und ohne Fremdlogo", checks)
+
+    def test_file_round_trip_exit_codes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            folder = Path(folder)
+            gradient_base().save(folder / "base.png")
+            synthetic_logo().save(folder / "logo.png")
+            original = folder / "logo.png"
+            original_loader = lc.load_original
+            lc.load_original = lambda path=original, check_hash=True: original_loader(path, check_hash=False)
+            try:
+                placement = lc.compose_file(folder / "base.png", folder / "out.png", None, original,
+                                            frame="on", logo_corner="bottom-right")
+                code, checks = lc.verify_files(folder / "out.png", folder / "base.png", original)
+                self.assertEqual(code, 0, [c for c in checks if c.status not in ("ok", "manual")])
+                code_box, _ = lc.verify_files(folder / "out.png", folder / "base.png", original,
+                                              heading_box=(54, 54, 700, 400))
+                with self.assertRaises(lc.LogoError):
+                    lc.verify_files(folder / "out.png", folder / "base.png", original, heading_corner="top-left")
+            finally:
+                lc.load_original = original_loader
+            self.assertTrue(placement.logo_only)
+            self.assertEqual(placement.logo_corner, "bottom-right")
+            self.assertEqual(code_box, 1)
+
+    def test_cli_requires_exactly_one_corner_option(self):
+        for argv in (["compose", "a.png", "b.png"],
+                     ["compose", "a.png", "b.png", "--heading-corner", "top-left", "--logo-corner", "bottom-right"]):
+            with self.assertRaises(SystemExit):
+                lc.main(argv)
+
+
 @unittest.skipUnless(lc.DEFAULT_ORIGINAL.is_file(), "Original-Logo nicht erreichbar")
 class RealOriginalTests(unittest.TestCase):
     def test_original_matches_pinned_size_and_hash(self):
@@ -287,6 +429,26 @@ class RealOriginalTests(unittest.TestCase):
         scale = 400 / 1939
         for x, y in ((200, 1000), (1000, 150), (800, 1000)):  # weisse Innenflaechen des Originals
             self.assertEqual(layer.getpixel((int(x * scale) + 8, int(y * scale) + 8))[3], 255)
+
+    def test_real_logo_only_end_to_end_passes_and_tampering_fails(self):
+        with tempfile.TemporaryDirectory() as folder:
+            folder = Path(folder)
+            gradient_base().save(folder / "base.png")
+            placement = lc.compose_file(folder / "base.png", folder / "out.png", None, frame="on",
+                                        logo_corner="bottom-right")
+            self.assertTrue(placement.logo_only)
+            code, checks = lc.verify_files(folder / "out.png", folder / "base.png")
+            self.assertEqual(code, 0, [c for c in checks if c.status not in ("ok", "manual")])
+            tampered = Image.open(folder / "out.png")
+            info = tampered.text
+            tampered = tampered.convert("RGBA")
+            tampered.putpixel((5, 5), (255, 0, 0, 255))
+            from PIL.PngImagePlugin import PngInfo
+            meta = PngInfo()
+            meta.add_text(lc.PNG_KEY, info[lc.PNG_KEY])
+            tampered.save(folder / "bad.png", pnginfo=meta)
+            code, _ = lc.verify_files(folder / "bad.png", folder / "base.png")
+            self.assertEqual(code, 1)
 
     def test_real_logo_end_to_end_passes_and_tampering_fails(self):
         with tempfile.TemporaryDirectory() as folder:

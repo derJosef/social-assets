@@ -120,8 +120,9 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # The independently reviewed 4:5 source already exists in git.
+          test -f "visual-reviews/$CAMPAIGN.json"
           git add -- \
-            "artwork-requests/$CAMPAIGN.json" \
             "media/source-images/$CAMPAIGN-base.png" \
             "media/images/$CAMPAIGN-branded.png" \
             "artwork-receipts/$CAMPAIGN.json" \
@@ -131,14 +132,14 @@ jobs:
             "ready-for-buffer/auto-$CAMPAIGN-facebook.json" \
             "ready-for-buffer/auto-$CAMPAIGN-instagram.json"
           count="$(git diff --cached --name-only | wc -l)"
-          [[ "$count" -eq 9 ]] || { echo "Nur 9 neue Dateien erlaubt; gefunden: $count" >&2; exit 1; }
+          [[ "$count" -eq 8 ]] || { echo "Nur 8 neue Dateien erlaubt; gefunden: $count" >&2; exit 1; }
           if git diff --cached --name-status | grep -v '^A[[:space:]]'; then
             echo 'Bestehende Dateien dürfen nicht geändert werden' >&2
             exit 1
           fi
           git commit -m "campaign: verified autonomous draft package $CAMPAIGN"
           git push origin HEAD:main
-          echo "9 markenkonforme Kampagnendateien committed. Buffer wird im selben Workflow ausgeführt." >> "$GITHUB_STEP_SUMMARY"
+          echo "8 neue Kampagnendateien committed; die freigegebene 4:5-Quelle lag bereits im Repository." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Vorbereitete Beiträge ohne Fremdtrigger DIREKT als Drafts senden
         if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
