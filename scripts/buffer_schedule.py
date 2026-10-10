@@ -15,6 +15,8 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from publish_approval import verify_current_run
+
 # Sibling module is part of the existing social-assets integration.
 from buffer_draft import (  # type: ignore
     REPOSITORY,
@@ -131,14 +133,14 @@ def inspect_request(request_file: str, now: datetime | None = None) -> dict:
 
 
 def schedule(info: dict) -> None:
-    # A manual workflow dispatch with protected environment is obligatory.
-    # The environment protection still requires GitHub Settings configuration.
-    if os.environ.get("PUBLISH_APPROVAL_GATE") != "authorized-by-protected-environment":
-        raise RuntimeError("PUBLISH_APPROVAL_GATE fehlt: keine geschützte Publikationsfreigabe.")
+    # Static flags are not proof of a human GitHub deployment approval.
     if os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch":
         raise RuntimeError("Buffer-Terminierung nur über manuell angestoßenen Workflow.")
     if os.environ.get("GITHUB_REPOSITORY") != REPOSITORY or os.environ.get("GITHUB_REF") != "refs/heads/main":
         raise RuntimeError("Terminierung nur durch GitHub Actions auf social-assets/main.")
+    # Recheck actual GitHub run approvals immediately before ANY Buffer API call.
+    # This is a live independent check, not a self-reported env marker.
+    approver = verify_current_run()
     token = os.environ.get("BUFFER_API_KEY", "")
     github_token = os.environ.get("GITHUB_TOKEN", "")
     if not token or not github_token:
@@ -159,6 +161,7 @@ def schedule(info: dict) -> None:
         "buffer_post_id": info["post_id"], "due_at": info["due_at"],
         "state": "pending_manual_reconciliation_on_failure",
         "github_run_id": os.environ.get("GITHUB_RUN_ID", "unknown"),
+        "independent_github_approver": approver,
     }
     receipt_sha = put_receipt(github_token, receipt, pending, f"buffer: reserve scheduling {info['request_file']}")
     # The reservation is deliberately irreversible on uncertain API results.
