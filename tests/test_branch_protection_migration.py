@@ -200,6 +200,15 @@ class PreviousReservationsTests(unittest.TestCase):
                 reservations.import_manifests(self.root)
         self.assertFalse((self.root / "campaign-manifests").exists())
 
+    def test_correct_utc_but_wrong_berlin_wall_time_is_rejected(self):
+        bad = json.loads(self.raw)
+        bad["posting_times"]["facebook"]["local"] = "2026-10-22T11:00:00+01:00"
+        with mock.patch.object(reservations, "git_bytes", side_effect=[
+            (self.ref + "\n").encode(), json.dumps(bad).encode(),
+        ]):
+            with self.assertRaisesRegex(ValueError, "Zeitzone"):
+                reservations.import_manifests(self.root)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -41,7 +41,8 @@ def checked_manifest(raw: bytes, campaign: str) -> None:
         if not isinstance(timing["local"], str):
             raise ValueError("Zeitzone der Reservierung fehlt")
         local = datetime.fromisoformat(timing["local"])
-        if local.tzinfo is None or local.astimezone(timezone.utc) != utc or utc.astimezone(ZoneInfo("Europe/Berlin")) != local:
+        if (local.tzinfo is None or local.astimezone(timezone.utc) != utc
+                or utc.astimezone(ZoneInfo("Europe/Berlin")).isoformat(timespec="seconds") != local.isoformat(timespec="seconds")):
             raise ValueError("Zeitzone der historischen Kampagne passt nicht")
 
 
