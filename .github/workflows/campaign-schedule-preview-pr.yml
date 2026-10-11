@@ -1,0 +1,28 @@
+name: Kampagnen-Termin-Vorschau (nur Offline-Tests)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  offline-preview:
+    name: Reine Vorschau und Regressionen
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Vorschau-Test ohne Buffer/GitHub-Tokens
+        run: |
+          python3 -B -m py_compile scripts/campaign_schedule_preview.py
+          python3 -B -m unittest discover -s tests -p 'test_campaign_schedule_preview.py' -v
