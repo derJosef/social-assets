@@ -129,7 +129,7 @@ jobs:
           set -euo pipefail
           python3 scripts/social_orchestrator.py --brief "$BRIEF" --mode "$RUN_MODE" --report "$REPORT_PATH"
 
-      - name: Alle neuen Assets atomar nach GitHub übertragen
+      - name: Freigegebene Assets auf unveränderlichem Bild-Commit sichern (NICHT main)
         if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
         shell: bash
         run: |
@@ -138,24 +138,40 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           # The independently reviewed 4:5 source already exists in git.
           test -f "visual-reviews/$CAMPAIGN.json"
+          branch="automation/campaign/$CAMPAIGN"
+          existing="$(git ls-remote --heads origin "refs/heads/$branch")"
+          [[ -z "$existing" ]] || { echo 'Kampagnen-Output-Branch existiert bereits. Keine Wiederholung.' >&2; exit 1; }
+          # First Git commit freezes only the brand-verified image and its
+          # proof. The second commit references that exact SHA, never a
+          # mutable output branch or unprotected main asset URL.
           git add -- \
             "media/source-images/$CAMPAIGN-base.png" \
             "media/images/$CAMPAIGN-branded.png" \
-            "artwork-receipts/$CAMPAIGN.json" \
+            "artwork-receipts/$CAMPAIGN.json"
+          [[ "$(git diff --cached --name-only | wc -l)" -eq 3 ]] || { echo 'Drei Bilddateien erforderlich' >&2; exit 1; }
+          [[ -z "$(git diff --cached --name-status | grep -v '^A[[:space:]]' || true)" ]] || exit 1
+          git commit -m "assets: pin verified artwork for $CAMPAIGN"
+          image_commit="$(git rev-parse HEAD)"
+          python3 scripts/immutable_campaign_assets.py --campaign "$CAMPAIGN" --image-commit "$image_commit"
+          python3 scripts/autonomous_campaign_gate.py --posts \
+            "ready-for-buffer/auto-$CAMPAIGN-linkedin.json" \
+            "ready-for-buffer/auto-$CAMPAIGN-facebook.json" \
+            "ready-for-buffer/auto-$CAMPAIGN-instagram.json"
+          git add -- \
             "campaign-manifests/$CAMPAIGN.json" \
             "drafts/$CAMPAIGN-plan.md" \
             "ready-for-buffer/auto-$CAMPAIGN-linkedin.json" \
             "ready-for-buffer/auto-$CAMPAIGN-facebook.json" \
             "ready-for-buffer/auto-$CAMPAIGN-instagram.json"
           count="$(git diff --cached --name-only | wc -l)"
-          [[ "$count" -eq 8 ]] || { echo "Nur 8 neue Dateien erlaubt; gefunden: $count" >&2; exit 1; }
+          [[ "$count" -eq 5 ]] || { echo "Fünf weitere Kampagnendateien erforderlich; gefunden: $count" >&2; exit 1; }
           if git diff --cached --name-status | grep -v '^A[[:space:]]'; then
             echo 'Bestehende Dateien dürfen nicht geändert werden' >&2
             exit 1
           fi
-          git commit -m "campaign: verified autonomous draft package $CAMPAIGN"
-          git push origin HEAD:main
-          echo "8 neue Kampagnendateien committed; die freigegebene 4:5-Quelle lag bereits im Repository." >> "$GITHUB_STEP_SUMMARY"
+          git commit -m "campaign: immutable media and verified draft package $CAMPAIGN"
+          git push origin "HEAD:refs/heads/$branch"
+          echo "8 neue Kampagnendateien nur auf $branch (nicht main); Medien per Bild-Commit $image_commit fixiert." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Vorbereitete Beiträge ohne Fremdtrigger DIREKT als Drafts senden
         if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
@@ -218,8 +234,8 @@ jobs:
           content="$(base64 -w0 /tmp/social-final-report/receipt.json)"
           gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$file" \
             -f message="audit: orchestration run $GITHUB_RUN_ID" \
-            -f content="$content" -f branch=main > /dev/null
-          echo "Prüfbericht: https://github.com/$GITHUB_REPOSITORY/blob/main/$file" >> "$GITHUB_STEP_SUMMARY"
+            -f content="$content" -f branch=automation-receipts > /dev/null
+          echo "Prüfbericht: https://github.com/$GITHUB_REPOSITORY/blob/automation-receipts/$file" >> "$GITHUB_STEP_SUMMARY"
           echo "Buffer-Publikation wurde durch diesen Workflow nie aktiviert." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Zusätzliche Artefakt-Sicherung bei fehlgeschlagenem GitHub-Report

@@ -33,6 +33,7 @@ REQUIRED_CHECKS = (
     "privacy_and_rights", "brand_image", "posting_time_research"
 )
 IMG_BASE = "https://raw.githubusercontent.com/derJosef/social-assets/main/"
+IMG_REPO_BASE = "https://raw.githubusercontent.com/derJosef/social-assets/"
 HEADING_CORNERS = {"top-left", "top-right", "bottom-left", "bottom-right"}
 PATH_IMG_RE = re.compile(r"^media/images/[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}\.png$")
 PATH_BASE_RE = re.compile(r"^media/source-images/[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}\.png$")
@@ -172,8 +173,18 @@ def check_campaign(post_paths: list[str], today: date | None = None, verify_imag
         require(item["format_version"] == 2 and item["target"] == target,
                 "Plattform/Format falsch")
         media = item["media"]
+        media_url = media["images"][0]["url"] if (
+            isinstance(media, dict) and isinstance(media.get("images"), list)
+            and len(media["images"]) == 1 and isinstance(media["images"][0], dict)
+        ) else None
+        media_ref = None
+        if isinstance(media_url, str) and media_url.startswith(IMG_REPO_BASE):
+            remainder = media_url[len(IMG_REPO_BASE):]
+            media_ref, separator, media_path = remainder.partition("/")
+            if not separator or media_path != image["final"]:
+                media_ref = None
         require(media["type"] == "images" and len(media["images"]) == 1
-                and media["images"][0]["url"] == IMG_BASE + image["final"],
+                and (media_ref == "main" or bool(re.fullmatch(r"[a-f0-9]{40}", media_ref or ""))),
                 "Nur das zuvor verifizierte Original-Logo-Bild ist zulaessig")
     times = manifest["posting_times"]
     require(isinstance(times, dict) and set(times) == set(TARGETS), "Drei Plattformzeiten erforderlich")
