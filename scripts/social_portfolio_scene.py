@@ -186,7 +186,7 @@ def build(spec_path: Path, root: Path, base: Path, final: Path,
     if not logo.is_file() or digest(logo) != LOGO_SHA:
         raise InvalidScene("Verified immutable Pauderer logo unavailable")
     bbox = render_base(source, base, spec["heading"], font)
-    from ai_disclosure import apply_to_base, verify_label_region, verify_no_logo_overlap
+    from ai_disclosure import apply_to_base, verify_final_disclosure
     disclosure_qa = {"required": needs_disclosure(spec), "text": None, "pixel_verified": False}
     if disclosure_qa["required"]:
         # Never ask a generative model to draw the caption. Fail closed if
@@ -219,9 +219,9 @@ def build(spec_path: Path, root: Path, base: Path, final: Path,
             qa = {"profile": "headline", "validator": "personalos_canonical",
                   "logo_verified": True}
         if disclosure_qa["required"]:
-            caption_box = verify_label_region(base, font)
-            verify_no_logo_overlap(final, caption_box)
+            verify_final_disclosure(base, final, font)
             disclosure_qa["logo_disjoint_verified"] = True
+            disclosure_qa["final_pixel_verified"] = True
     except (subprocess.CalledProcessError, OSError, ValueError):
         final.unlink(missing_ok=True)
         raise
