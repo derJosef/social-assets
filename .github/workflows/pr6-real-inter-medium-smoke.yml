@@ -1,0 +1,127 @@
+name: PR6 real Inter Medium smoke (temporary)
+
+on:
+  push:
+    branches: [feature/powered-by-ai-review-gate-20261011]
+    paths: ['.github/workflows/pr6-real-inter-medium-smoke.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python3 -m pip install --disable-pip-version-check 'Pillow>=11,<13' 'numpy>=2,<3'
+      - name: Fetch the exact real Inter variable TTF used by production
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 2 'https://raw.githubusercontent.com/google/fonts/main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf' -o /tmp/Inter.ttf
+          test -s /tmp/Inter.ttf
+          sha256sum /tmp/Inter.ttf
+      - name: Synthetic 4:5 render with real Inter Medium and canonical original logo
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          import subprocess
+          import sys
+          from PIL import Image, ImageDraw
+
+          root = Path.cwd()
+          sys.path.insert(0, str(root / "scripts"))
+          from ai_disclosure import (
+              DisclosureError, apply_to_base, contrast_ratio, load_font,
+              verify_against_original, verify_label_region, verify_no_logo_overlap,
+              BACKGROUND, MARGIN, MIN_CONTRAST, SIZE, TEXT, TEXT_COLOR,
+          )
+          from social_portfolio_scene import LOGO_SHA, digest
+
+          out = root / "smoke-proof"
+          out.mkdir(exist_ok=False)
+          font_path = Path("/tmp/Inter.ttf")
+          font = load_font(font_path)
+          variations = [n.decode("utf-8", "replace") for n in font.get_variation_names()]
+          assert "Medium" in variations, "Real Inter lacks named Medium instance"
+
+          # Non-human abstract shapes; no person or image rights asserted.
+          raw = Image.new("RGB", SIZE, (7,17,31))
+          draw = ImageDraw.Draw(raw)
+          for n in range(5):
+              draw.rounded_rectangle((155+n*22, 170+n*95, 810-n*32, 235+n*95),
+                                     radius=16, outline=(20,125,120), width=3)
+          for n in range(4):
+              draw.line((225+n*130,715,350+n*130,865),fill=(124,156,209),width=6)
+          source = out / "synthetic-unmarked.png"
+          base = out / "synthetic-with-disclosure.png"
+          final = out / "synthetic-with-disclosure-and-original-logo.png"
+          raw.save(source, "PNG")
+          raw.save(base, "PNG")
+
+          receipt = apply_to_base(base,font_path)
+          box = verify_label_region(base,font_path)
+          verify_against_original(raw,base,font_path)
+          assert tuple(receipt["box"]) == box
+          assert box[0] == MARGIN-8 and box[3] == SIZE[1]-MARGIN
+          assert receipt["text"] == TEXT and receipt["font"] == "Inter Medium"
+          assert receipt["font_size_px"] == 42 and receipt["margin_px"] == 54
+          assert contrast_ratio(TEXT_COLOR,BACKGROUND) >= MIN_CONTRAST
+
+          altered = Image.open(base).convert("RGB")
+          ImageDraw.Draw(altered).point((box[0]+15,box[1]+15),fill=(255,0,0))
+          tampered = out / "temporary-tampered.png"
+          altered.save(tampered)
+          try:
+              verify_label_region(tampered,font_path)
+          except DisclosureError:
+              pass
+          else:
+              raise AssertionError("A tampered caption pixel was accepted")
+          tampered.unlink()
+
+          logo = root / "media/brand/logo-pauderer-original.png"
+          assert logo.is_file() and digest(logo) == LOGO_SHA, "Wrong original logo"
+          subprocess.run([sys.executable,"scripts/logo_composite.py","compose",
+              str(base),str(final),"--original",str(logo),
+              "--logo-corner","bottom-right","--frame","on",
+              "--margin-ratio","0.05","--stroke-ratio","0.03"],check=True)
+          subprocess.run([sys.executable,"scripts/logo_composite.py","verify",
+              str(final),str(base),"--original",str(logo)],check=True)
+          verify_no_logo_overlap(final,box)
+          with Image.open(final) as image:
+              assert image.size == SIZE
+
+          result = {
+              "scope":"Synthetic PR smoke only; no actual human or Buffer",
+              "status":"PASS",
+              "production_font_sha256":hashlib.sha256(font_path.read_bytes()).hexdigest(),
+              "font_name":font.getname(),
+              "named_variations":variations,
+              "caption":receipt,
+              "pixel_gate":"PASS",
+              "tamper_negative":"REJECTED",
+              "logo_sha256":digest(logo),
+              "canonical_logo_verify":"PASS",
+              "logo_disjoint":"PASS",
+              "final_sha256":digest(final),
+              "dimensions":list(SIZE),
+          }
+          (out/"verification.json").write_text(json.dumps(result,indent=2,ensure_ascii=False)+"\n")
+          print(json.dumps(result,indent=2,ensure_ascii=False))
+          PY
+      - name: Upload synthetic preview and receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr6-real-inter-medium-synthetic-proof
+          path: smoke-proof/
+          if-no-files-found: error
+          retention-days: 14
