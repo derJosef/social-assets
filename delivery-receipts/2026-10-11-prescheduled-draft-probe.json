@@ -2,7 +2,7 @@
   "probe": "one-time-prescheduled-draft",
   "target": "linkedin",
   "due_at_utc": "2027-02-08T12:00:00Z",
-  "state": "created_requires_independent_check",
+  "state": "verified_prescheduled_draft_not_queued",
   "github_run_id": "38179032859",
   "buffer_post_id": "6acc083fea568e911a4249f0"
 }
