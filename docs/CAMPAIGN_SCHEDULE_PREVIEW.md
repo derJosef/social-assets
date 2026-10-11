@@ -21,6 +21,12 @@ Das erzeugt auf **stdout** eine reine Leseansicht mit:
 - SHA-256 der manifestierten Bildbytes, des Manifests und aller drei Draft-Dateien;
 - deutlicher Warnung: weder Brief-Freigabe noch Buffer-Status noch Publikationsfreigabe.
 
+Eine beispielhafte, unverbindliche GitHub-Leseansicht mit drei echten
+bereits vorhandenen Entwürfen ist unter
+[`docs/previews/2026-10-10-kundenmail-kein-befehl-005.md`](previews/2026-10-10-kundenmail-kein-befehl-005.md)
+abgelegt. Es ist ein **eingefrorener Snapshot, keine Freigabe** und keine
+eigene Quelle für Inhalte oder Terminentscheidungen.
+
 **Fail-closed Offline-Prüfung:** Alle Dateien gehören zur gleichen Kampagne,
 alle Kanäle sind vorhanden, das Bild stimmt bytegenau, die Sommer-/Winterzeit
 ist korrekt umgerechnet, Termine liegen in der Zukunft, und es gibt keine
