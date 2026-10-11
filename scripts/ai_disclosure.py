@@ -64,7 +64,8 @@ def draw_disclosure(image: Image.Image, font: ImageFont.FreeTypeFont) -> tuple[i
     if not (0 <= box[0] < box[2] < SIZE[0] and 0 <= box[1] < box[3] < SIZE[1]):
         raise DisclosureError("Powered by AI caption does not fit the canvas")
     d = ImageDraw.Draw(image)
-    d.rounded_rectangle(box, radius=6, fill=BACKGROUND)
+    d.rounded_rectangle((box[0], box[1], box[2] - 1, box[3] - 1),
+                        radius=6, fill=BACKGROUND)
     d.text((MARGIN, box[1] + 6), TEXT, font=font, fill=TEXT_COLOR, anchor="lt")
     return box
 
@@ -106,7 +107,15 @@ def verify_label_region(base_path: Path, font_path: Path) -> tuple[int, int, int
         actual = image.convert("RGB")
     if actual.size != SIZE:
         raise DisclosureError("Caption base not 1080x1350")
-    if ImageChops.difference(expected.crop(box), actual.crop(box)).getbbox():
+    # The four rounded corners are transparent to the original scene. Compare
+    # only pixels actually owned by the caption, not the background corners.
+    mask = Image.new("L", SIZE, 0)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (box[0], box[1], box[2] - 1, box[3] - 1), radius=6, fill=255
+    )
+    delta = ImageChops.difference(expected, actual)
+    owned = Image.composite(delta, Image.new("RGB", SIZE), mask)
+    if owned.crop(box).getbbox():
         raise DisclosureError("Powered by AI missing, altered, too small, or low contrast")
     return box
 
