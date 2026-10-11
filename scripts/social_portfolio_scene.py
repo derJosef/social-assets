@@ -24,6 +24,13 @@ REVIEW_KEYS = (
     "plausible_details", "matches_topic", "heading_and_logo_space",
 )
 LOGO_SHA = "15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0"
+PERSON_REVIEW_KEYS = ("photorealistic_ai_face", "ai_altered_real_person", "person_use_approved")
+
+def needs_disclosure(spec: dict) -> bool:
+    """Only these two PersonalOS-locked cases require Powered by AI."""
+    review = spec["visual_review"]
+    return review.get("photorealistic_ai_face") is True or review.get("ai_altered_real_person") is True
+
 
 
 class InvalidScene(ValueError):
@@ -39,10 +46,13 @@ def digest(path: Path) -> str:
 
 
 def validate_spec(spec: dict, root: Path) -> Path:
-    if not isinstance(spec, dict) or set(spec) != {
+    legacy_fields = {
         "format_version", "brand", "source", "source_sha256", "layout",
         "heading", "visual_review", "review_evidence"
-    }:
+    }
+    if not isinstance(spec, dict) or set(spec) not in (
+        legacy_fields, legacy_fields | {"person_approval_evidence"}
+    ):
         raise InvalidScene("Exact version-1 scene specification required")
     if spec["format_version"] != 1 or spec["brand"] != "ai-agent-builder":
         raise InvalidScene("Only AI Agent Builder version 1 allowed")
@@ -60,10 +70,34 @@ def validate_spec(spec: dict, root: Path) -> Path:
     ):
         raise InvalidScene("Headline layout requires one nonempty, single-line heading")
     review = spec["visual_review"]
-    if not isinstance(review, dict) or set(review) != set(REVIEW_KEYS):
-        raise InvalidScene("Every visual review field must be provided")
-    if any(review[k] is not True for k in REVIEW_KEYS):
-        raise InvalidScene("Visual review incomplete; do not use this artwork")
+    if not isinstance(review, dict) or set(review) not in (
+        set(REVIEW_KEYS), set(REVIEW_KEYS) | set(PERSON_REVIEW_KEYS)
+    ):
+        raise InvalidScene("Every review field must be explicitly provided")
+    # Legacy approved scenes are compatible only when no person is present.
+    person_review = set(review) == set(REVIEW_KEYS) | set(PERSON_REVIEW_KEYS)
+    for key in REVIEW_KEYS:
+        if key != "no_people" and review[key] is not True:
+            raise InvalidScene("Visual review incomplete; do not use this artwork")
+    if not person_review:
+        if review["no_people"] is not True or "person_approval_evidence" in spec:
+            raise InvalidScene("Any person requires the new classified review and approval evidence")
+    else:
+        if any(type(review[k]) is not bool for k in PERSON_REVIEW_KEYS):
+            raise InvalidScene("Person review fields must be actual booleans")
+        if type(review["no_people"]) is not bool:
+            raise InvalidScene("no_people must be an actual boolean")
+        has_person = not review["no_people"]
+        if (review["photorealistic_ai_face"] or review["ai_altered_real_person"]) and not has_person:
+            raise InvalidScene("AI person classification contradicts no_people")
+        if has_person:
+            if review["person_use_approved"] is not True:
+                raise InvalidScene("Person depicted without explicit individual approval")
+            approval = spec.get("person_approval_evidence")
+            if not isinstance(approval, str) or len(approval.strip()) < 25:
+                raise InvalidScene("Documented Josef-specific person approval evidence required")
+        elif review["person_use_approved"] or "person_approval_evidence" in spec:
+            raise InvalidScene("Person approval may not be invented for a person-free scene")
     evidence = spec["review_evidence"]
     if not isinstance(evidence, str) or len(evidence.strip()) < 15:
         raise InvalidScene("Independent manual review evidence is required")
@@ -152,6 +186,12 @@ def build(spec_path: Path, root: Path, base: Path, final: Path,
     if not logo.is_file() or digest(logo) != LOGO_SHA:
         raise InvalidScene("Verified immutable Pauderer logo unavailable")
     bbox = render_base(source, base, spec["heading"], font)
+    from ai_disclosure import apply_to_base, verify_label_region, verify_no_logo_overlap
+    disclosure_qa = {"required": needs_disclosure(spec), "text": None, "pixel_verified": False}
+    if disclosure_qa["required"]:
+        # Never ask a generative model to draw the caption. Fail closed if
+        # Inter or a person-specific approval is unavailable.
+        disclosure_qa = {"required": True, **apply_to_base(base, font)}
     final.parent.mkdir(parents=True, exist_ok=True)
     def call(*args):
         subprocess.run([sys.executable, str(root / "scripts/logo_composite.py"),
@@ -178,12 +218,17 @@ def build(spec_path: Path, root: Path, base: Path, final: Path,
                  "--heading-box", ",".join(map(str, bbox)))
             qa = {"profile": "headline", "validator": "personalos_canonical",
                   "logo_verified": True}
+        if disclosure_qa["required"]:
+            caption_box = verify_label_region(base, font)
+            verify_no_logo_overlap(final, caption_box)
+            disclosure_qa["logo_disjoint_verified"] = True
     except (subprocess.CalledProcessError, OSError, ValueError):
         final.unlink(missing_ok=True)
         raise
     return {"size": list(SIZE), "sha256": digest(final),
             "source_sha256": digest(source), "heading_box": list(bbox) if bbox else None,
-            "layout": spec["layout"], "logo_qa": qa, "status": "verified_image_only"}
+            "layout": spec["layout"], "logo_qa": qa,
+            "ai_disclosure": disclosure_qa, "status": "verified_image_only"}
 
 
 def main():
