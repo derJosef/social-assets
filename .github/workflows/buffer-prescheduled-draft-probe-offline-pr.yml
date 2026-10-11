@@ -1,0 +1,25 @@
+name: Buffer-Draft mit Datum – nur Offline-PR-Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  offline-only:
+    name: Safety-Tests ohne Buffer-Token
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Nur Syntax- und Tests, keine API-Aufrufe
+        run: |
+          python3 -B -m py_compile scripts/buffer_prescheduled_draft_probe.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_buffer_prescheduled_draft_probe.py' -v
