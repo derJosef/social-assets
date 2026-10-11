@@ -202,5 +202,58 @@ class AutonomousCampaignGateTests(unittest.TestCase):
                         gate.check_campaign(list(paths.values()),today=date(2026,10,9),verify_image=True)
 
 
+    def make_person_review(self,td,*,qa_present=True,correct=True):
+        paths,manifest,m=self.create_reviewed_fixture(td)
+        review_path=Path(td)/"visual-reviews/2026-10-09-agenten-tests.json"
+        review=json.loads(review_path.read_text())
+        review["visual_review"]["no_people"]=False
+        review["visual_review"].update({
+            "photorealistic_ai_face":True,"ai_altered_real_person":False,
+            "person_use_approved":True,
+        })
+        review["person_approval_evidence"]=(
+            "SYNTHETIC TEST ONLY - hypothetical personal approval, NOT live evidence"
+        )
+        review_path.write_text(json.dumps(review))
+        if qa_present:
+            manifest["image"]["ai_disclosure"]={
+                "required":True,"text":"Powered by AI" if correct else "Powered by IA",
+                "font_size_px":42,"margin_px":54,"pixel_verified":True,
+                "logo_disjoint_verified":True
+            }
+        m.write_text(json.dumps(manifest))
+        return paths,manifest,m
+
+    def test_person_qa_receipt_missing_blocks_preflight(self):
+        with tempfile.TemporaryDirectory() as td:
+            paths,_,_=self.make_person_review(td,qa_present=False)
+            with patch.object(gate,"ROOT",Path(td)),patch.dict(gate.read_draft.__globals__,{"ROOT":Path(td)}):
+                with self.assertRaisesRegex(ValueError,"requires disclosure"):
+                    gate.check_campaign(list(paths.values()),today=date(2026,10,9),verify_image=False)
+
+    def test_wrong_caption_wording_blocks_independent_gate(self):
+        with tempfile.TemporaryDirectory() as td:
+            paths,_,_=self.make_person_review(td,correct=False)
+            with patch.object(gate,"ROOT",Path(td)),patch.dict(gate.read_draft.__globals__,{"ROOT":Path(td)}):
+                with self.assertRaisesRegex(ValueError,"verification receipt"):
+                    gate.check_campaign(list(paths.values()),today=date(2026,10,9),verify_image=False)
+
+    def test_person_receipt_only_can_pass_structural_gate_not_pixel_gate(self):
+        from ai_disclosure import DisclosureError
+        with tempfile.TemporaryDirectory() as td:
+            paths,_,_=self.make_person_review(td)
+            with patch.object(gate,"ROOT",Path(td)),patch.dict(gate.read_draft.__globals__,{"ROOT":Path(td)}):
+                # Structure-only explicitly skips logo and pixel checks.
+                result=gate.check_campaign(list(paths.values()),today=date(2026,10,9),verify_image=False)
+                self.assertEqual(result["status"],"eligible_for_draft_only")
+                # In a real run the **second gate** must inspect rendered pixels;
+                # this fixture's uncaptioned black frame is not acceptable.
+                with patch.object(gate.subprocess,"run") as logo_check:
+                    with patch("ai_disclosure.verify_label_region",side_effect=DisclosureError("missing caption")):
+                        with self.assertRaisesRegex(DisclosureError,"missing caption"):
+                            gate.check_campaign(list(paths.values()),today=date(2026,10,9),verify_image=True)
+                    logo_check.assert_called()
+
+
 if __name__ == "__main__":
     unittest.main()
