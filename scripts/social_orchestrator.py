@@ -235,6 +235,7 @@ def create_packages(brief, evidences, g):
         "base":p["base"],"final":p["final"],"sha256":digest,
         "layout":verified["layout"],"image_review":brief["image_review"],
         "source_sha256":verified["source_sha256"],
+        "ai_disclosure":verified["ai_disclosure"],
         "logo_original_sha256":SHA_LOGO,
         "manual_review":verified["logo_qa"].get("source_visual_review","separate-review")
     })
@@ -251,6 +252,7 @@ def create_packages(brief, evidences, g):
       "image":{"final":p["final"],"base":p["base"],"sha256":digest,
                "layout":verified["layout"],"review_spec":brief["image_review"],
                "source_sha256":verified["source_sha256"],
+               "ai_disclosure":verified["ai_disclosure"],
                "heading_corner":"top-left" if verified["layout"]=="headline" else None,
                "heading_box":verified["heading_box"]},
       "posts":{t:f"ready-for-buffer/auto-{c}-{t}.json" for t in TARGETS},
@@ -261,13 +263,17 @@ def create_packages(brief, evidences, g):
         write_json(ROOT/manifest["posts"][t],{
             "format_version":2,"target":t,"text":g["posts"][t],
             "media":{"type":"images","images":[{"url":url,
-              "alt_text":"Technische Darstellung zum Thema "+brief["topic"][:165]+"; Original-Pauderer-Logo unten rechts."}]}
+              "alt_text":"Technische Darstellung zum Thema "+brief["topic"][:165]+"; Original-Pauderer-Logo unten rechts." +
+              (" Im Bild: Powered by AI." if verified["ai_disclosure"]["required"] else "")}]}
         })
     write_json(ROOT/p["manifest"],manifest)
     plan=["# "+c,"","## Faktenquellen",""]
     plan += [f"- {s['url']} (Publikationsdatum laut Brief: {s['published_at']})" for s in brief["sources"]]
     plan += ["","## Vier-Augen- und sechs-Hüte-Prüfung",""]
     plan += [f"- **{k}:** {v}" for k,v in g["six_hats"].items()]
+    plan += ["","## Powered-by-AI-Bildpruefung",
+             f"- Hinweis erforderlich: {verified['ai_disclosure']['required']}",
+             f"- Eigenstaendiges Pixel-Gate: {verified['ai_disclosure']['pixel_verified']}"]
     plan += ["","## Offene Risiken",""]+[f"- {str(v)[:500]}" for v in g["risks"]]
     plan += ["","## Geplante Termine (NICHT in Buffer aktiviert)",""]
     plan += [f"- {t}: {times[t]['local']} Berlin / {times[t]['utc']} UTC" for t in TARGETS]
