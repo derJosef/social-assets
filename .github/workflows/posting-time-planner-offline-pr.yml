@@ -1,0 +1,25 @@
+name: Postingzeiten – Offline-Regressionsprüfung
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  posting-time-planner:
+    name: Kein Buffer, keine Terminierung
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Python-Syntax und synthetische Zeitfenster-Tests
+        run: |
+          python3 -B -m py_compile scripts/posting_time_planner.py scripts/social_orchestrator.py
+          python3 -B -m unittest discover -s tests -p 'test_posting_time_planner.py' -v
