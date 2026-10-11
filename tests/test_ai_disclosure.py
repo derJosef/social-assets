@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Offline negative/positive tests: synthetic pixels only, no external image or Buffer."""
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -76,7 +77,7 @@ class DisclosureTests(unittest.TestCase):
         with self.assertRaises(m.DisclosureError):
             m.apply_to_base(self.base, self.font)
 
-    def make_fake_compositor_png(self, *, logo_corner="bottom-right"):
+    def make_fake_compositor_png(self, *, logo_corner="bottom-right", captioned=False):
         final = self.root / "final.png"
         placement = {
             "heading_corner": None, "logo_only": True, "logo_only_corner": logo_corner,
@@ -85,7 +86,11 @@ class DisclosureTests(unittest.TestCase):
         }
         info = PngImagePlugin.PngInfo()
         info.add_text("logo_placement",json.dumps(placement))
-        Image.new("RGB", m.SIZE).save(final,pnginfo=info)
+        if captioned:
+            with Image.open(self.base) as source:
+                source.convert("RGB").save(final,pnginfo=info)
+        else:
+            Image.new("RGB", m.SIZE).save(final,pnginfo=info)
         return final
 
     def test_original_logo_right_disjoint(self):
@@ -106,6 +111,40 @@ class DisclosureTests(unittest.TestCase):
         Image.new("RGB",m.SIZE).save(final)
         with self.assertRaises(m.DisclosureError):
             m.verify_no_logo_overlap(final,tuple(report["box"]))
+
+    def test_final_caption_and_disjoint_logo_are_both_verified(self):
+        report = m.apply_to_base(self.base, self.font)
+        final = self.make_fake_compositor_png(captioned=True)
+        self.assertEqual(tuple(report["box"]),
+                         m.verify_final_disclosure(self.base, final, self.font))
+
+    def test_fake_disjoint_logo_metadata_cannot_cover_final_caption(self):
+        report = m.apply_to_base(self.base, self.font)
+        final = self.make_fake_compositor_png(captioned=True)
+        with Image.open(final) as image:
+            metadata = image.info["logo_placement"]
+            covered = image.convert("RGB")
+        box = tuple(report["box"])
+        ImageDraw.Draw(covered).rectangle(
+            (box[0] + 12, box[1] + 12, box[0] + 35, box[1] + 35), fill="red"
+        )
+        info = PngImagePlugin.PngInfo()
+        info.add_text("logo_placement", metadata)  # Forged disjoint placement
+        covered.save(final, pnginfo=info)
+        m.verify_no_logo_overlap(final, box)  # Old metadata-only check passes
+        with self.assertRaises(m.DisclosureError):
+            m.verify_final_disclosure(self.base, final, self.font)
+
+    @unittest.skipUnless(os.environ.get("SOCIAL_FONT_SMOKE") == "1",
+                         "Production font smoke runs only in read-only PR CI")
+    def test_real_immutable_inter_medium_pixels(self):
+        inter = Path("/tmp/Inter.ttf")
+        self.assertTrue(inter.is_file(), "PR CI must download the pinned Inter font")
+        report = m.apply_to_base(self.base, inter)
+        final = self.make_fake_compositor_png(captioned=True)
+        self.assertEqual(report["font"], "Inter Medium")
+        self.assertEqual(tuple(report["box"]),
+                         m.verify_final_disclosure(self.base, final, inter))
 
     def test_no_unmarked_pixels_outside_caption_changed(self):
         untouched = Image.open(self.base).convert("RGB")
