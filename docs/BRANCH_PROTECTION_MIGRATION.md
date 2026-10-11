@@ -17,7 +17,13 @@ angelegt, keine Terminierung/Publikation freigegeben.
 Der Orchestrator läuft weiterhin **auf `main`**: Nur der tatsächlich geschützte
 Brief samt Freigabe wird dort geladen. Vor externer Recherche und vor jedem
 schreibenden Aufruf muss `brief_approval_gate.py` die persönliche Merge-Provenienz
-prüfen. Die generierten acht Dateien werden in **zwei lokalen Git-Commits**
+prüfen. Der **Ein-Datei-Freigabe-PR-Merge** löst den Job über
+`orchestration/approvals/*.json` ohne zusätzlichen manuellen Dispatch aus.
+Er liest vorherige automatisch generierte Kampagnenmanifest-Termine aus den
+vorhandenen Output-Branches **nur lesend** in sein temporäres Arbeitsverzeichnis
+ein; so kann die Zeitplanung (#9) frühere Kanaltermine berücksichtigen,
+obwohl `main` nicht durch Bots beschrieben wird.
+Die generierten acht Dateien werden in **zwei lokalen Git-Commits**
 geschrieben (3 Bild-/Bildbelegdateien, dann 5 Manifest-/Textdateien). Erst
 nach dem zweiten lokalen Qualitätscheck wird der einmalige Output-Branch
 gepusht. **Keine Direktpushes auf `main`.** Ein GitHub-Actions-Push mit dem
@@ -73,6 +79,9 @@ ohne Beleg verweigert sie die Terminierung.
 - Bilder unter commit-gepinnten URLs müssen weiterhin öffentlich abrufbar
   bleiben. Ein fehlender/abweichender Remote-Download stoppt den Sender
   **vor** dessen Reservierungsbeleg und vor Buffer.
+- Temporär eingelesene ältere Kampagnenmanifests werden **nicht** in `main`
+  oder in den neuen Kampagnen-Output-Branch zurückgeschrieben. Ungültige,
+  widersprüchliche oder nicht lesbare alte Zeitdaten blockieren den Lauf.
 - Die alten `ready-to-schedule`-Anfragen behalten ihre **eigenständige,
   explizite Terminierungsfreigabe**. Datierte Drafts (`state=
   verified_prescheduled_draft_not_queued`) sind dafür nicht geeignet.

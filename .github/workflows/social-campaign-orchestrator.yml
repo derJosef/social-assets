@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'orchestration/briefs/*.json'
+      - 'orchestration/approvals/*.json' # Explicit Josef approval merge starts the prepared campaign automatically.
   workflow_dispatch:
     inputs:
       brief:
@@ -71,10 +72,15 @@ jobs:
             [[ "$BEFORE_SHA" =~ ^[0-9a-f]{40}$ && ! "$BEFORE_SHA" =~ ^0+$ ]] || { echo 'Unbekannter vorheriger Commit' >&2; exit 1; }
             tempfile="$(mktemp)"
             trap 'rm -f "$tempfile"' EXIT
-            git diff --no-renames --name-only -z "$BEFORE_SHA" "$GITHUB_SHA" -- orchestration/briefs/ > "$tempfile"
+            git diff --no-renames --name-only -z "$BEFORE_SHA" "$GITHUB_SHA" -- orchestration/briefs/ orchestration/approvals/ > "$tempfile"
             mapfile -d '' -t changed < "$tempfile"
-            [[ "${#changed[@]}" -eq 1 ]] || { echo 'Pro Push genau einen neuen oder geänderten Auftrag zulässig' >&2; exit 1; }
-            BRIEF="${changed[0]}"
+            [[ "${#changed[@]}" -eq 1 ]] || { echo 'Pro Push genau eine neue/geänderte Brief- oder Freigabedatei zulässig' >&2; exit 1; }
+            changed_file="${changed[0]}"
+            if [[ "$changed_file" =~ ^orchestration/approvals/20[0-9]{2}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*\.json$ ]]; then
+              BRIEF="orchestration/briefs/$(basename "$changed_file")"
+            else
+              BRIEF="$changed_file"
+            fi
             MODE="$(python3 - "$BRIEF" <<'PY'
           import json,sys
           with open(sys.argv[1],encoding='utf-8') as f:
@@ -109,6 +115,16 @@ jobs:
           set -euo pipefail
           python3 scripts/brief_approval_gate.py \
             --draft "ready-for-buffer/auto-$CAMPAIGN-linkedin.json" --dated-draft
+
+      - name: Bisherige automatische Kanaltermine read-only für die Planung laden
+        if: steps.request.outputs.mode == 'drafts'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Fetching all heads also works for the *first* campaign, when no
+          # automation/campaign branch exists yet.
+          git fetch --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+          python3 scripts/campaign_reservations.py
 
       - name: Inter-Schrift nur für die echte Bildproduktion beziehen
         if: steps.request.outputs.mode == 'drafts'

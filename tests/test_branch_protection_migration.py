@@ -9,6 +9,7 @@ from unittest import mock
 
 from scripts import buffer_draft as sender
 from scripts import immutable_campaign_assets as assets
+from scripts import campaign_reservations as reservations
 
 CAMPAIGN = "2026-10-12-isolated"
 TARGETS = ("linkedin", "facebook", "instagram")
@@ -148,8 +149,56 @@ class WorkflowBoundaryTests(unittest.TestCase):
         orchestrator = (root / ".github/workflows/social-campaign-orchestrator.yml").read_text()
         self.assertIn("git push origin \"HEAD:refs/heads/$branch\"", orchestrator)
         self.assertIn("-f content=\"$content\" -f branch=automation-receipts", orchestrator)
+        self.assertIn("'orchestration/approvals/*.json'", orchestrator)
+        self.assertIn('BRIEF="orchestration/briefs/$(basename "$changed_file")"', orchestrator)
+        self.assertLess(orchestrator.index("--dated-draft"), orchestrator.index("scripts/campaign_reservations.py"))
+        self.assertLess(orchestrator.index("scripts/campaign_reservations.py"), orchestrator.index("scripts/social_orchestrator.py --brief"))
         self.assertLess(orchestrator.index("git push origin \"HEAD:refs/heads/$branch\""),
                         orchestrator.index("python3 scripts/buffer_draft.py --draft"))
+
+
+class PreviousReservationsTests(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name)
+        self.ref = reservations.REF_PREFIX + CAMPAIGN
+        self.manifest = {"brand": "ai-agent-builder", "campaign_id": CAMPAIGN,
+                         "posting_times": {t: {"utc": "2026-10-22T10:00:00Z",
+                             "local": "2026-10-22T12:00:00+02:00"} for t in TARGETS}}
+        self.raw = json.dumps(self.manifest).encode()
+
+    def test_imports_old_campaign_slots_from_read_only_remote_ref(self):
+        def git(root, *args):
+            if args[0] == "for-each-ref":
+                return (self.ref + "\n").encode()
+            if args[0] == "show":
+                return self.raw
+            raise AssertionError(args)
+        with mock.patch.object(reservations, "git_bytes", side_effect=git):
+            files = reservations.import_manifests(self.root)
+        self.assertEqual(files, [f"campaign-manifests/{CAMPAIGN}.json"])
+        self.assertEqual((self.root / files[0]).read_bytes(), self.raw)
+
+    def test_new_repo_with_zero_prior_campaigns_stays_empty(self):
+        with mock.patch.object(reservations, "git_bytes", return_value=b""):
+            self.assertEqual(reservations.import_manifests(self.root), [])
+
+    def test_bad_branch_stops_without_creating_files(self):
+        with mock.patch.object(reservations, "git_bytes", return_value=b"refs/remotes/origin/automation/campaign/invalid\n"):
+            with self.assertRaisesRegex(ValueError, "Branch-ID"):
+                reservations.import_manifests(self.root)
+        self.assertFalse((self.root / "campaign-manifests").exists())
+
+    def test_malformed_existing_slot_stops_before_write(self):
+        bad = json.loads(self.raw)
+        bad["posting_times"]["linkedin"]["local"] = "2026-10-22T12:00:00+01:00"
+        with mock.patch.object(reservations, "git_bytes", side_effect=[
+            (self.ref + "\n").encode(), json.dumps(bad).encode(),
+        ]):
+            with self.assertRaisesRegex(ValueError, "Zeitzone"):
+                reservations.import_manifests(self.root)
+        self.assertFalse((self.root / "campaign-manifests").exists())
 
 
 if __name__ == "__main__":
