@@ -46,7 +46,7 @@ jobs:
           python-version: '3.12'
 
       - name: Bild- und QA-Abhängigkeiten
-        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow>=11,<13' 'numpy>=2,<3'
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0' 'numpy==2.5.4'
 
       - name: Offline-Regressionen (keine API-Aufrufe)
         shell: bash
@@ -131,8 +131,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsSL --retry 2 'https://raw.githubusercontent.com/google/fonts/main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf' -o /tmp/Inter.ttf
-          test -s /tmp/Inter.ttf
+          curl -fsSL --retry 2 'https://raw.githubusercontent.com/google/fonts/e1d6480102fed30739fead0faee463101f892c8f/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf' -o /tmp/Inter.ttf
+          echo '29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031  /tmp/Inter.ttf' | sha256sum --check --status
 
       - name: Orchestrator ausführen (fail closed)
         id: build
