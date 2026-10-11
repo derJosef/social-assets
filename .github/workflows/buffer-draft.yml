@@ -21,6 +21,7 @@ on:
 
 permissions:
   contents: write # Ausschließlich für die GitHub-Empfangsbelege erforderlich.
+  pull-requests: read # Only for protected brief-approval PR provenance.
 
 concurrency:
   group: buffer-drafts-single-flight
@@ -39,6 +40,10 @@ jobs:
 
       - name: Python-Version anzeigen
         run: python3 --version
+
+      - name: Bildpruefung fuer freigegebene automatische Kampagnen vorbereiten
+        if: inputs.send_to_buffer == true
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow>=11,<13' 'numpy>=2,<3'
 
       - name: JSON prüfen und optional Buffer-Entwurf erstellen
         env:

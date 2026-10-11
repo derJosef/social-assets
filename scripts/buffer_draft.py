@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Transfer one LinkedIn/Facebook/Instagram post to Buffer as a draft, never schedule.
+"""Transfer one LinkedIn/Facebook/Instagram post as a Buffer draft, never queue.
 
 No external calls in dry-run mode. Live sending is only possible with --send,
 configured GitHub Actions secrets and a reservation receipt in this repository.
+Approved auto-campaign drafts can carry a future dueAt while remaining drafts.
 """
 from __future__ import annotations
 
@@ -17,6 +18,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 import re
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 BUFFER_ENDPOINT = "https://api.buffer.com"
@@ -40,6 +43,38 @@ mutation CreateDraft($text: String!, $channelId: ChannelId!, $assets: [AssetInpu
   }
 }
 """
+
+# The one-off live acceptance run #38179032859 proved this exact Buffer mode:
+# dueAt is stored on a DRAFT, never queued for automatic publication.
+CREATE_DATED_DRAFT = """
+mutation CreateDatedDraft($text: String!, $channelId: ChannelId!, $assets: [AssetInput!]!, $metadata: PostInputMetaData, $dueAt: DateTime!) {
+  createPost(input: {
+    text: $text
+    channelId: $channelId
+    schedulingType: automatic
+    mode: customScheduled
+    dueAt: $dueAt
+    saveToDraft: true
+    assets: $assets
+    metadata: $metadata
+  }) {
+    __typename
+    ... on PostActionSuccess { post { id channelId status dueAt } }
+    ... on MutationError { message }
+  }
+}
+"""
+
+READ_DATED_DRAFT = """
+query VerifyDatedDraft($id: PostId!) {
+  post(input: { id: $id }) { id channelId status dueAt }
+}
+"""
+
+AUTO_DRAFT_RE = re.compile(
+    r"^ready-for-buffer/auto-(20\d{2}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*)-"
+    r"(linkedin|facebook|instagram)\.json$"
+)
 
 GET_ORGANIZATIONS = """
 query GetOrganizations {
@@ -341,6 +376,102 @@ def channel_preference(target: str) -> str:
     return os.environ.get(name, "").strip()
 
 
+def planned_due_at(draft_path: str, target: str, *, now: datetime | None = None) -> str | None:
+    """Bind an auto-draft's time to its manifest, never to editable draft fields.
+
+    Legacy `ready-for-buffer/` entries cannot silently evade brief approval.
+    Directly dispatched `drafts/` entries keep their original undated behavior.
+    """
+    match = AUTO_DRAFT_RE.fullmatch(draft_path)
+    if match is None:
+        if draft_path.startswith("ready-for-buffer/"):
+            raise RuntimeError("Legacy-ready-for-buffer ohne gebundene Brief-Freigabe gesperrt")
+        if not draft_path.startswith("drafts/"):
+            raise RuntimeError("Unbekannter Entwurfseingang")
+        return None
+    campaign, named_target = match.groups()
+    if target != named_target:
+        raise RuntimeError("Kanal in Dateiname und Inhalt stimmt nicht überein")
+    manifest_file = (ROOT / "campaign-manifests" / f"{campaign}.json").resolve(strict=True)
+    if not manifest_file.is_relative_to(ROOT.resolve()) or manifest_file.stat().st_size > 100_000:
+        raise RuntimeError("Manifestpfad oder -größe unzulässig")
+    manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+    if (not isinstance(manifest, dict) or manifest.get("brand") != "ai-agent-builder"
+            or manifest.get("campaign_id") != campaign):
+        raise RuntimeError("Kampagnenmanifest ist nicht gebunden")
+    posts = manifest.get("posts")
+    if not isinstance(posts, dict) or posts.get(target) != draft_path:
+        raise RuntimeError("Post und Manifest widersprechen sich")
+    timings = manifest.get("posting_times")
+    if not isinstance(timings, dict) or set(timings) != {"linkedin", "facebook", "instagram"}:
+        raise RuntimeError("Drei Plattformtermine fehlen")
+    current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None:
+        raise RuntimeError("Zeitprüfung benötigt eine Zeitzone")
+    tz = ZoneInfo("Europe/Berlin")
+    parsed = {}
+    for name, timing in timings.items():
+        if not isinstance(timing, dict) or set(timing) != {"local", "utc"}:
+            raise RuntimeError("Unvollständiger Zeitnachweis")
+        utc_text = timing["utc"]
+        if not isinstance(utc_text, str) or not re.fullmatch(
+            r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", utc_text
+        ):
+            raise RuntimeError("Termin benötigt sekundengenaues UTC-Format")
+        utc = datetime.strptime(utc_text, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        local = datetime.fromisoformat(timing["local"])
+        if (local.tzinfo is None or local.astimezone(timezone.utc) != utc
+                or utc.astimezone(tz).isoformat(timespec="seconds") != local.isoformat(timespec="seconds")
+                or utc <= current + timedelta(minutes=10)):
+            raise RuntimeError("Ungültiger, abgelaufener oder falsch konvertierter Termin")
+        parsed[name] = utc
+    return timings[target]["utc"]
+
+
+def authorize_auto_dated_draft(draft_path: str) -> dict:
+    """Use PR #7's protected-main approval, plus the full campaign QA gate."""
+    if __package__:
+        from .brief_approval_gate import authorize_draft
+        from .autonomous_campaign_gate import check_campaign
+    else:
+        from brief_approval_gate import authorize_draft
+        from autonomous_campaign_gate import check_campaign
+    match = AUTO_DRAFT_RE.fullmatch(draft_path)
+    if match is None:
+        raise RuntimeError("Automatischer datierter Entwurf benötigt eindeutige Kampagne")
+    campaign = match.group(1)
+    posts = [f"ready-for-buffer/auto-{campaign}-{target}.json"
+             for target in ("linkedin", "facebook", "instagram")]
+    check_campaign(posts, verify_image=True)
+    evidence = authorize_draft(draft_path, expected_purpose="dated_buffer_draft_not_queued")
+    # The protected approval pins the brief bytes. Enforce its actual approved
+    # editorial text, not just the three valid output filenames and image.
+    brief = json.loads((ROOT / "orchestration" / "briefs" / f"{campaign}.json").read_text(encoding="utf-8"))
+    prepared = brief.get("prepared_content")
+    expected_posts = prepared.get("posts") if isinstance(prepared, dict) else None
+    if not isinstance(expected_posts, dict) or set(expected_posts) != {"linkedin", "facebook", "instagram"}:
+        raise RuntimeError("Freigegebene plattformspezifische Brief-Texte fehlen")
+    for target, filename in zip(("linkedin", "facebook", "instagram"), posts):
+        _, actual, _ = read_draft(filename)
+        if actual != expected_posts[target]:
+            raise RuntimeError("Buffer-Draft-Text weicht vom freigegebenen Brief ab")
+    return evidence
+
+
+def verified_dated_post(record: object, *, post_id: str, channel_id: str, due_at: str) -> bool:
+    """Require the independent Buffer readback to agree on ID, channel, status, UTC."""
+    if not isinstance(record, dict):
+        return False
+    try:
+        due = datetime.fromisoformat(str(record.get("dueAt", "")).replace("Z", "+00:00"))
+        expected = datetime.fromisoformat(due_at.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return (record.get("id") == post_id and record.get("channelId") == channel_id
+            and str(record.get("status", "")).lower() == "draft"
+            and due.tzinfo is not None and due.astimezone(timezone.utc) == expected)
+
+
 def check_connection() -> None:
     buffer_key = os.environ.get("BUFFER_API_KEY", "")
     if not buffer_key:
@@ -360,6 +491,8 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
         raise RuntimeError("GitHub-Token oder BUFFER_API_KEY fehlt.")
 
     target = json.loads(raw.decode("utf-8"))["target"]
+    due_at = planned_due_at(draft_path, target)
+    approval = authorize_auto_dated_draft(draft_path) if due_at is not None else None
     channel_id = resolve_channel(buffer_key, target, channel_preference(target))
     assets = parse_assets(raw)
     verify_media_access(assets)
@@ -376,6 +509,8 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
         "state": "pending_manual_reconciliation_on_failure",
         "github_run_id": os.environ.get("GITHUB_RUN_ID", "unknown"),
     }
+    if due_at is not None:
+        pending.update({"due_at_utc": due_at, "channel_id": channel_id, "brief_approval": approval})
     receipt_sha = put_receipt(
         github_token, receipt, pending, f"buffer: reserve draft transfer for {draft_path}"
     )
@@ -385,7 +520,9 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
         "text": text, "channelId": channel_id, "assets": assets,
         "metadata": platform_metadata(target),
     }
-    result = buffer_graphql(buffer_key, CREATE_DRAFT, variables)
+    if due_at is not None:
+        variables["dueAt"] = due_at
+    result = buffer_graphql(buffer_key, CREATE_DATED_DRAFT if due_at is not None else CREATE_DRAFT, variables)
     post_result = result.get("createPost") or {}
     post = post_result.get("post") if isinstance(post_result, dict) else None
     if not isinstance(post, dict) or not post.get("id"):
@@ -394,7 +531,21 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
         raise RuntimeError(
             f"Buffer-Draft nicht bestätigt ({typename}). Pending-Beleg bleibt; manuell prüfen."
         )
-    pending.update({"state": "draft_created", "buffer_post_id": str(post["id"])})
+    post_id = str(post["id"])
+    if due_at is not None:
+        pending.update({"state": "created_requires_independent_check", "buffer_post_id": post_id})
+        receipt_sha = put_receipt(
+            github_token, receipt, pending,
+            f"buffer: identify dated draft for {draft_path}", sha=receipt_sha,
+        )
+        if not verified_dated_post(post, post_id=post_id, channel_id=channel_id, due_at=due_at):
+            raise RuntimeError("ALARM: Buffer-Anlage war kein datierter Draft; nur manuell abgleichen")
+        independent = buffer_graphql(buffer_key, READ_DATED_DRAFT, {"id": post_id}).get("post")
+        if not verified_dated_post(independent, post_id=post_id, channel_id=channel_id, due_at=due_at):
+            raise RuntimeError("ALARM: Buffer-Readback bestätigt keinen datierten Draft")
+        pending["state"] = "verified_prescheduled_draft_not_queued"
+    else:
+        pending.update({"state": "draft_created", "buffer_post_id": post_id})
     try:
         put_receipt(
             github_token,
@@ -408,7 +559,10 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
             "Entwurf laut Buffer erstellt, aber GitHub-Beleg nicht aktualisiert. "
             f"{receipt} steht weiterhin auf pending. Manuell abgleichen."
         ) from exc
-    print(f"Erfolg: Buffer-Entwurf angelegt (Post-ID: {post['id']}). Keine Planung/Veröffentlichung.")
+    if due_at is not None:
+        print(f"Erfolg: verifizierter Buffer-Draft (Post-ID: {post_id}, dueAt={due_at}). Keine Queue/Publikation.")
+    else:
+        print(f"Erfolg: Buffer-Entwurf angelegt (Post-ID: {post_id}). Keine Planung/Veröffentlichung.")
     print(f"GitHub-Beleg: {receipt}")
 
 

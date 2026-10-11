@@ -1,17 +1,19 @@
 # Kampagnen-Brief-Freigaben – Entwurf, noch nicht produktiv
 
-**Status: nur Implementierungsentwurf auf einem nicht gemergten Feature-Branch.**
-Diese Dokumentation erteilt keine Freigabe für eine konkrete Kampagne.
-`scripts/brief_approval_gate.py` ist **noch nicht** mit GitHub Actions oder
-`buffer_draft.py --send` verbunden. Ein bestandenes `--lint-only` ist nie
-eine Erlaubnis zum Senden.
+**Status: gestapelter Implementierungsentwurf, noch nicht auf `main`.**
+Die Weiterentwicklung `approved-dated-drafts` verbindet die Freigabeprüfung
+im Entwurfszweig mit allen drei Draft-Einstiegen, aktiviert aber **keinen**
+Workflow auf `main`. Ein bestandenes `--lint-only` ist nie eine Erlaubnis
+zum Senden.
 
 ## Entscheidung von Josef, 11.10.2026
 
 Nach **ausdrücklicher Freigabe eines einzelnen Kampagnen-Briefs** dürfen daraus
-automatisch **ungeplante Buffer-Drafts** entstehen. Eine erneute Freigabe je
-Draft ist nicht nötig. Terminierung und Veröffentlichung sind davon vollständig
-getrennt und brauchen eine eigene Josef-Entscheidung.
+automatisch Buffer-Drafts entstehen. Am 11./12.10.2026 präzisierte Josef:
+**Die recherchierten Termine sollen bereits im Draft stehen**, ohne
+Veröffentlichungswarteschlange oder Veröffentlichung. Das wurde mit dem
+einmaligen Live-Lauf #38179032859 als `draft` samt `dueAt` nachgewiesen.
+Ein Entwurf mit Datum ist keine aktivierte Veröffentlichung.
 
 ## Vorgeschlagener Genehmigungsweg
 
@@ -42,7 +44,7 @@ Das vorgeschlagene Schema ist ein JSON-Objekt mit **genau** folgenden Feldern
   "image_review_sha256": "<64 Hex-Zeichen des unveränderten Reviews>",
   "source_sha256": "<64 Hex-Zeichen der unveränderten Bildquelle>",
   "targets": ["linkedin", "facebook", "instagram"],
-  "purpose": "unscheduled_buffer_draft_only",
+  "purpose": "dated_buffer_draft_not_queued",
   "state": "approved"
 }
 ```
@@ -50,6 +52,10 @@ Das vorgeschlagene Schema ist ein JSON-Objekt mit **genau** folgenden Feldern
 **Abgrenzung:** Eine `execution_mode: drafts`-Eigenschaft im Brief ist keine
 menschliche Freigabe. Ebenso wenig genügen grüne CI-Checks, ein Merge des
 Briefs oder ein `workflow_dispatch`.
+Der alte Freigabezweck `unscheduled_buffer_draft_only` darf **nicht** still
+für einen datierten Entwurf umgedeutet werden. Er ist nur für den historischen,
+ungeplanten Pfad bekannt; der neue Sender verlangt exakt
+`dated_buffer_draft_not_queued`.
 
 ## Aufrufe und Tests (ohne Buffer)
 
@@ -72,21 +78,24 @@ Briefs oder ein `workflow_dispatch`.
   unmittelbar nach `main`; der zentrale Buffer-Sender speichert dort
   Einmal-Receipts. Vor strenger Branch-Protection sind diese Schreibwege
   ohne Verlust des Retry-/Doppelsendeschutzes zu migrieren.
-- **Alle drei** Draft-Einstiege sind später gesondert zu verdrahten und
-  fail-closed zu testen: Orchestrator, automatischer Ready-for-Buffer-Push
-  und manueller `buffer-draft.yml`-Dispatch. Bestehende nicht-`auto-`
-  Dateien benötigen eine eigene, ausdrücklich bestätigte Übergangsregel.
-- Die späteren prüfenden Jobs brauchen für den GitHub-PR-Nachweis zusätzlich
-  eng begrenzte **Pull-requests-Leserechte**; die aktuellen
-  `permissions: contents: write` reichen dafür nicht ohne Weiteres aus.
+- **Alle drei** Draft-Einstiege sind in diesem Integrationszweig über denselben
+  Sender abgesichert: Orchestrator, automatischer Ready-for-Buffer-Push und
+  manueller `buffer-draft.yml`-Dispatch. Der Orchestrator prüft den Brief
+  zusätzlich vor dem ersten externen Aufruf. Bestehende nicht-`auto-`
+  Dateien unter `ready-for-buffer/` werden fail-closed gesperrt; `drafts/`
+  bleiben ausdrücklich manuell und undatiert.
+- Für den GitHub-PR-Nachweis erhalten die neuen Jobs nur zusätzliche
+  **Pull-requests-Leserechte**. Das erlaubt keinen PR-Merge.
 - Der neue Approval-PR-Merge muss einen kontrollierten Kampagnenlauf anstoßen,
   ohne dass ein bloßer Brief-Push schon senden darf.
 - Der separate bestehende `buffer-auto-schedule.yml` reagiert bereits auf
   **individuell freigegebene** Dateien unter `ready-to-schedule/` und plant
   damit Termine. Dieser **nicht veränderte** Workflow ist gesondert mit
   Josefs Wunsch „keine automatische Terminierung“ abzugleichen.
-- Die jetzige Gate-Bibliothek enthält **keine Buffer-Mutation**, ersetzt
-  keine redaktionelle Wahrheit und beweist noch keine produktive Integration.
+- Die Gate-Bibliothek enthält **keine Buffer-Mutation**; der getrennte Sender
+  benutzt nur `createPost(saveToDraft:true, mode:customScheduled, dueAt)`.
+  Die Integrations- und Fehlertests sind bislang **offline**; der Live-Nachweis
+  stammt allein aus dem genehmigten Einmaltest, nicht aus einem Kampagnenlauf.
 
 **Keines der hier beschriebenen Genehmigungs- oder Ablaufbeispiele ist aktiv
 oder genehmigt. Kein Merge/Buffer-Draft/Scheduling/Publishing ohne separate

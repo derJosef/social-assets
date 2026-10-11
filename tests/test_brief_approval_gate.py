@@ -111,6 +111,20 @@ class BriefApprovalTests(unittest.TestCase):
         self.assertIn("branches/main", self.github.calls)
         self.assertFalse(any("buffer" in path for path in self.github.calls))
 
+    def test_t01b_dated_draft_needs_its_own_exact_approved_purpose(self):
+        with self.assertRaisesRegex(gate.ApprovalBlocked, "Freigabezweck"):
+            gate.authorize_draft(POST, root=self.root, api_get=self.github,
+                                 expected_purpose="dated_buffer_draft_not_queued")
+        self.assertEqual(self.github.calls, [])
+        self.approval["purpose"] = "dated_buffer_draft_not_queued"
+        self.save()
+        self.github.approval = self.approval_file.read_bytes()
+        result = gate.authorize_draft(POST, root=self.root, api_get=self.github,
+                                      expected_purpose="dated_buffer_draft_not_queued")
+        self.assertEqual(result["approved_pr"], 17)
+        with self.assertRaisesRegex(gate.ApprovalBlocked, "Freigabezweck"):
+            self.authorize()
+
     def test_t02_execution_mode_drafts_without_approval_fails_closed(self):
         self.approval_file.unlink()
         with self.assertRaises(OSError):

@@ -1,0 +1,41 @@
+name: Freigegebene datierte Buffer-Entwürfe – ausschließlich Offline-PR-Tests
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/approved-dated-drafts-offline-pr.yml'
+      - '.github/workflows/buffer-auto-drafts.yml'
+      - '.github/workflows/buffer-draft.yml'
+      - '.github/workflows/social-campaign-orchestrator.yml'
+      - 'scripts/brief_approval_gate.py'
+      - 'scripts/autonomous_campaign_gate.py'
+      - 'scripts/buffer_draft.py'
+      - 'scripts/orchestrator_verify_buffer.py'
+      - 'tests/**'
+      - 'docs/APPROVED_DATED_BUFFER_DRAFTS.md'
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    name: Nur synthetische Tests – nie Buffer oder GitHub-Secrets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Offline-Python-Pakete
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow>=11,<13' 'numpy>=2,<3'
+      - name: Syntax und gesamte synthetische Regression
+        run: |
+          set -euo pipefail
+          python3 -B -m py_compile scripts/brief_approval_gate.py scripts/autonomous_campaign_gate.py scripts/buffer_draft.py scripts/orchestrator_verify_buffer.py
+          python3 -B -m unittest discover -s tests -q
+      - name: Nie externe Aktionen
+        run: |
+          echo 'Nur Offline-Tests. Kein Buffer-Zugriff, kein Terminierungs- oder Publikationsaufruf.'

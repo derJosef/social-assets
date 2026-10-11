@@ -20,7 +20,7 @@ Schritte:
 6. Drei Terminvorschläge in Europe/Berlin plus UTC ermitteln, vorgeschlagene Slots früherer Kampagnen berücksichtigen. Nur eine **redaktionelle Planung**, keine Buffer-Terminierung.
 7. Das unabhängige `autonomous_campaign_gate.py` ausführen, inklusive aller drei Draft-JSON, Manifest, Quellennachweisen, Bild und Zeitumrechnung.
 8. Die **neun neuen Dateien** als Commit nach `main` übertragen. Ein eigener `GITHUB_TOKEN`-Commit startet kein weiteres Push-Workflow-Ereignis; daher werden die drei Buffer-Entwürfe im **selben Runner** mit `buffer_draft.py --send` erstellt. Die bestehende GitHub-Receipt-Reservierung verhindert blindes Doppelsenden.
-9. `orchestrator_verify_buffer.py` verifiziert aus den GitHub-Empfangsbelegen die drei Post-IDs über die Buffer-API: **`status=draft` und `dueAt=null`**.
+9. Im neuen, noch ungemergten Integrationszweig verifiziert `orchestrator_verify_buffer.py` aus den GitHub-Empfangsbelegen die drei Post-IDs über die Buffer-API: **`status=draft` und `dueAt` exakt wie im geprüften Kampagnenmanifest**. Historische frühere Läufe verwendeten noch `dueAt=null`.
 10. Unabhängig von Erfolg/Fehler wird ein dauerhafter Bericht nach `orchestration/reports/<kampagne>-run-<id>.json` geschrieben und zusätzlich als GitHub-Actions-Artefakt gesichert.
 
 ## Betrieb
@@ -46,7 +46,7 @@ Falls der Key fehlt, versucht das Skript GitHub Models mit dem automatisch berei
 - Vorbereitete Informationen und generierte Dateien werden im **öffentlichen** GitHub-Repository gespeichert. Keine vertraulichen Daten in Briefings, Prompts, Beiträgen oder Quellen-Extraktionen hinterlegen.
 - Einzig erlaubte Buffer-Mutation: **neue Drafts erstellen**. Kein `scheduled`, keine Veröffentlichung, keine Dateien in `ready-to-schedule/`, keine Veränderungen bestehender Posts.
 - Keine automatischen Wiederholungen nach einer unklaren Buffer-Antwort. Jeder Post erhält vor dem API-Aufruf einen GitHub-Pending-Receipt. Bestehende Kampagnennamen werden nicht überschrieben.
-- Erfolgsbericht bedeutet 3/3 Buffer-Post-IDs mit Status `draft`, `dueAt=null`; GitHub-Job `success` allein reicht nicht.
+- Erfolgsbericht bedeutet bei der neuen Integration 3/3 Buffer-Post-IDs mit Status `draft`, passenden Channel-IDs und geprüftem `dueAt`; GitHub-Job `success` allein reicht nicht.
 
 ## Nachgewiesene Testläufe
 
