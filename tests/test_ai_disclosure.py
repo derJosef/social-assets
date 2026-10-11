@@ -63,6 +63,14 @@ class DisclosureTests(unittest.TestCase):
         with self.assertRaises(m.DisclosureError):
             m.apply_to_base(self.base, self.root/"missing-inter.ttf")
 
+    def test_production_inter_must_support_medium(self):
+        # Deliberately masquerading a static test font as production Inter.ttf
+        # must BLOCK rather than silently falling back to Regular.
+        pretend_inter=self.root/"Inter.ttf"
+        pretend_inter.write_bytes(self.font.read_bytes())
+        with self.assertRaisesRegex(m.DisclosureError,"Medium instance unavailable"):
+            m.apply_to_base(self.base,pretend_inter)
+
     def test_full_canvas_must_be_four_by_five(self):
         Image.new("RGB", (1080, 1080)).save(self.base)
         with self.assertRaises(m.DisclosureError):
