@@ -255,6 +255,7 @@ class SceneTests(unittest.TestCase):
         self.assertTrue(result["ai_disclosure"]["required"])
         self.assertTrue(result["ai_disclosure"]["pixel_verified"])
         self.assertTrue(result["ai_disclosure"]["logo_disjoint_verified"])
+        self.assertTrue(result["ai_disclosure"]["final_pixel_verified"])
         self.assertTrue(result["logo_qa"]["logo_verified"])
         from ai_disclosure import verify_label_region, verify_no_logo_overlap
         caption=verify_label_region(base,font_path)
