@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write # Reservierung und Ergebnisbeleg; keine anderen GitHub-Schreibrechte.
+  pull-requests: read # Read-only approval PR provenance; no PR mutation.
 
 concurrency:
   group: buffer-drafts-single-flight

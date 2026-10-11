@@ -20,6 +20,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: read # Independent evidence for Josef's own single-purpose approval merge.
 
 concurrency:
   group: social-campaign-orchestrator
@@ -99,6 +100,16 @@ jobs:
           set -euo pipefail
           python3 scripts/prepared_brief_preflight.py --brief "$BRIEF"
 
+      - name: Brief-Freigabe auf geschütztem main unabhängig nachweisen (vor jedem externen Aufruf)
+        if: steps.request.outputs.mode == 'drafts'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/brief_approval_gate.py \
+            --draft "ready-for-buffer/auto-$CAMPAIGN-linkedin.json" --dated-draft
+
       - name: Inter-Schrift nur für die echte Bildproduktion beziehen
         if: steps.request.outputs.mode == 'drafts'
         shell: bash
@@ -163,7 +174,7 @@ jobs:
             python3 scripts/buffer_draft.py --draft "$file" --send
           done
 
-      - name: Unabhängige Buffer-Prüfung (draft und dueAt=null)
+      - name: Unabhängige Buffer-Prüfung (draft und verbindlicher Datumswert, nie Queue)
         if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
         shell: bash
         env:

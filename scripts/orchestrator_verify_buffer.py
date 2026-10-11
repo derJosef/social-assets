@@ -6,7 +6,14 @@ import os
 import re
 import sys
 from pathlib import Path
-from buffer_draft import buffer_graphql, fetch_receipt, receipt_path
+if __package__:
+    from .buffer_draft import (
+        buffer_graphql, fetch_receipt, receipt_path, planned_due_at, verified_dated_post,
+    )
+else:
+    from buffer_draft import (
+        buffer_graphql, fetch_receipt, receipt_path, planned_due_at, verified_dated_post,
+    )
 
 POST_QUERY = """
 query InspectOrchestratedPost($id: PostId!) {
@@ -24,20 +31,28 @@ def verify(campaign: str) -> dict:
     outputs={}
     for t in TARGETS:
         file=f"ready-for-buffer/auto-{campaign}-{t}.json"
+        expected_due_at=planned_due_at(file,t)
+        if expected_due_at is None:
+            raise RuntimeError(f"Missing planned date for {t}")
         receipt=fetch_receipt(token,receipt_path(file))
         if not isinstance(receipt,dict) or not receipt.get("content"):
             raise RuntimeError(f"Missing GitHub receipt for {t}")
         import base64
         record=json.loads(base64.b64decode(receipt["content"]))
-        if record.get("state")!="draft_created" or record.get("draft_file")!=file:
-            raise RuntimeError(f"Receipt not a confirmed draft: {t}")
+        if (record.get("state")!="verified_prescheduled_draft_not_queued"
+                or record.get("draft_file")!=file
+                or record.get("due_at_utc")!=expected_due_at):
+            raise RuntimeError(f"Receipt not an independently verified dated draft: {t}")
         post_id=record.get("buffer_post_id","")
         if not re.fullmatch(r"[0-9a-f]{24}",post_id):
             raise RuntimeError(f"Buffer post ID missing for {t}")
+        channel_id=record.get("channel_id","")
+        if not isinstance(channel_id,str) or not channel_id:
+            raise RuntimeError(f"Buffer channel missing for {t}")
         p=buffer_graphql(buffer_token,POST_QUERY,{"id":post_id}).get("post")
-        if not isinstance(p,dict) or p.get("id")!=post_id or p.get("status")!="draft" or p.get("dueAt") is not None:
-            raise RuntimeError(f"Buffer status unclear/not draft for {t}")
-        outputs[t]={"post_id":post_id,"status":"draft","dueAt":None}
+        if not verified_dated_post(p,post_id=post_id,channel_id=channel_id,due_at=expected_due_at):
+            raise RuntimeError(f"Buffer status/date unclear or not draft for {t}")
+        outputs[t]={"post_id":post_id,"status":"draft","dueAt":expected_due_at}
     return outputs
 
 if __name__=="__main__":

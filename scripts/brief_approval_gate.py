@@ -76,7 +76,10 @@ def sha256(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
-def inspect_local(draft_path: str, root: Path = ROOT) -> tuple[str, bytes]:
+def inspect_local(
+    draft_path: str, root: Path = ROOT, *,
+    expected_purpose: str = "unscheduled_buffer_draft_only",
+) -> tuple[str, bytes]:
     """Validate a proposed approval record; NEVER return authorization alone."""
     matched = POST_RE.fullmatch(draft_path)
     require(matched is not None, "Nur zugeordnete auto-Kampagnenentwürfe sind zulässig")
@@ -88,7 +91,9 @@ def inspect_local(draft_path: str, root: Path = ROOT) -> tuple[str, bytes]:
     require(type(approval["format_version"]) is int and approval["format_version"] == 1,
             "Unbekannte Freigabeformatversion")
     require(approval["campaign_id"] == campaign, "Falsche Kampagnenbindung")
-    require(approval["purpose"] == "unscheduled_buffer_draft_only", "Unzulässiger Freigabezweck")
+    require(expected_purpose in ("unscheduled_buffer_draft_only", "dated_buffer_draft_not_queued"),
+            "Unbekannter Freigabezweck")
+    require(approval["purpose"] == expected_purpose, "Unzulässiger Freigabezweck")
     require(approval["state"] == "approved", "Freigabe fehlt oder wurde widerrufen")
     require(approval["targets"] == list(TARGETS) and platform in approval["targets"],
             "Unzulässige Plattformfreigabe")
@@ -197,12 +202,14 @@ def authorize_draft(
     draft_path: str,
     root: Path = ROOT,
     api_get: Callable[[str], object] | None = None,
+    *,
+    expected_purpose: str = "unscheduled_buffer_draft_only",
 ) -> dict:
     """Authorize only when local bindings AND protected GitHub provenance agree."""
     require(os.environ.get("GITHUB_REPOSITORY") == REPOSITORY
             and os.environ.get("GITHUB_REF") == "refs/heads/main",
             "Live-Freigabeprüfung nur auf social-assets/main erlaubt")
-    path, raw = inspect_local(draft_path, root)
+    path, raw = inspect_local(draft_path, root, expected_purpose=expected_purpose)
     if api_get is None:
         token = os.environ.get("GITHUB_TOKEN", "")
         require(bool(token), "GitHub-Token fehlt")
@@ -215,13 +222,16 @@ def main() -> int:
     parser.add_argument("--draft", required=True, help="ready-for-buffer/auto-...-<plattform>.json")
     parser.add_argument("--lint-only", action="store_true",
                         help="Nur lokale Prüfsummen/Struktur; KEINE Autorisierung, kein Netzwerk")
+    parser.add_argument("--dated-draft", action="store_true",
+                        help="Nur Freigaben für datierte, nicht eingereihte Entwürfe anerkennen")
     args = parser.parse_args()
     try:
+        purpose = "dated_buffer_draft_not_queued" if args.dated_draft else "unscheduled_buffer_draft_only"
         if args.lint_only:
-            inspect_local(args.draft)
+            inspect_local(args.draft, expected_purpose=purpose)
             print("LOCAL_CHECK_OK: Dies ist KEINE Buffer-Freigabe; GitHub-Provenienz ungeprüft.")
         else:
-            evidence = authorize_draft(args.draft)
+            evidence = authorize_draft(args.draft, expected_purpose=purpose)
             print("BRIEF_APPROVED_DRAFT_ONLY:", json.dumps(evidence, sort_keys=True))
         return 0
     except (ApprovalBlocked, OSError, KeyError, TypeError) as exc:

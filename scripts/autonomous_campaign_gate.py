@@ -17,7 +17,10 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
-from buffer_draft import read_draft
+if __package__:
+    from .buffer_draft import read_draft
+else:
+    from buffer_draft import read_draft
 
 ROOT = Path(__file__).resolve().parents[1]
 BRAND = "ai-agent-builder"
