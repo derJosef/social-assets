@@ -1,0 +1,47 @@
+name: Buffer – datierter Entwurf (einmaliger manueller Abnahmetest)
+
+# Sensitive: no push, PR, schedule, repository_dispatch or workflow_run trigger.
+# This workflow cannot be dispatched from this unmerged draft PR: the workflow
+# must first be reviewed and explicitly approved for main, then the owner must
+# separately and deliberately enter the confirmation phrase.
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Genau DATIERTER_DRAFT_EINMALTEST_OHNE_QUEUE eintippen; ein Test-Entwurf entsteht bei Buffer'
+        type: string
+        required: true
+
+permissions:
+  contents: write # Solely for the fixed fail-closed, single-use receipt on main.
+
+concurrency:
+  group: buffer-drafts-single-flight # Shared with existing manual/auto draft senders.
+  cancel-in-progress: false
+
+jobs:
+  single-linkedin-draft:
+    name: Ein LinkedIn-Draft, nie die Veröffentlichungswarteschlange
+    if: >-
+      github.actor == 'derJosef' &&
+      github.ref == 'refs/heads/main' &&
+      github.run_attempt == 1 &&
+      inputs.confirmation == 'DATIERTER_DRAFT_EINMALTEST_OHNE_QUEUE'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Zuerst Offline-Sperren prüfen
+        run: python3 -B -m unittest discover -s tests -p 'test_buffer_prescheduled_draft_probe.py' -q
+      - name: Einmaligen Test-Draft erzeugen und unabhängig verifizieren
+        run: python3 -B scripts/buffer_prescheduled_draft_probe.py --live
+        env:
+          PROBE_CONFIRMATION: ${{ inputs.confirmation }}
+          GITHUB_TOKEN: ${{ github.token }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
