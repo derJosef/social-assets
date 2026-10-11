@@ -154,3 +154,16 @@ def verify_no_logo_overlap(final_path: Path,
     a, b = caption_box, logo_box
     if a[0] < b[2] and a[2] > b[0] and a[1] < b[3] and a[3] > b[1]:
         raise DisclosureError("Powered by AI overlaps original logo")
+
+
+def verify_final_disclosure(base_path: Path, final_path: Path,
+                            font_path: Path) -> tuple[int, int, int, int]:
+    """Check the exact approved glyphs in BOTH images, plus logo placement.
+
+    Canonical placement metadata alone cannot establish that the final pixels
+    still show the caption. Recheck the final composite after the logo step.
+    """
+    caption = verify_label_region(base_path, font_path)
+    verify_no_logo_overlap(final_path, caption)
+    verify_label_region(final_path, font_path)
+    return caption
