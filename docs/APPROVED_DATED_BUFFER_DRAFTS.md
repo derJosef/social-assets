@@ -3,6 +3,11 @@
 **Status (12.10.2026): Draft-PR, nicht produktiv aktiviert.** Diese Datei ist
 keine Kampagnenfreigabe und keine Anweisung, etwas zu veröffentlichen.
 
+**Fortsetzung zur Branch-Protection:** Der nachgelagerte Draft-PR dokumentiert
+die [Trennung von Bot-Ausgaben und geschütztem `main`](BRANCH_PROTECTION_MIGRATION.md).
+Bis zur eigenständig freigegebenen Migration gelten dessen Maßnahmen nicht
+als produktiv aktiviert.
+
 ## Bewiesene Buffer-Funktion
 
 Der von Josef ausgelöste [Einmaltest #38179032859](https://github.com/derJosef/social-assets/actions/runs/38179032859)

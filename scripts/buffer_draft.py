@@ -24,6 +24,7 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parents[1]
 BUFFER_ENDPOINT = "https://api.buffer.com"
 REPOSITORY = "derJosef/social-assets"
+RECEIPT_BRANCH = "automation-receipts"
 
 # The only Buffer mutation in this script. There is no scheduling or publish path.
 CREATE_DRAFT = """
@@ -180,7 +181,7 @@ def read_draft(given_path: str) -> tuple[str, str, bytes]:
 
 
 # This public repository owns all media. Never send private URLs or tokens to Buffer.
-MEDIA_PREFIX = "https://raw.githubusercontent.com/derJosef/social-assets/main/media/"
+MEDIA_HOST_PREFIX = "https://raw.githubusercontent.com/derJosef/social-assets/"
 MEDIA_NAME_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}$")
 
 
@@ -193,10 +194,16 @@ def validate_media_url(value: object, category: str) -> str:
         or parsed.netloc != "raw.githubusercontent.com"
         or parsed.query or parsed.fragment
         or parsed.username or parsed.password or parsed.port
-        or not value.startswith(MEDIA_PREFIX)
+        or not value.startswith(MEDIA_HOST_PREFIX)
     ):
         raise ValueError("Medien müssen direkt aus dem öffentlichen social-assets/media/ kommen.")
-    suffix = value[len(MEDIA_PREFIX):]
+    repo_suffix = value[len(MEDIA_HOST_PREFIX):]
+    git_ref, slash, suffix = repo_suffix.partition("/")
+    if not slash or (git_ref != "main" and not re.fullmatch(r"[0-9a-f]{40}", git_ref)):
+        raise ValueError("Medien-Ref muss main oder ein unveränderlicher Git-Commit sein.")
+    if not suffix.startswith("media/"):
+        raise ValueError("Medien müssen unter media/ liegen.")
+    suffix = suffix[len("media/"):]
     parts = suffix.split("/")
     if len(parts) != 2 or parts[0] != category or not MEDIA_NAME_RE.fullmatch(parts[1]):
         raise ValueError("Medienpfad muss ein Dateiname unter media/images oder media/documents sein.")
@@ -278,6 +285,35 @@ def verify_media_access(assets: list[dict]) -> None:
             raise RuntimeError("Öffentliche Medien-URL ist nicht erreichbar.") from exc
 
 
+def verify_auto_image_bytes(draft_path: str, assets: list[dict]) -> None:
+    """Check fetched image bytes against approved local artwork before Buffer sees it.
+
+    A SHA URL is immutable, but its commit could name a different image. HEAD
+    alone proves access, not identity. Verify both before reserving a receipt.
+    """
+    match = AUTO_DRAFT_RE.fullmatch(draft_path)
+    if match is None or not assets:
+        return
+    manifest_path = ROOT / "campaign-manifests" / (match.group(1) + ".json")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    expected = manifest["image"]["sha256"]
+    if not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
+        raise RuntimeError("Fehlender geprüfter Bild-Fingerprint")
+    for asset in assets:
+        if "image" not in asset:
+            raise RuntimeError("Auto-Kampagnen benötigen geprüfte Bilder")
+        url = asset["image"]["url"]
+        try:
+            with urllib.request.urlopen(urllib.request.Request(
+                url, headers={"User-Agent": "social-assets-buffer-draft/1.0"}), timeout=25,
+            ) as response:
+                raw = response.read(10_000_001)
+        except (urllib.error.HTTPError, urllib.error.URLError) as exc:
+            raise RuntimeError("Gepinntes öffentliches Bild nicht abrufbar") from exc
+        if len(raw) > 10_000_000 or hashlib.sha256(raw).hexdigest() != expected:
+            raise RuntimeError("GitHub-Bildinhalt stimmt nicht mit dem freigegebenen Bild überein")
+
+
 
 def platform_metadata(target: str) -> dict | None:
     """Mandatory channel-specific post input metadata, independent of publication mode."""
@@ -303,9 +339,20 @@ def github_contents_url(receipt: str) -> str:
 
 
 def fetch_receipt(token: str, receipt: str) -> dict | None:
-    url = github_contents_url(receipt) + "?ref=main"
+    # Historical, already-spent reservations live on main. They must remain
+    # authoritative even after new receipts move to the automation branch.
     try:
-        return json_http(url, token=token)
+        historical = json_http(github_contents_url(receipt) + "?ref=main", token=token)
+    except RuntimeError as exc:
+        if str(exc) != "HTTP 404 bei api.github.com":
+            raise
+    else:
+        return historical
+    # A missing receipt and a missing branch are both 404 on /contents. Fail
+    # closed unless the independently provisioned ledger branch exists.
+    json_http(f"https://api.github.com/repos/{REPOSITORY}/branches/{RECEIPT_BRANCH}", token=token)
+    try:
+        return json_http(github_contents_url(receipt) + f"?ref={RECEIPT_BRANCH}", token=token)
     except RuntimeError as exc:
         if str(exc) == "HTTP 404 bei api.github.com":
             return None
@@ -318,7 +365,7 @@ def put_receipt(token: str, receipt: str, content: dict, message: str, sha: str 
         "content": base64.b64encode(
             (json.dumps(content, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
         ).decode("ascii"),
-        "branch": "main",
+        "branch": RECEIPT_BRANCH,
     }
     if sha:
         payload["sha"] = sha
@@ -496,6 +543,7 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
     channel_id = resolve_channel(buffer_key, target, channel_preference(target))
     assets = parse_assets(raw)
     verify_media_access(assets)
+    verify_auto_image_bytes(draft_path, assets)
     receipt = receipt_path(draft_path)
     if fetch_receipt(github_token, receipt) is not None:
         raise RuntimeError(

@@ -1,5 +1,12 @@
 # GitHub-Actions-Orchestrator – AI Agent Builder
 
+> **Migration als nicht aktivierter Draft-PR, 12.10.2026:** Die unten stehenden
+> historischen `main`-Schreibschritte gehören zum frühen Pilotstand. Für die
+> geplante geschützte `main`-Branch werden Bot-Ausgaben in eigene
+> Kampagnenbranches mit festem Git-Commit für Medien und in einen separaten
+> [Receipt-Branch](BRANCH_PROTECTION_MIGRATION.md) verlagert. Dieser Änderung
+> ist noch nicht gemergt oder live geprüft; keine Buffer-Veröffentlichung.
+
 Stand: 09.10.2026. **Technischer End-to-End-Test über GitHub → Buffer-Entwürfe erfolgreich.** Autonome KI-Textgenerierung ist separat durch einen funktionsfähigen Modell-API-Zugang abzusichern.
 
 ## Hintergrund und Architektur

@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -65,6 +66,25 @@ def local_file(relative: str) -> Path:
     return path
 
 
+def delivery_receipt_bytes(relative: str) -> bytes:
+    """Read historical main receipts or the fetched, read-only automation ledger.
+
+    Nothing is written to main; a missing/unavailable branch fails closed.
+    """
+    path = ROOT / relative
+    if path.is_file():
+        return local_file(relative).read_bytes()
+    if not re.fullmatch(r"delivery-receipts/[0-9a-f]{24}\.json", relative):
+        raise ValueError("Ungültiger Buffer-Belegpfad")
+    try:
+        return subprocess.check_output(
+            ["git", "show", f"refs/remotes/origin/automation-receipts:{relative}"],
+            cwd=ROOT, stderr=subprocess.DEVNULL,
+        )
+    except (subprocess.CalledProcessError, OSError) as exc:
+        raise ValueError("Buffer-Beleg nicht auf main oder Ledger-Branch vorhanden") from exc
+
+
 def inspect_request(request_file: str, now: datetime | None = None) -> dict:
     """Validate the approval, draft, and original delivery receipt offline."""
     if not REQUEST_RE.fullmatch(request_file):
@@ -96,7 +116,7 @@ def inspect_request(request_file: str, now: datetime | None = None) -> dict:
     if not isinstance(draft, dict) or draft.get("target") != target:
         raise ValueError("Kanal der Freigabe und des Entwurfs stimmt nicht überein.")
     delivery_file = receipt_path(draft_file)
-    delivery = json.loads(local_file(delivery_file).read_text(encoding="utf-8"))
+    delivery = json.loads(delivery_receipt_bytes(delivery_file).decode("utf-8"))
     if (delivery.get("state") != "draft_created"
             or delivery.get("draft_file") != draft_file
             or delivery.get("target") != target
