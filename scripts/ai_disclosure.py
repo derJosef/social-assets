@@ -114,8 +114,12 @@ def verify_label_region(base_path: Path, font_path: Path) -> tuple[int, int, int
     draw_disclosure(expected, font)
     with Image.open(base_path) as image:
         actual = image.convert("RGB")
+        # convert("RGB") drops alpha; a transparent caption would still match.
+        opaque = image.convert("RGBA").crop(box).getextrema()[3] == (255, 255)
     if actual.size != SIZE:
         raise DisclosureError("Caption base not 1080x1350")
+    if not opaque:
+        raise DisclosureError("Powered by AI caption is not fully opaque")
     # The four rounded corners are transparent to the original scene. Compare
     # only pixels actually owned by the caption, not the background corners.
     mask = Image.new("L", SIZE, 0)

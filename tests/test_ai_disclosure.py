@@ -135,6 +135,25 @@ class DisclosureTests(unittest.TestCase):
         with self.assertRaises(m.DisclosureError):
             m.verify_final_disclosure(self.base, final, self.font)
 
+    def test_transparent_caption_is_rejected(self):
+        report = m.apply_to_base(self.base, self.font)
+        box = tuple(report["box"])
+        with Image.open(self.base) as source:
+            hidden = source.convert("RGBA")
+        alpha = Image.new("L", m.SIZE, 255)
+        ImageDraw.Draw(alpha).rectangle(box, fill=0)
+        hidden.putalpha(alpha)  # RGB glyphs intact, but invisible when rendered
+        hidden.save(self.base)
+        final = self.make_fake_compositor_png()
+        info = PngImagePlugin.PngInfo()
+        with Image.open(final) as image:
+            info.add_text("logo_placement", image.info["logo_placement"])
+        hidden.save(final, pnginfo=info)
+        with self.assertRaises(m.DisclosureError):
+            m.verify_label_region(self.base, self.font)
+        with self.assertRaises(m.DisclosureError):
+            m.verify_final_disclosure(self.base, final, self.font)
+
     @unittest.skipUnless(os.environ.get("SOCIAL_FONT_SMOKE") == "1",
                          "Production font smoke runs only in read-only PR CI")
     def test_real_immutable_inter_medium_pixels(self):
