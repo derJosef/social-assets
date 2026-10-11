@@ -41,9 +41,18 @@ def load_font(path: Path) -> ImageFont.FreeTypeFont:
     if not path.is_file():
         raise DisclosureError("Inter font file missing; cannot render or verify Powered by AI")
     try:
-        return ImageFont.truetype(str(path), FONT_SIZE)
+        font = ImageFont.truetype(str(path), FONT_SIZE)
     except OSError as exc:
         raise DisclosureError("Inter font file cannot be read") from exc
+    # The production GitHub job downloads Google's Inter variable TTF at
+    # /tmp/Inter.ttf. Its default axis is usually Regular, not Josefs
+    # approved Inter Medium. Request the actual named Medium instance.
+    if path.name == "Inter.ttf":
+        try:
+            font.set_variation_by_name("Medium")
+        except OSError as exc:
+            raise DisclosureError("Production Inter Medium instance unavailable") from exc
+    return font
 
 
 def geometry(font: ImageFont.FreeTypeFont) -> tuple[int, int, int, int]:
