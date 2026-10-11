@@ -181,9 +181,9 @@ def check_campaign(post_paths: list[str], today: date | None = None, verify_imag
                         "--heading-box",",".join(str(n) for n in image["heading_box"])])
         subprocess.run(cmd, cwd=ROOT, check=True)
         if new_format and expected_caption:
-            from ai_disclosure import verify_label_region, verify_no_logo_overlap
-            caption = verify_label_region(ROOT / image["base"], Path("/tmp/Inter.ttf"))
-            verify_no_logo_overlap(ROOT / image["final"], caption)
+            from ai_disclosure import verify_final_disclosure
+            verify_final_disclosure(ROOT / image["base"], ROOT / image["final"],
+                                    Path("/tmp/Inter.ttf"))
     for target in TARGETS:
         filename = entries[target]
         relative, _, raw = read_draft(filename)
