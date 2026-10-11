@@ -15,17 +15,16 @@ import sys
 import urllib.parse
 import urllib.request
 import urllib.error
-from datetime import date, datetime, timedelta, time, timezone
+from datetime import date, datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
-from zoneinfo import ZoneInfo
+from posting_time_planner import RESEARCH_URLS, propose_times
 
 ROOT = Path(__file__).resolve().parents[1]
 BRIEF_RE = re.compile(r"^orchestration/briefs/(20\d{2}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*)\.json$")
 TARGETS = ("linkedin", "facebook", "instagram")
 SHA_LOGO = "15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0"
 DEFAULT_REPORT = "orchestration/last-run-report.json"
-TIMEZONE = ZoneInfo("Europe/Berlin")
 
 class Blocked(Exception):
     pass
@@ -158,27 +157,9 @@ def call_model(messages, *, max_tokens=3100):
         raise Blocked("Modell hat kein gültiges strukturiertes JSON geliefert") from None
 
 def select_times(today):
-    # Only proposals! UTC conversion uses actual Europe/Berlin DST.
-    floor=max(today + timedelta(days=14), date(2026,11,2))
-    # Avoid previously documented proposed publishing slots.
-    for file in (ROOT/"campaign-manifests").glob("*.json"):
-        try:
-            previous=json.loads(file.read_text(encoding="utf-8"))
-            for timing in previous.get("posting_times",{}).values():
-                last_day=datetime.fromisoformat(timing["local"]).astimezone(TIMEZONE).date()
-                floor=max(floor,last_day+timedelta(days=7))
-        except (OSError,ValueError,KeyError,TypeError):
-            continue
-    targets=[("linkedin",2,16),("facebook",1,19),("instagram",2,18)]
-    out={}
-    for target,weekday,hour in targets:
-        delta=(weekday-floor.weekday())%7
-        day=floor+timedelta(days=delta)
-        local=datetime.combine(day,time(hour,0),tzinfo=TIMEZONE)
-        out[target]={"local":local.isoformat(timespec="seconds"),
-                     "utc":local.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
-        floor=day+timedelta(days=1)
-    return out
+    # The existing manifest schema is unchanged. This is only a proposed
+    # posting time: never authorize scheduling or publication from a proposal.
+    return propose_times(today, ROOT)
 
 def assess_generated(g):
     require(isinstance(g,dict) and set(g)=={"posts","visual","six_hats","risks"}, "LLM-Antwortstruktur ungültig")
@@ -271,6 +252,14 @@ def create_packages(brief, evidences, g):
     plan += ["","## Offene Risiken",""]+[f"- {str(v)[:500]}" for v in g["risks"]]
     plan += ["","## Geplante Termine (NICHT in Buffer aktiviert)",""]
     plan += [f"- {t}: {times[t]['local']} Berlin / {times[t]['utc']} UTC" for t in TARGETS]
+    plan += ["", "## Zeitstudien und Grenzen der Planung", "",
+             "Die Vorschläge beruhen auf allgemeinen Buffer-Engagementdaten aus 2026, "
+             "nicht auf einem nachgewiesenen Optimum für unsere eigenen Follower. "
+             "Fünf Tage Vorlauf, mindestens drei Tage Abstand je Kanal, "
+             "bestehende GitHub-Manifeste und bereits beantragte Termine werden berücksichtigt. "
+             "Für eine endgültige Veröffentlichungsentscheidung sind aktuelle Kanalmetriken, "
+             "Anlass und Kollisionen erneut zu prüfen."]
+    plan += [f"- {t}: {RESEARCH_URLS[t]}" for t in TARGETS]
     method_note = (
         "Vorbereitete Redaktionstexte (prepared_content): externe Quellen wurden im Lauf "
         "abgerufen und formale Strukturpruefungen durchgefuehrt. KEINE automatische "
