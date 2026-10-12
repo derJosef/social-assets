@@ -58,10 +58,12 @@ Ledger-Erstellung oder ungesicherte Wiederholung.
    sowie öffentliche Bild-URLs ebenfalls prüfen. Kein weiterer Live-Probe-
    Buffer-Post: Test [38179032859](https://github.com/derJosef/social-assets/actions/runs/38179032859)
    belegt `draft` mit `dueAt` bereits.
-5. Die tatsächliche wöchentliche Bild-/Asset-Quelle und die Fähigkeit,
-   fertige Buffer-Links in der ChatGPT-Aufgabe auszugeben, separat
-   End-to-End nachweisen, bevor von produktiver Wochenautomation gesprochen
-   wird. Ein grüner synthetischer PR-Test allein genügt nicht.
+5. Die neue, rein offline getestete Bildvorstufe
+   (`automatic_image_source.py`: GPT Image → zwei Maschinenprüfungen →
+   4:5 → kanonisches Original-Logo) braucht **noch** einen Live-API-Test
+   sowie den Nachweis ihrer vollständigen Verbindung zu GitHub/Buffer.
+   Echte Buffer-Draft-Links müssen in der ChatGPT-Wochenaufgabe gesichert
+   ausgabefähig sein. Grüne synthetische Tests allein genügen nicht.
 
 ## Finale Freigabe: Buffer-Bearbeitungen erhalten
 
