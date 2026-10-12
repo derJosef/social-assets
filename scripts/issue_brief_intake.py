@@ -69,14 +69,27 @@ def extract(event: dict) -> tuple[str, dict, int]:
             and obj.get("execution_mode") == "drafts"
             and obj.get("image_review") == f"visual-reviews/{campaign}.json",
             "Brief identity, brand, draft mode or review binding mismatch")
-    require(isinstance(obj.get("prepared_content"), dict),
-            "Full three-channel prepared content is required before Issue trigger")
-    posts = obj["prepared_content"].get("posts")
+    prepared = obj.get("prepared_content")
+    require(isinstance(prepared, dict) and set(prepared) ==
+            {"posts", "visual", "six_hats", "risks"},
+            "Full editorial package required; three posts, visual:null, six hats and risks")
+    # Brand image comes independently from the verified topic and canonical
+    # Original-Logo compositor. Never allow obsolete generated three-card art.
+    require(prepared["visual"] is None, "Prepared visual must be null; no generated cards")
+    posts = prepared["posts"]
     require(isinstance(posts, dict)
             and set(posts) == {"linkedin", "facebook", "instagram"}
-            and all(isinstance(post, str) and post.strip()
-                    for post in posts.values()),
-            "All three posts required for automatic draft-first creation")
+            and all(isinstance(post, str) and
+                    250 <= len(post) <= (2200 if target == "instagram" else 3000)
+                    for target, post in posts.items()),
+            "All three channel-length posts required for automatic draft-first creation")
+    hats = prepared["six_hats"]
+    require(isinstance(hats, dict) and set(hats) ==
+            {"white", "red", "black", "yellow", "green", "blue"}
+            and all(isinstance(v, str) and len(v) > 24 for v in hats.values()),
+            "Six full thinking hats required")
+    require(isinstance(prepared["risks"], list),
+            "Editorial risks must be documented in an array")
     require(isinstance(obj.get("topic"), str) and 30 <= len(obj["topic"]) <= 550,
             "Missing concrete campaign topic")
     require(isinstance(obj.get("sources"), list) and 2 <= len(obj["sources"]) <= 6
