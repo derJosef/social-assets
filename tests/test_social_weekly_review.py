@@ -66,6 +66,10 @@ class SocialWeeklyReviewTests(unittest.TestCase):
         self.assertIn("keine", md.lower())
         self.assertNotIn("saveToDraft: false", md)
 
+    def test_failed_github_job_never_claims_complete_review(self):
+        self.r["job_status"] = "failure"
+        self.assertIn("Status: BLOCKED", review.render(self.r))
+
     def test_missing_verified_receipt_cannot_be_offered_as_approved(self):
         self.r["buffer_verification"]["status"] = "BLOCKED"
         md = review.render(self.r)
