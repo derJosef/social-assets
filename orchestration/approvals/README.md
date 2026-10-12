@@ -1,3 +1,27 @@
+# HISTORISCH – Brief-Vorabfreigaben nicht mehr im Draft-Workflow
+
+**Status seit 12.10.2026: ABGELÖST.** Josef hat die individuelle
+Freigabe **vor** der Erzeugung von Buffer-Drafts ausdrücklich aufgehoben.
+Für AI Agent Builder sollen zuerst drei qualitativ geprüfte, mit konkretem
+Datum und Uhrzeit gespeicherte Buffer-**Entwürfe** entstehen. Erst danach
+entscheidet Josef anhand der Inhalte und Links im ChatGPT-Wochenbericht
+oder nach eigenen Änderungen direkt in Buffer über eine spätere
+Freigabe zur Veröffentlichung.
+
+Die unten dokumentierte alte `brief_approval_gate.py`-Architektur ist
+**nur historisches Wissen und Gegenstand synthetischer Regressionstests**.
+Sie darf nicht automatisch wieder in den Produktionsworkflow aufgenommen
+werden. Ein Freigabe-JSON unter `orchestration/approvals/` löst künftig
+keine neue Draft-Kampagne aus. Die vor Veröffentlichung notwendige
+persönliche Freigabe ist ein **separater späterer Vorgang** und muss die
+aktuelle live gelesene Buffer-Fassung inklusive manueller Änderungen
+erhalten. Dessen verlustfreie technische Umsetzung ist weiterhin offen.
+
+Siehe `docs/APPROVED_DATED_BUFFER_DRAFTS.md` und
+`docs/BRANCH_PROTECTION_MIGRATION.md`.
+
+---
+
 # Kampagnen-Brief-Freigaben – Entwurf, noch nicht produktiv
 
 **Status: gestapelter Implementierungsentwurf, noch nicht auf `main`.**
