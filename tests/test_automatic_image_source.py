@@ -74,7 +74,7 @@ class AutomaticDraftImageTests(unittest.TestCase):
         script = self.root / "scripts/logo_composite.py"
         script.parent.mkdir(parents=True)
         shutil.copy2(repo / "scripts/logo_composite.py", script)
-        with mock.patch.object(automatic, "generate_image", return_value=self.original), \\
+        with mock.patch.object(automatic, "generate_image", return_value=self.original), \
              mock.patch.object(automatic, "audit_image",
                                return_value={name: True for name in automatic.FIELDS}):
             automatic.create_source(BRIEF, self.root, api_key="synthetic")
