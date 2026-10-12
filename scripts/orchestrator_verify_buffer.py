@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import binascii
 import json
 import os
 import re
@@ -57,17 +58,14 @@ def load_expected(campaign: str, target: str) -> tuple[str, str]:
     image = obj.get("media")
     images = image.get("images") if isinstance(image, dict) else None
     if (not isinstance(text, str) or not text.strip()
-            or image.get("type") != "images" or not isinstance(images, list)
+            or not isinstance(image, dict) or image.get("type") != "images"
+            or not isinstance(images, list)
             or len(images) != 1 or not isinstance(images[0], dict)):
         raise RuntimeError(f"Prepared text or verified image missing for {target}")
     url = images[0].get("url")
     if not isinstance(url, str) or not url.startswith(IMAGE_PREFIX):
         raise RuntimeError(f"Prepared image not on canonical asset host for {target}")
     suffix = url[len(IMAGE_PREFIX):].split("/")
-    if (len(suffix) != 3 or not IMAGE_COMMIT_RE.fullmatch(suffix[0])
-            or suffix[1] != "media" or suffix[2] != "images"):
-        # Canonical full path has four slash-separated parts below commit.
-        suffix = url[len(IMAGE_PREFIX):].split("/")
     if (len(suffix) != 4 or not IMAGE_COMMIT_RE.fullmatch(suffix[0])
             or suffix[1] != "media" or suffix[2] != "images"
             or suffix[3] != f"{campaign}-branded.png"):
@@ -99,7 +97,7 @@ def decode_receipt(receipt: object, target: str) -> dict:
     try:
         decoded = base64.b64decode(receipt["content"], validate=True)
         record = json.loads(decoded)
-    except (ValueError, UnicodeError, json.JSONDecodeError) as exc:
+    except (ValueError, binascii.Error, UnicodeError, json.JSONDecodeError) as exc:
         raise RuntimeError(f"Corrupt delivery receipt for {target}") from exc
     if not isinstance(record, dict):
         raise RuntimeError(f"Delivery receipt is not JSON object: {target}")
