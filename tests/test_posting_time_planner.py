@@ -22,7 +22,7 @@ class PostingTimePlannerTests(unittest.TestCase):
         self.root = Path(temporary.name)
         (self.root / "campaign-manifests").mkdir()
         (self.root / "ready-to-schedule").mkdir()
-        self.today = date(2026, 10, 11)
+        self.today = date(2026, 10, 12)
 
     def propose(self, today=None):
         return planner.propose_times(today or self.today, self.root)
