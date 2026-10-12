@@ -36,6 +36,8 @@ def validate(report: dict) -> tuple[str, dict]:
     if not isinstance(campaign, str) or not CAMPAIGN_RE.fullmatch(campaign):
         raise InvalidReviewReceipt("Invalid campaign identity")
     verification = report.get("buffer_verification")
+    if report.get("job_status") != "success":
+        raise InvalidReviewReceipt("GitHub orchestrator did not complete successfully")
     if (report.get("state") != "buffer_drafts_verified"
             or not isinstance(verification, dict)
             or verification.get("status") != "PASS"):
