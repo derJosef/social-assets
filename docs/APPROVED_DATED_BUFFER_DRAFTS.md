@@ -1,87 +1,110 @@
-# Nach Brief-Freigabe: datierte Buffer-Entwürfe ohne Veröffentlichungswarteschlange
+# AI Agent Builder: datierte Buffer-Drafts zuerst, Josefs Freigabe danach
 
-**Status (12.10.2026): Draft-PR, nicht produktiv aktiviert.** Diese Datei ist
-keine Kampagnenfreigabe und keine Anweisung, etwas zu veröffentlichen.
+**Status 12.10.2026: Review-Zweig PR #13 – nicht nach main gemergt, nicht produktiv aktiviert.**
 
-**Fortsetzung zur Branch-Protection:** Der nachgelagerte Draft-PR dokumentiert
-die [Trennung von Bot-Ausgaben und geschütztem `main`](BRANCH_PROTECTION_MIGRATION.md).
-Bis zur eigenständig freigegebenen Migration gelten dessen Maßnahmen nicht
-als produktiv aktiviert.
+## Verbindliche Freigabereihenfolge
 
-## Bewiesene Buffer-Funktion
+Josef hat am 12.10.2026 die vorübergehend vorgesehene persönliche
+Kampagnen-Brief-Freigabe **vor** dem Draft-Transfer aufgehoben.
 
-Der von Josef ausgelöste [Einmaltest #38179032859](https://github.com/derJosef/social-assets/actions/runs/38179032859)
-bestätigte einen realen LinkedIn-Entwurf mit `status=draft` und
-`dueAt=2027-02-08T12:00:00Z`. Der unabhängige API-Readback und der
-[dauerhafte Receipt](../delivery-receipts/2026-10-11-prescheduled-draft-probe.json)
-stimmten überein. Das Testdatum ist kein Kampagnentermin.
+1. Die wöchentliche Recherche und Produktion erstellt drei **redaktionell,
+   technisch und markenbezogen geprüfte** Beiträge für LinkedIn, Facebook
+   und Instagram samt geprüftem 4:5-Markenbild.
+2. Der Automationslauf überträgt diese Beiträge ohne vorherige individuelle
+   Brief-Freigabe nach Buffer als **datierte, aber unveröffentlichte Drafts**.
+   Die Quellen-, Brand-/Original-Logo-, Bildkennzeichnungs-, Kanal-, Media-Hash-,
+   Termin- und Drei-Kanal-Qualitätsprüfungen bleiben verbindlich.
+3. Der Sender verwendet ausschließlich `createPost` mit
+   `saveToDraft:true`, `mode:customScheduled` und `dueAt` aus dem
+   manifestgebundenen UTC-Termin. Keine Aktion mit `saveToDraft:false`.
+4. Die Erstellung wird nur als PASS gemeldet, wenn für jeden Beitrag ein
+   dauerhafter Einmal-Receipt mit Buffer-Post-ID vorliegt und der unabhängig
+   zurückgelesene Buffer-Status exakt `draft`, passender Kanal und passender
+   `dueAt` lautet. Unklare Ergebnisse: STOP ohne erneute Sendung.
+5. Der ChatGPT-Wochenbericht zeigt Bild, drei aus Buffer zurückgelesene
+   Texte, kanalbezogene Termine, tatsächliche Buffer-Post-IDs und
+   **nachweislich gültige** Links. Die API liefert keinen bestätigten
+   individuellen Draft-Editor-Link; daher zunächst nur den
+   [offiziellen Buffer-Einstieg](https://publish.buffer.com) und Post-ID
+   angeben, nicht als Deep Link tarnen. Das neue GitHub-Readback publiziert
+   run-spezifische JSON- und Markdown-Prüfbelege auf automation-receipts;
+   siehe [Wochenbericht](CHATGPT_WEEKLY_BUFFER_REVIEW.md).
+6. Erst **nach** der Prüfung der fertigen Entwürfe sagt Josef `freigegeben`,
+   bearbeitet einen Draft direkt in Buffer oder gibt Änderungshinweise. Seine
+   Änderungen in Buffer sind verbindlich und dürfen nicht durch alte
+   GitHub-Dateien überschrieben werden.
+7. Eine spätere Freigabe zur Veröffentlichungswarteschlange bezieht sich
+   ausschließlich auf diese **bereits bestehenden** Post-IDs. Vor einer
+   technischen Aktivierung sind aktuelle Buffer-Text-, Bild-, Zeit-, Kanal-,
+   ID- und Draft-Daten zu prüfen. Derzeit ist `scripts/buffer_schedule.py`
+   hierfür **noch nicht geeignet**: Er verwendet alte GitHub-Bilder/Texte
+   und verweigert geänderte Drafts. Deshalb darf dieser alte Weg für
+   datierte Drafts nicht freigeschaltet werden. Änderungen an Medien, deren
+   aktuelle Version die API nicht vollständig lesen kann, müssen bis zur
+   verifizierten, verlustfreien Freigabefunktion manuell in Buffer freigegeben
+   werden. Kein stilles Überschreiben.
 
-## Zielablauf – nach separater Prüfung und Produktivfreigabe
+## Live nachgewiesener Buffer-Draft
 
-1. Redaktionelle Quellen und passende Zeitfenster werden pro Plattform
-   recherchiert (Europe/Berlin mit Sommer-/Winterzeit). Die unabhängige
-   Verbesserung des Zeitplaners befindet sich in **Draft-PR #9**.
-2. Josef prüft den vollständigen Kampagnen-Brief, das Original-Bildreview und
-   die zugehörigen Texte. Ein **eigener, ausschließlich die Freigabe enthaltender
-   PR** wird nur von Josef nach bewusstem Entschluss auf geschützt `main`
-   gemergt. Das SHA-256-gebundene Schema stammt aus **Draft-PR #7**;
-   neuer Zweck: `dated_buffer_draft_not_queued`.
-3. Alle drei möglichen Sendepfade (`social-campaign-orchestrator.yml`,
-   `buffer-auto-drafts.yml`, `buffer-draft.yml`) verwenden dasselbe
-   `scripts/buffer_draft.py --send`. Automatische `auto-*`-Dateien werden erst
-   akzeptiert, wenn die GitHub-Merge-Provenienz und das Kampagnen-QA-Gate
-   positiv sind. Der Orchestrator prüft diese Freigabe bereits **vor**
-   Inhaltsquellen-Netzwerkzugriff, Bildproduktion oder GitHub-Push.
-4. Der Entwurfs-Text muss exakt mit `prepared_content.posts` im freigegebenen
-   Brief übereinstimmen. `posting_times[plattform]` des gültigen Manifests
-   liefert `dueAt`; der Post darf selbst keinen frei editierbaren Termin
-   einschleusen. Termin-Format, Europe/Berlin-Umrechnung, Zukunftsgrenze,
-   Kanal und Kampagnenbindung werden unabhängig geprüft.
-5. Der Sender reserviert vor dem Buffer-Aufruf einen dauerhaften
-   Einmal-Beleg pro Draft-Dateiname auf GitHub. Dann **nur**
-   `createPost(saveToDraft: true, mode: customScheduled, dueAt: ...)`.
-   Weder `editPost`, Queue-Aktivierung noch Publikation sind enthalten.
-6. Der Sender speichert zuerst die erzeugte Post-ID, verifiziert die
-   Create-Antwort und liest `post` über die Buffer-API noch einmal unabhängig
-   aus: **gleiche Post-ID, gleicher Kanal, Status `draft`, identisches `dueAt`**.
-   Nur dann erhält der Receipt
-   `state=verified_prescheduled_draft_not_queued`. Der separate Orchestrator-
-   Abgleich liest alle drei Receipts und Post-IDs nochmals.
-7. Bei einer unklaren Antwort oder einem `scheduled`-Status: **Alarm und
-   Stopp, keine automatische Löschung, Korrektur oder Wiederholung.** Ein
-   bestehender `pending`-Receipt bleibt gesperrt; Josef entscheidet über die
-   manuelle Buffer-Prüfung.
+Der einmalig von Josef freigegebene [Run 38179032859](https://github.com/derJosef/social-assets/actions/runs/38179032859)
+hat `saveToDraft:true` plus `mode:customScheduled` plus `dueAt`
+erfolgreich geprüft. Buffer antwortete mit `status=draft` und
+`dueAt=2027-02-08T12:00:00Z` (nur technischer Zukunftstest, kein
+Kampagnentermin), Post-ID `6acc083fea568e911a4249f0`.
+Der [Receipt](../delivery-receipts/2026-10-11-prescheduled-draft-probe.json)
+belegt das Ergebnis. **Diesen Einmaltest niemals wiederholen.**
 
-## Unveränderte Grenzen
+## Architekturgrenzen
 
-- Keine Änderung an `ready-to-schedule/`,
-  `buffer-auto-schedule.yml`, `scripts/buffer_schedule.py`, alten Kampagnen
-  oder bereits existierenden Buffer-Posts.
-- Die separaten, manuell angestoßenen `drafts/`-Dateien behalten den alten,
-  **undatierten** Modus. Die ehemals uneindeutigen Dateien direkt unter
-  `ready-for-buffer/` ohne `auto-`-Schema werden sicherheitshalber blockiert.
-- Die `Powered by AI`-Overlay-Prüfung in **PR #6** und die menschliche
-  Vorschau in **PR #8** sind eigene Review-Vorgänge und werden nicht
-  stillschweigend mitgemergt.
-- Kein anderer PR-Merge und keine neue Live-Buffer-Mutation wurden durch
-  die Erstellung dieser Implementierung autorisiert.
-- **Wichtiger Aktivierungsblocker:** `main` muss mit tatsächlich wirksamer
-  Branch-Protection und ohne ungeprüften Bot-Bypass für die Freigabequelle
-  geschützt werden. Gleichzeitig verwenden aktuelle Workflows GitHub-
-  Schreibrechte für die dokumentierten Assets und Einmal-Receipts. Vor einem
-  Merge muss diese Wechselwirkung einschließlich Approval-Provenienz,
-  Schreibrechten und Rückfallverhalten separat geprüft und gelöst sein.
-- Ein freigegebener Brief ist keine Veröffentlichungsfreigabe.
+- Der alte `brief_approval_gate.py` bleibt als historische, isolierte
+  Proof-of-Concept-Datei bestehen. Er darf nicht mehr vom aktuellen
+  Draft-Sender oder dem Kampagnen-Orchestrator aufgerufen werden.
+- Ein **neuer** Brief wird durch eine neue
+  `orchestration/briefs/YYYY-MM-DD-slug.json` angestoßen; ein
+  Freigabe-JSON triggert keine Entwurfserzeugung. Updates existierender
+  Briefs sind keine automatische Wiederholung.
+- `scripts/buffer_draft.py` führt vor dem ersten Buffer-Zugriff das volle
+  `autonomous_campaign_gate.check_campaign` samt Bildprüfung aus und
+  vergleicht die drei lokalen Posts mit ihren vorbereiteten Texten.
+  `posting_times` aus dem Manifest sind vorab als lokale Zeit und UTC
+  wechselseitig zu prüfen.
+- Schutz gegen Mehrfachversand: unveränderliche Media-Commit-SHA,
+  Hashprüfung des tatsächlich ausgelieferten Bildes, Einmal-Receipts
+  (inklusive offenem `pending`), isolierte Output- und Receipt-Branches.
+- Die aktuelle Produktionsarchitektur und der Receipt-Ledger benötigen
+  noch eine eigenständig geprüfte sichere GitHub-Branch-Schutzkonfiguration;
+  **kein Merge, keine GitHub-Settings-Änderung und kein Live-Buffer-Test**
+  durch dieses Dokument.
+- Der Workflow enthält jetzt eine **automatische 4:5-Bildvorstufe**
+  (`scripts/automatic_image_source.py`) für noch fehlende Quellbilder,
+  die ohne Logo ein menschenfreies B2B-Rohmotiv erzeugt und mit zwei
+  getrennten Maschinenprüfungen untersucht. Bild/Prüfbelege gehen
+  gemeinsam in den isolierten Output-Branch und anschließend durch
+  den bisherigen Original-Logo-Compositor. Maschinenprüfung ist **keine
+  menschliche Sichtprüfung**; Josef prüft die fertigen Buffer-Entwürfe
+  vor Publikationsfreigabe. Die vollständige reale Image-API-/Buffer-
+  Verbindung ist **noch nicht live nachgewiesen**. Siehe
+  [Bild-Vorstufe](AUTOMATIC_IMAGE_SOURCE.md).
+- Die PersonalOS-Recherche verlangt mindestens **zwei unabhängige aktuelle
+  Postingzeit-Studien pro Kanal**. PR #13 vergleicht hierfür inzwischen
+  Buffer und Sprout Social; die B2B-/Tech-Einschränkungen sind in
+  [POSTING_TIME_PLANNER_2026.md](POSTING_TIME_PLANNER_2026.md)
+  dokumentiert. Der Planer blockiert abgelaufene Recherche, sofern
+  die Studien nicht tatsächlich neu geprüft wurden. Eigene verifizierte
+  Account-Metriken wurden bislang nicht eingelesen.
+- Ein gesonderter, nur lesender GitHub-Workflow
+  `.github/workflows/buffer-draft-live-review.yml` kann nach
+  Änderungen direkt in Buffer die aktuellen Texte, Bild-URLs und
+  Zeiten derselben Post-IDs nachprüfen. Weder dieser Prüfweg noch der
+  Wochenbericht aktivieren die Warteschlange. Für die spätere finale
+  Freigabe ist weiterhin eine verlustfreie, eigenständige und
+  von Josef tatsächlich autorisierte Lösung erforderlich.
 
-## Offline-Abnahme
+## Offline-Prüfung
 
 ```bash
 python3 -B -m unittest discover -s tests -q
 ```
 
-Die Tests simulieren Buffer und GitHub ohne Netzwerkzugriff und decken
-erfolgreiche Datumsbestätigung, ein mögliches versehentliches `scheduled`,
-unpassenden Readback, doppelte Receipts, fehlende Freigaben, Textänderung,
-falschen Kanal, Vergangenheit, DST und die drei Sendepfade ab. **Sie sind
-keine Wiederholung des Live-Tests und dürfen nicht als neue externe
-Buffer-Abnahme ausgegeben werden.**
+Die Tests simulieren Buffer und GitHub. Sie beweisen keinen neuen Live-Transfer
+und auch keine nachträgliche Bearbeitungs-/Freigabefunktion in Buffer.

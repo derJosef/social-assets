@@ -149,12 +149,33 @@ class WorkflowBoundaryTests(unittest.TestCase):
         orchestrator = (root / ".github/workflows/social-campaign-orchestrator.yml").read_text()
         self.assertIn("git push origin \"HEAD:refs/heads/$branch\"", orchestrator)
         self.assertIn("-f content=\"$content\" -f branch=automation-receipts", orchestrator)
-        self.assertIn("'orchestration/approvals/*.json'", orchestrator)
-        self.assertIn('BRIEF="orchestration/briefs/$(basename "$changed_file")"', orchestrator)
-        self.assertLess(orchestrator.index("--dated-draft"), orchestrator.index("scripts/campaign_reservations.py"))
+        self.assertNotIn("orchestration/approvals/", orchestrator)
+        self.assertIn("'orchestration/briefs/*.json'", orchestrator)
+        self.assertIn("--diff-filter=A", orchestrator)
+        self.assertNotIn("--dated-draft", orchestrator)
+        self.assertLess(orchestrator.index("scripts/prepared_brief_preflight.py"),
+                        orchestrator.index("scripts/campaign_reservations.py"))
         self.assertLess(orchestrator.index("scripts/campaign_reservations.py"), orchestrator.index("scripts/social_orchestrator.py --brief"))
         self.assertLess(orchestrator.index("git push origin \"HEAD:refs/heads/$branch\""),
                         orchestrator.index("python3 scripts/buffer_draft.py --draft"))
+
+    def test_every_auto_draft_entrypoint_pins_identical_image_dependencies(self):
+        root = Path(__file__).resolve().parents[1] / ".github/workflows"
+        font_source = ("raw.githubusercontent.com/google/fonts/"
+                       "e1d6480102fed30739fead0faee463101f892c8f/")
+        font_sha = "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031"
+        for name in ("social-campaign-orchestrator.yml", "buffer-auto-drafts.yml",
+                     "buffer-draft.yml"):
+            with self.subTest(name=name):
+                workflow = (root / name).read_text(encoding="utf-8")
+                self.assertIn("Pillow==12.3.0", workflow)
+                self.assertIn("numpy==2.5.4", workflow)
+                self.assertIn(font_source, workflow)
+                self.assertIn(font_sha, workflow)
+                self.assertLess(workflow.index(font_sha), workflow.index("scripts/buffer_draft.py --draft"))
+        manual = (root / "buffer-draft.yml").read_text(encoding="utf-8")
+        self.assertIn("inputs.send_to_buffer == true && startsWith(inputs.draft_file, 'ready-for-buffer/auto-')", manual)
+        self.assertIn("if: inputs.send_to_buffer == true", manual)
 
 
 class PreviousReservationsTests(unittest.TestCase):

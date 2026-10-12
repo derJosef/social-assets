@@ -23,17 +23,17 @@ Schritte:
 4. Zwei Modi zur redaktionellen Produktion:
    - **`prepared_content` vorhanden:** drei bereits redaktionell vorbereitete Texte, das Bildkonzept und die sechs Denkhüte stammen aus der Auftragsdatei. Textprüfung ist **kein Beleg für eine autonome KI-Textgenerierung**. Geeignet für die fachliche Bearbeitung durch ChatGPT/Claude außerhalb des Runners.
    - **`prepared_content` fehlt:** Der Runner fragt GitHub Models mit `models:read` oder alternativ einen als GitHub-Secret hinterlegten OpenAI-API-Schlüssel ab. Er fordert strukturiertes JSON und eine zweite kritische Modellprüfung; bei Fehlern Abbruch vor Buffer. Die API-Nutzung ist unabhängig vom ChatGPT-Abonnement.
-5. Das logo-freie Bild mit `social_visual_from_spec.py` erzeugen; das Original-PNG anhand SHA256 `15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0` prüfen, proportional und mit gleichmäßigem weißem Konturrahmen **unten rechts** montieren. `logo_composite.py verify` prüft das Ergebnis gegen Original und Hintergrundpixel.
-6. Drei Terminvorschläge in Europe/Berlin plus UTC ermitteln, vorgeschlagene Slots früherer Kampagnen berücksichtigen. Nur eine **redaktionelle Planung**, keine Buffer-Terminierung.
+5. Für ein noch fehlendes Motiv mit `automatic_image_source.py` zunächst **ein** menschenfreies logo-/textfreies Rohmotiv erzeugen, es mit zwei getrennten Maschinenprüfungen vorläufig für einen **Buffer-Draft** beurteilen und die echte 4:5-Quelle samt SHA-/Prüfdatei aufbauen. Die Maschine behauptet keine menschliche Sichtfreigabe. Vorhandene geprüfte Quellbilder bleiben unverändert. Danach setzt `social_portfolio_scene.py` mit dem kanonischen `logo_composite.py` das Original-PNG mit SHA256 `15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0` proportional unten rechts auf; `logo_composite.py verify` prüft Logo und übrige Pixel. Siehe `docs/AUTOMATIC_IMAGE_SOURCE.md`. Ein echter API-/Buffer-Gesamtlauf ist noch nicht nachgewiesen.
+6. Drei Termine in Europe/Berlin plus UTC ermitteln und vorhandene Kanalreservierungen berücksichtigen. Diese Daten werden in Buffer als **vordatierte Drafts** gespeichert, bleiben aber ohne spätere Freigabe ausdrücklich außerhalb der Veröffentlichungswarteschlange.
 7. Das unabhängige `autonomous_campaign_gate.py` ausführen, inklusive aller drei Draft-JSON, Manifest, Quellennachweisen, Bild und Zeitumrechnung.
-8. Die **neun neuen Dateien** als Commit nach `main` übertragen. Ein eigener `GITHUB_TOKEN`-Commit startet kein weiteres Push-Workflow-Ereignis; daher werden die drei Buffer-Entwürfe im **selben Runner** mit `buffer_draft.py --send` erstellt. Die bestehende GitHub-Receipt-Reservierung verhindert blindes Doppelsenden.
+8. Die verifizierten Kampagnen-Assets und drei Beiträge in zwei Commits auf einen **eindeutigen `automation/campaign/<kampagne>`-Branch** übertragen, **nicht auf `main`**. Der Runner erstellt die datierten Buffer-Drafts mit `buffer_draft.py --send` im selben Job nach kompletter QA und Einmal-Receipt. Die bestehende GitHub-Receipt-Reservierung verhindert blindes Doppelsenden.
 9. Im neuen, noch ungemergten Integrationszweig verifiziert `orchestrator_verify_buffer.py` aus den GitHub-Empfangsbelegen die drei Post-IDs über die Buffer-API: **`status=draft` und `dueAt` exakt wie im geprüften Kampagnenmanifest**. Historische frühere Läufe verwendeten noch `dueAt=null`.
 10. Unabhängig von Erfolg/Fehler wird ein dauerhafter Bericht nach `orchestration/reports/<kampagne>-run-<id>.json` geschrieben und zusätzlich als GitHub-Actions-Artefakt gesichert.
 
 ## Betrieb
 
 ### Auslösen
-- Ein neuer/aktualisierter `orchestration/briefs/YYYY-MM-DD-slug.json` startet automatisch den Workflow.
+- Nur eine **neu hinzugefügte** `orchestration/briefs/YYYY-MM-DD-slug.json` startet den automatischen Workflow; eine Aktualisierung bereits bestehender Briefdateien löst keinen automatischen Retry aus.
 - Alternativ GitHub → Actions → **AI Agent Builder – Recherche bis geprüfter Buffer-Entwurf** → Run workflow, dort Brief-Pfad und Modus auswählen.
 - `execution_mode: smoke`: nur lokale Validierung, keine Quellen-/Modellaufrufe, keine Buffer-Mutation.
 - `execution_mode: drafts`: Quelle abrufen, Inhalte (entweder über Modell oder aus `prepared_content`) bearbeiten, Bild produzieren, Quality Gate, drei Buffer-Entwürfe und Statusprüfung.
@@ -47,6 +47,9 @@ Falls der Key fehlt, versucht das Skript GitHub Models mit dem automatisch berei
 **Wichtig:** Der am 09.10.2026 erfolgreiche Datenschutz-Pilot verwendete von ChatGPT bereits redaktionell erstellte Texte (`prepared_content`). Die Quellenabrufe, die vollständige deterministische Bildproduktion, das Quality Gate und die Buffer-Übertragung erfolgten vollautomatisch im Runner; die **autonome Modell-Textgenerierung wurde bei diesem Lauf nicht ausgeführt**. Das wird im Report ausdrücklich markiert.
 
 ### Freigaben und Sicherheitsgrenzen
+
+**Freigabereihenfolge seit 12.10.2026:** Die persönliche Brief-Vorabfreigabe ist aufgehoben. Nach vollständiger fachlicher und technischer Qualitätsprüfung werden drei mit konkretem Datum versehene Buffer-Drafts erzeugt. Josef prüft diese später im ChatGPT-Wochenbericht oder direkt in Buffer; Änderungen im Buffer sind maßgeblich. Nur seine separate ausdrückliche finale Zustimmung kann die bestehenden Posts in die Veröffentlichungswarteschlange bringen. Der bisherige Legacy-Release-Sender ist dafür bei geänderten Buffer-Entwürfen noch nicht geeignet.
+
 
 - Nur Marke **AI Agent Builder**, keine anderen Marken.
 - Neue Quellen nur HTTPS, kein localhost/Private-IP als Quellenhost; maximal sechs Inhaltsquellen pro Brief, kein vertrauliches Kundenmaterial.

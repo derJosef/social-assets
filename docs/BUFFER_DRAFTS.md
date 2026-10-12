@@ -112,7 +112,7 @@ Der Workflow [buffer-auto-drafts.yml](../.github/workflows/buffer-auto-drafts.ym
 
 Ablauf:
 1. Beitrag unter `drafts/` vorbereiten und inhaltlich prüfen. **Das Anlegen oder Bearbeiten dieser Datei löst keinen Buffer-Transfer aus.**
-2. **Erst nach ausdrücklicher Freigabe durch Josef** eine neue JSON-Datei unter `ready-for-buffer/<eindeutiger-dateiname>.json` erstellen oder dorthin übertragen und nach `main` committen/pushen. Git behandelt Umbenennungen bei der Freigabe absichtlich als neu hinzugefügte Datei.
+2. **Manueller Legacy-Transfer:** Ein explizit persönlich freigegebener Einzelbeitrag kann weiter unter `ready-for-buffer/<eindeutiger-dateiname>.json` auf `main` eintreffen; diese manuelle Anleitung ist **nicht** der autonome AI-Agent-Builder-Wochenweg. **Autonome Wochenkampagnen:** Nach Josefs Korrektur vom 12.10.2026 dürfen qualitätsgeprüfte datierte Buffer-Drafts **vor** seiner redaktionellen Freigabe erzeugt werden – über den isolierten Kampagnenbranch, mit verifiziertem `draft` und `dueAt`. Erst nach Sichtung und gegebenenfalls Änderungen in Buffer darf Josef die Queue freigeben. Git behandelt Umbenennungen bei der Freigabe absichtlich als neu hinzugefügte Datei.
 3. Der GitHub-Push startet den automatischen Workflow. Nur auf diesem Push **hinzugefügte** JSON-Dateien werden übertragen; Bearbeitungen vorhandener Dateien lösen keinen zweiten Versand aus. Pro Dateiname erzeugt das Skript einen dauerhaften Reservierungs-/Ergebnisbeleg und blockiert Wiederholungen.
 4. Buffer erhält ausschließlich einen **Entwurf**, niemals eine Queue-Aufnahme oder Veröffentlichung. Kontrolle und Veröffentlichung bleiben manuell in Buffer.
 

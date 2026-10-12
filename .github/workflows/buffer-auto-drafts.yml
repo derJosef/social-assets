@@ -26,6 +26,11 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Python 3.12 für identische Pixelprüfung einrichten
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
       - name: Ausschließlich neue Freigabedateien ermitteln
         id: added
         env:
@@ -72,7 +77,10 @@ jobs:
 
           if (( ${#auto[@]} > 0 )); then
             echo "Validiere alle automatisch vorbereiteten Dateien zuerst: ${#auto[@]}"
-            python3 -m pip install --disable-pip-version-check --quiet 'Pillow>=11,<13' 'numpy>=2,<3'
+            python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0' 'numpy==2.5.4'
+            # Identical immutable Inter Medium as the orchestrator; checksum fails closed.
+            curl -fsSL --retry 2 'https://raw.githubusercontent.com/google/fonts/e1d6480102fed30739fead0faee463101f892c8f/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf' -o /tmp/Inter.ttf
+            echo '29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031  /tmp/Inter.ttf' | sha256sum --check --status
             python3 -m unittest discover -s tests -p 'test_autonomous_campaign_gate.py' -v
             python3 scripts/autonomous_campaign_gate.py --posts "${auto[@]}"
           else
