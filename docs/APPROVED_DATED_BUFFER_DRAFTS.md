@@ -21,9 +21,14 @@ Kampagnen-Brief-Freigabe **vor** dem Draft-Transfer aufgehoben.
    dauerhafter Einmal-Receipt mit Buffer-Post-ID vorliegt und der unabhängig
    zurückgelesene Buffer-Status exakt `draft`, passender Kanal und passender
    `dueAt` lautet. Unklare Ergebnisse: STOP ohne erneute Sendung.
-5. Der ChatGPT-Wochenbericht zeigt Bild, drei Texte, kanalbezogene Termine,
-   tatsächliche Buffer-Post-IDs und **nachweislich gültige** Links. Niemals
-   Deep Links aus einer bloßen Post-ID raten.
+5. Der ChatGPT-Wochenbericht zeigt Bild, drei aus Buffer zurückgelesene
+   Texte, kanalbezogene Termine, tatsächliche Buffer-Post-IDs und
+   **nachweislich gültige** Links. Die API liefert keinen bestätigten
+   individuellen Draft-Editor-Link; daher zunächst nur den
+   [offiziellen Buffer-Einstieg](https://publish.buffer.com) und Post-ID
+   angeben, nicht als Deep Link tarnen. Das neue GitHub-Readback publiziert
+   run-spezifische JSON- und Markdown-Prüfbelege auf automation-receipts;
+   siehe [Wochenbericht](CHATGPT_WEEKLY_BUFFER_REVIEW.md).
 6. Erst **nach** der Prüfung der fertigen Entwürfe sagt Josef `freigegeben`,
    bearbeitet einen Draft direkt in Buffer oder gibt Änderungshinweise. Seine
    Änderungen in Buffer sind verbindlich und dürfen nicht durch alte
@@ -81,10 +86,19 @@ belegt das Ergebnis. **Diesen Einmaltest niemals wiederholen.**
   Verbindung ist **noch nicht live nachgewiesen**. Siehe
   [Bild-Vorstufe](AUTOMATIC_IMAGE_SOURCE.md).
 - Die PersonalOS-Recherche verlangt mindestens **zwei unabhängige aktuelle
-  Postingzeit-Studien pro Kanal**. Die bisherigen PR-#13-Slotwerte stützen
-  sich nur auf Buffer und sind deshalb noch nicht produktionsreif.
-- Die separate finale Freigabe schaltet niemals ohne Josef-Entscheidung
-  automatisch die Warteschlange oder Veröffentlichung frei.
+  Postingzeit-Studien pro Kanal**. PR #13 vergleicht hierfür inzwischen
+  Buffer und Sprout Social; die B2B-/Tech-Einschränkungen sind in
+  [POSTING_TIME_PLANNER_2026.md](POSTING_TIME_PLANNER_2026.md)
+  dokumentiert. Der Planer blockiert abgelaufene Recherche, sofern
+  die Studien nicht tatsächlich neu geprüft wurden. Eigene verifizierte
+  Account-Metriken wurden bislang nicht eingelesen.
+- Ein gesonderter, nur lesender GitHub-Workflow
+  `.github/workflows/buffer-draft-live-review.yml` kann nach
+  Änderungen direkt in Buffer die aktuellen Texte, Bild-URLs und
+  Zeiten derselben Post-IDs nachprüfen. Weder dieser Prüfweg noch der
+  Wochenbericht aktivieren die Warteschlange. Für die spätere finale
+  Freigabe ist weiterhin eine verlustfreie, eigenständige und
+  von Josef tatsächlich autorisierte Lösung erforderlich.
 
 ## Offline-Prüfung
 
