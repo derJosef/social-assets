@@ -7,6 +7,8 @@ on:
       - 'scripts/ai_disclosure.py'
       - 'tests/test_ai_disclosure.py'
       - 'scripts/social_orchestrator.py'
+      - 'scripts/automatic_image_source.py'
+      - 'tests/test_automatic_image_source.py'
       - 'scripts/autonomous_campaign_gate.py'
       - 'tests/test_social_orchestrator.py'
       - 'scripts/prepared_brief_preflight.py'
