@@ -89,7 +89,7 @@ class AutomaticDraftImageTests(unittest.TestCase):
     def test_missing_review_fields_never_writes_source(self):
         with mock.patch.object(automatic, "generate_image", return_value=self.original), \
              mock.patch.object(automatic, "audit_image", return_value={"no_people": True}):
-            with self.assertRaisesRegex(automatic.ImageSourceBlocked, "widersprechen"):
+            with self.assertRaisesRegex(automatic.ImageSourceBlocked, "unvollständig"):
                 automatic.create_source(BRIEF, self.root, api_key="synthetic")
         self.assertFalse((self.root / SOURCE).exists())
 
