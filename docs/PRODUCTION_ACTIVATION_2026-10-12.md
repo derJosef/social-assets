@@ -10,6 +10,51 @@
 - Im Integrations-PR neu: `.github/workflows/social-main-offline-required.yml`, **ohne Pfadfilter**, bei jedem Pull Request auf `main` mit Job-Name `social-main-offline-required`. Run enthält ausschließlich synthetische Tests, keinerlei API-/Buffer-Secrets. Nicht mit der gleichnamigen optionalen PR-Testworkflow-Gruppe verwechseln.
 - Die bisherigen fünf/sieben alten PRs nicht zusätzlich mergen, auch nicht per Auto-Merge.
 
+## Automatischer Kampagneneingang OHNE Vorabfreigabe und OHNE Bot-Push nach main
+
+**Verbindlicher Betrieb:** Die montägliche ChatGPT-Automation verfasst den
+vollständigen, geprüften öffentlichen Kampagnenbrief und legt mit der
+verbundenen GitHub-App **genau ein neues Issue** an:
+
+- **Titel exakt:** `AIAGENT_BRIEF:YYYY-MM-DD-slug`
+- **Body:** ausschließlich ein gültiges UTF-8-JSON-Objekt nach dem
+  bestehenden vollständigen `orchestration/briefs/YYYY-MM-DD-slug.json`-
+  Schema (`format_version: 1`, Marke `ai-agent-builder`,
+  `execution_mode: drafts`, die sechs Buchhaltungs-/Recherche-/Zeitquellen,
+  `image_review: visual-reviews/<slug>.json`, alle drei
+  `prepared_content.posts`, sechs Hüte und die Bild-/Risikokonzeption).
+  **Kein Markdown-Codeblock** und keine persönlichen oder geheimen Daten.
+- Das GitHub-`issues: opened`-Ereignis startet GitHub Actions mit dem
+  **vertrauenswürdigen Workflow-Code auf dem geschützten Default-Branch
+  main**. Triggerbedingung: Benutzername **`derJosef`**, GitHub-
+  Autorbeziehung **`OWNER`**, passender Titel. Andere öffentliche
+  Issues sind ausgeschlossen.
+- `scripts/issue_brief_intake.py` prüft GitHub-Server-Ereignisdaten,
+  Größe, Marken-ID, Drei-Kanal-Texte und exakt zulässige Felder;
+  schreibt den Brief **nur lokal im Runner** und niemals nach
+  `main`. Vor Bildanbieter/Buffer prüft `production_activation_guard.py`
+  den effektiven Schutz beider Branches. Der vorhandene Preflight
+  prüft danach echte Quell-/Visual-/Kanal-/Marken-/Zeitbelege.
+- Der vom Issue übertragene Original-Brief wird zusammen mit Manifest,
+  drei Postdateien und Plan im **isolierten eindeutigen
+  `automation/campaign/<slug>`-Branch** archiviert. Bot schreibt
+  nicht auf geschütztes `main`; bei identischem Kampagnen-Branch,
+  fehlendem Ledger oder unvollständiger QA STOP/kein Retry.
+- Die bereits dokumentierten Pfade über neue Brief-Dateien auf
+  `main` bleiben nur als manuell freigegebene Alternative bestehen.
+  **Keine manuelle PR-Freigabe pro Wochenkampagne nötig.**
+
+**Tatsächlicher Berechtigungsnachweis vom 12.10.2026:** Einmaliges
+ungefährliches GitHub-[Issue #15](https://github.com/derJosef/social-assets/issues/15)
+über den GitHub-Connector erstellt, GitHub-REST-Issue-Liste unabhängig
+gelesen: `user.login=derJosef`,
+`author_association=OWNER`; danach Issue #15 geschlossen und erneut
+`state=closed` geprüft. Das Test-Issue hat absichtlich **keinen**
+`AIAGENT_BRIEF:`-Titel und löst keinen Buffer-Prozess aus. Das
+bestätigt die Identität des GitHub-Issue-Eingangs, aber noch nicht
+den echten GitHub-Actions-Issue-Workflow auf `main`, solange der PR
+ungemergt bleibt.
+
 ## Zwei einmalig nötige Einstellungen in GitHub (Eigentümer)
 
 Der verfügbare GitHub-Connector kann zwar Quellcode und PRs lesen/schreiben, **aber keine Branch-Protection-/Ruleset-Einstellungen durchführen**; der Versuch, den Protection-Endpunkt zu lesen, lieferte `403 Resource not accessible by integration`. Daher diese zwei kurzen GitHub-UI-Schritte vom Repository-Eigentümer selbst:
