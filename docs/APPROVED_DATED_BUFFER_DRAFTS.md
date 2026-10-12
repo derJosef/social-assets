@@ -70,12 +70,16 @@ belegt das Ergebnis. **Diesen Einmaltest niemals wiederholen.**
   noch eine eigenständig geprüfte sichere GitHub-Branch-Schutzkonfiguration;
   **kein Merge, keine GitHub-Settings-Änderung und kein Live-Buffer-Test**
   durch dieses Dokument.
-- Das derzeitige Bildverfahren setzt weiterhin eine vorhandene geprüfte
-  Quellbilddatei und ein `visual-reviews/<campaign>.json` voraus. Die
-  automatische Erzeugung/Bereitstellung eines wirklich neuen 4:5-Quellbilds
-  über die ChatGPT-Wochenautomation ist als End-to-End-Schnittstelle
-  **noch nicht nachgewiesen**. Deshalb keinen vollständig funktionierenden
-  Wochenlauf behaupten, nur weil die Draft-Vorabfreigabe entfällt.
+- Der Workflow enthält jetzt eine **automatische 4:5-Bildvorstufe**
+  (`scripts/automatic_image_source.py`) für noch fehlende Quellbilder,
+  die ohne Logo ein menschenfreies B2B-Rohmotiv erzeugt und mit zwei
+  getrennten Maschinenprüfungen untersucht. Bild/Prüfbelege gehen
+  gemeinsam in den isolierten Output-Branch und anschließend durch
+  den bisherigen Original-Logo-Compositor. Maschinenprüfung ist **keine
+  menschliche Sichtprüfung**; Josef prüft die fertigen Buffer-Entwürfe
+  vor Publikationsfreigabe. Die vollständige reale Image-API-/Buffer-
+  Verbindung ist **noch nicht live nachgewiesen**. Siehe
+  [Bild-Vorstufe](AUTOMATIC_IMAGE_SOURCE.md).
 - Die PersonalOS-Recherche verlangt mindestens **zwei unabhängige aktuelle
   Postingzeit-Studien pro Kanal**. Die bisherigen PR-#13-Slotwerte stützen
   sich nur auf Buffer und sind deshalb noch nicht produktionsreif.
