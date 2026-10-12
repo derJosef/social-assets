@@ -101,7 +101,7 @@ class OrchestratorTests(unittest.TestCase):
             m.load_brief(self.name)
 
     def test_sommerzeit_and_winterzeit(self):
-        summer=m.select_times(date(2026,10,9))
+        summer=m.select_times(date(2026,10,12))
         winter=m.select_times(date(2026,11,3))
         self.assertTrue(all("+02:00" in v["local"] for v in summer.values()))
         self.assertTrue(all("+01:00" in v["local"] for v in winter.values()))
