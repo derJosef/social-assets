@@ -28,6 +28,13 @@ jobs:
       - name: Offline-Sicherheitstests
         run: python3 -m unittest discover -s tests -p 'test_buffer_schedule.py' -v
 
+      - name: Unveränderlich lesbare Empfangsbelege aus separatem Ledger laden
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin \
+            '+refs/heads/automation-receipts:refs/remotes/origin/automation-receipts'
+
       - name: Neue, explizit freigegebene Terminierungsdateien ermitteln
         id: added
         env:

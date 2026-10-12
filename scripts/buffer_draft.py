@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Transfer one LinkedIn/Facebook/Instagram post to Buffer as a draft, never schedule.
+"""Transfer one LinkedIn/Facebook/Instagram post as a Buffer draft, never queue.
 
 No external calls in dry-run mode. Live sending is only possible with --send,
 configured GitHub Actions secrets and a reservation receipt in this repository.
+Approved auto-campaign drafts can carry a future dueAt while remaining drafts.
 """
 from __future__ import annotations
 
@@ -17,10 +18,13 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 import re
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 BUFFER_ENDPOINT = "https://api.buffer.com"
 REPOSITORY = "derJosef/social-assets"
+RECEIPT_BRANCH = "automation-receipts"
 
 # The only Buffer mutation in this script. There is no scheduling or publish path.
 CREATE_DRAFT = """
@@ -40,6 +44,38 @@ mutation CreateDraft($text: String!, $channelId: ChannelId!, $assets: [AssetInpu
   }
 }
 """
+
+# The one-off live acceptance run #38179032859 proved this exact Buffer mode:
+# dueAt is stored on a DRAFT, never queued for automatic publication.
+CREATE_DATED_DRAFT = """
+mutation CreateDatedDraft($text: String!, $channelId: ChannelId!, $assets: [AssetInput!]!, $metadata: PostInputMetaData, $dueAt: DateTime!) {
+  createPost(input: {
+    text: $text
+    channelId: $channelId
+    schedulingType: automatic
+    mode: customScheduled
+    dueAt: $dueAt
+    saveToDraft: true
+    assets: $assets
+    metadata: $metadata
+  }) {
+    __typename
+    ... on PostActionSuccess { post { id channelId status dueAt } }
+    ... on MutationError { message }
+  }
+}
+"""
+
+READ_DATED_DRAFT = """
+query VerifyDatedDraft($id: PostId!) {
+  post(input: { id: $id }) { id channelId status dueAt }
+}
+"""
+
+AUTO_DRAFT_RE = re.compile(
+    r"^ready-for-buffer/auto-(20\d{2}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*)-"
+    r"(linkedin|facebook|instagram)\.json$"
+)
 
 GET_ORGANIZATIONS = """
 query GetOrganizations {
@@ -145,7 +181,7 @@ def read_draft(given_path: str) -> tuple[str, str, bytes]:
 
 
 # This public repository owns all media. Never send private URLs or tokens to Buffer.
-MEDIA_PREFIX = "https://raw.githubusercontent.com/derJosef/social-assets/main/media/"
+MEDIA_HOST_PREFIX = "https://raw.githubusercontent.com/derJosef/social-assets/"
 MEDIA_NAME_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}$")
 
 
@@ -158,10 +194,16 @@ def validate_media_url(value: object, category: str) -> str:
         or parsed.netloc != "raw.githubusercontent.com"
         or parsed.query or parsed.fragment
         or parsed.username or parsed.password or parsed.port
-        or not value.startswith(MEDIA_PREFIX)
+        or not value.startswith(MEDIA_HOST_PREFIX)
     ):
         raise ValueError("Medien müssen direkt aus dem öffentlichen social-assets/media/ kommen.")
-    suffix = value[len(MEDIA_PREFIX):]
+    repo_suffix = value[len(MEDIA_HOST_PREFIX):]
+    git_ref, slash, suffix = repo_suffix.partition("/")
+    if not slash or (git_ref != "main" and not re.fullmatch(r"[0-9a-f]{40}", git_ref)):
+        raise ValueError("Medien-Ref muss main oder ein unveränderlicher Git-Commit sein.")
+    if not suffix.startswith("media/"):
+        raise ValueError("Medien müssen unter media/ liegen.")
+    suffix = suffix[len("media/"):]
     parts = suffix.split("/")
     if len(parts) != 2 or parts[0] != category or not MEDIA_NAME_RE.fullmatch(parts[1]):
         raise ValueError("Medienpfad muss ein Dateiname unter media/images oder media/documents sein.")
@@ -243,6 +285,35 @@ def verify_media_access(assets: list[dict]) -> None:
             raise RuntimeError("Öffentliche Medien-URL ist nicht erreichbar.") from exc
 
 
+def verify_auto_image_bytes(draft_path: str, assets: list[dict]) -> None:
+    """Check fetched image bytes against approved local artwork before Buffer sees it.
+
+    A SHA URL is immutable, but its commit could name a different image. HEAD
+    alone proves access, not identity. Verify both before reserving a receipt.
+    """
+    match = AUTO_DRAFT_RE.fullmatch(draft_path)
+    if match is None or not assets:
+        return
+    manifest_path = ROOT / "campaign-manifests" / (match.group(1) + ".json")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    expected = manifest["image"]["sha256"]
+    if not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
+        raise RuntimeError("Fehlender geprüfter Bild-Fingerprint")
+    for asset in assets:
+        if "image" not in asset:
+            raise RuntimeError("Auto-Kampagnen benötigen geprüfte Bilder")
+        url = asset["image"]["url"]
+        try:
+            with urllib.request.urlopen(urllib.request.Request(
+                url, headers={"User-Agent": "social-assets-buffer-draft/1.0"}), timeout=25,
+            ) as response:
+                raw = response.read(10_000_001)
+        except (urllib.error.HTTPError, urllib.error.URLError) as exc:
+            raise RuntimeError("Gepinntes öffentliches Bild nicht abrufbar") from exc
+        if len(raw) > 10_000_000 or hashlib.sha256(raw).hexdigest() != expected:
+            raise RuntimeError("GitHub-Bildinhalt stimmt nicht mit dem freigegebenen Bild überein")
+
+
 
 def platform_metadata(target: str) -> dict | None:
     """Mandatory channel-specific post input metadata, independent of publication mode."""
@@ -268,9 +339,20 @@ def github_contents_url(receipt: str) -> str:
 
 
 def fetch_receipt(token: str, receipt: str) -> dict | None:
-    url = github_contents_url(receipt) + "?ref=main"
+    # Historical, already-spent reservations live on main. They must remain
+    # authoritative even after new receipts move to the automation branch.
     try:
-        return json_http(url, token=token)
+        historical = json_http(github_contents_url(receipt) + "?ref=main", token=token)
+    except RuntimeError as exc:
+        if str(exc) != "HTTP 404 bei api.github.com":
+            raise
+    else:
+        return historical
+    # A missing receipt and a missing branch are both 404 on /contents. Fail
+    # closed unless the independently provisioned ledger branch exists.
+    json_http(f"https://api.github.com/repos/{REPOSITORY}/branches/{RECEIPT_BRANCH}", token=token)
+    try:
+        return json_http(github_contents_url(receipt) + f"?ref={RECEIPT_BRANCH}", token=token)
     except RuntimeError as exc:
         if str(exc) == "HTTP 404 bei api.github.com":
             return None
@@ -283,7 +365,7 @@ def put_receipt(token: str, receipt: str, content: dict, message: str, sha: str 
         "content": base64.b64encode(
             (json.dumps(content, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
         ).decode("ascii"),
-        "branch": "main",
+        "branch": RECEIPT_BRANCH,
     }
     if sha:
         payload["sha"] = sha
@@ -341,6 +423,112 @@ def channel_preference(target: str) -> str:
     return os.environ.get(name, "").strip()
 
 
+def planned_due_at(draft_path: str, target: str, *, now: datetime | None = None) -> str | None:
+    """Bind an auto-draft's time to its manifest, never to editable draft fields.
+
+    Legacy `ready-for-buffer/` entries lack three-channel quality evidence and stay blocked.
+    Directly dispatched `drafts/` entries keep their original undated behavior.
+    """
+    match = AUTO_DRAFT_RE.fullmatch(draft_path)
+    if match is None:
+        if draft_path.startswith("ready-for-buffer/"):
+            raise RuntimeError("Legacy-ready-for-buffer ohne gebundene Kampagnen-Qualitaetspruefung gesperrt")
+        if not draft_path.startswith("drafts/"):
+            raise RuntimeError("Unbekannter Entwurfseingang")
+        return None
+    campaign, named_target = match.groups()
+    if target != named_target:
+        raise RuntimeError("Kanal in Dateiname und Inhalt stimmt nicht überein")
+    manifest_file = (ROOT / "campaign-manifests" / f"{campaign}.json").resolve(strict=True)
+    if not manifest_file.is_relative_to(ROOT.resolve()) or manifest_file.stat().st_size > 100_000:
+        raise RuntimeError("Manifestpfad oder -größe unzulässig")
+    manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+    if (not isinstance(manifest, dict) or manifest.get("brand") != "ai-agent-builder"
+            or manifest.get("campaign_id") != campaign):
+        raise RuntimeError("Kampagnenmanifest ist nicht gebunden")
+    posts = manifest.get("posts")
+    if not isinstance(posts, dict) or posts.get(target) != draft_path:
+        raise RuntimeError("Post und Manifest widersprechen sich")
+    timings = manifest.get("posting_times")
+    if not isinstance(timings, dict) or set(timings) != {"linkedin", "facebook", "instagram"}:
+        raise RuntimeError("Drei Plattformtermine fehlen")
+    current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None:
+        raise RuntimeError("Zeitprüfung benötigt eine Zeitzone")
+    tz = ZoneInfo("Europe/Berlin")
+    parsed = {}
+    for name, timing in timings.items():
+        if not isinstance(timing, dict) or set(timing) != {"local", "utc"}:
+            raise RuntimeError("Unvollständiger Zeitnachweis")
+        utc_text = timing["utc"]
+        if not isinstance(utc_text, str) or not re.fullmatch(
+            r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", utc_text
+        ):
+            raise RuntimeError("Termin benötigt sekundengenaues UTC-Format")
+        utc = datetime.strptime(utc_text, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        local = datetime.fromisoformat(timing["local"])
+        if (local.tzinfo is None or local.astimezone(timezone.utc) != utc
+                or utc.astimezone(tz).isoformat(timespec="seconds") != local.isoformat(timespec="seconds")
+                or utc <= current + timedelta(minutes=10)):
+            raise RuntimeError("Ungültiger, abgelaufener oder falsch konvertierter Termin")
+        parsed[name] = utc
+    return timings[target]["utc"]
+
+
+def authorize_auto_dated_draft(draft_path: str) -> dict:
+    """Require campaign QA before Buffer, not Josef's approval before draft.
+
+    The separate personal decision happens only on the finished Buffer posts.
+    Image-source, logo, disclosure, time and three-platform gates remain.
+    """
+    if __package__:
+        from .autonomous_campaign_gate import check_campaign
+    else:
+        from autonomous_campaign_gate import check_campaign
+    match = AUTO_DRAFT_RE.fullmatch(draft_path)
+    if match is None:
+        raise RuntimeError("Automatischer datierter Entwurf benötigt eindeutige Kampagne")
+    campaign = match.group(1)
+    targets = ("linkedin", "facebook", "instagram")
+    posts = [f"ready-for-buffer/auto-{campaign}-{target}.json" for target in targets]
+    evidence = check_campaign(posts, verify_image=True)
+    if (not isinstance(evidence, dict) or evidence.get("status") != "eligible_for_draft_only"
+            or evidence.get("campaign") != campaign
+            or evidence.get("targets") != list(targets)):
+        raise RuntimeError("Unvollständiger Drei-Kanal-Kampagnen-Qualitätsnachweis")
+    brief_path = ROOT / "orchestration" / "briefs" / f"{campaign}.json"
+    brief = json.loads(brief_path.read_text(encoding="utf-8"))
+    if (not isinstance(brief, dict) or brief.get("campaign_id") != campaign
+            or brief.get("brand") != "ai-agent-builder"
+            or brief.get("execution_mode") != "drafts"
+            or brief.get("image_review") != f"visual-reviews/{campaign}.json"):
+        raise RuntimeError("Unpassender Kampagnen-Brief zur Bildprüfung")
+    prepared = brief.get("prepared_content")
+    expected_posts = prepared.get("posts") if isinstance(prepared, dict) else None
+    if not isinstance(expected_posts, dict) or set(expected_posts) != set(targets):
+        raise RuntimeError("Geprüfte plattformspezifische Brief-Texte fehlen")
+    for target, filename in zip(targets, posts):
+        _, actual, _ = read_draft(filename)
+        if actual != expected_posts[target]:
+            raise RuntimeError("Buffer-Draft-Text weicht vom vorbereiteten geprüften Brief ab")
+    return {"campaign": campaign, "quality_gate": "passed",
+            "image_sha256": evidence.get("image_sha256", "")}
+
+
+def verified_dated_post(record: object, *, post_id: str, channel_id: str, due_at: str) -> bool:
+    """Require the independent Buffer readback to agree on ID, channel, status, UTC."""
+    if not isinstance(record, dict):
+        return False
+    try:
+        due = datetime.fromisoformat(str(record.get("dueAt", "")).replace("Z", "+00:00"))
+        expected = datetime.fromisoformat(due_at.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return (record.get("id") == post_id and record.get("channelId") == channel_id
+            and str(record.get("status", "")).lower() == "draft"
+            and due.tzinfo is not None and due.astimezone(timezone.utc) == expected)
+
+
 def check_connection() -> None:
     buffer_key = os.environ.get("BUFFER_API_KEY", "")
     if not buffer_key:
@@ -360,9 +548,12 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
         raise RuntimeError("GitHub-Token oder BUFFER_API_KEY fehlt.")
 
     target = json.loads(raw.decode("utf-8"))["target"]
+    due_at = planned_due_at(draft_path, target)
+    quality = authorize_auto_dated_draft(draft_path) if due_at is not None else None
     channel_id = resolve_channel(buffer_key, target, channel_preference(target))
     assets = parse_assets(raw)
     verify_media_access(assets)
+    verify_auto_image_bytes(draft_path, assets)
     receipt = receipt_path(draft_path)
     if fetch_receipt(github_token, receipt) is not None:
         raise RuntimeError(
@@ -376,6 +567,8 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
         "state": "pending_manual_reconciliation_on_failure",
         "github_run_id": os.environ.get("GITHUB_RUN_ID", "unknown"),
     }
+    if due_at is not None:
+        pending.update({"due_at_utc": due_at, "channel_id": channel_id, "campaign_quality": quality})
     receipt_sha = put_receipt(
         github_token, receipt, pending, f"buffer: reserve draft transfer for {draft_path}"
     )
@@ -385,7 +578,9 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
         "text": text, "channelId": channel_id, "assets": assets,
         "metadata": platform_metadata(target),
     }
-    result = buffer_graphql(buffer_key, CREATE_DRAFT, variables)
+    if due_at is not None:
+        variables["dueAt"] = due_at
+    result = buffer_graphql(buffer_key, CREATE_DATED_DRAFT if due_at is not None else CREATE_DRAFT, variables)
     post_result = result.get("createPost") or {}
     post = post_result.get("post") if isinstance(post_result, dict) else None
     if not isinstance(post, dict) or not post.get("id"):
@@ -394,7 +589,21 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
         raise RuntimeError(
             f"Buffer-Draft nicht bestätigt ({typename}). Pending-Beleg bleibt; manuell prüfen."
         )
-    pending.update({"state": "draft_created", "buffer_post_id": str(post["id"])})
+    post_id = str(post["id"])
+    if due_at is not None:
+        pending.update({"state": "created_requires_independent_check", "buffer_post_id": post_id})
+        receipt_sha = put_receipt(
+            github_token, receipt, pending,
+            f"buffer: identify dated draft for {draft_path}", sha=receipt_sha,
+        )
+        if not verified_dated_post(post, post_id=post_id, channel_id=channel_id, due_at=due_at):
+            raise RuntimeError("ALARM: Buffer-Anlage war kein datierter Draft; nur manuell abgleichen")
+        independent = buffer_graphql(buffer_key, READ_DATED_DRAFT, {"id": post_id}).get("post")
+        if not verified_dated_post(independent, post_id=post_id, channel_id=channel_id, due_at=due_at):
+            raise RuntimeError("ALARM: Buffer-Readback bestätigt keinen datierten Draft")
+        pending["state"] = "verified_prescheduled_draft_not_queued"
+    else:
+        pending.update({"state": "draft_created", "buffer_post_id": post_id})
     try:
         put_receipt(
             github_token,
@@ -408,12 +617,15 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
             "Entwurf laut Buffer erstellt, aber GitHub-Beleg nicht aktualisiert. "
             f"{receipt} steht weiterhin auf pending. Manuell abgleichen."
         ) from exc
-    print(f"Erfolg: Buffer-Entwurf angelegt (Post-ID: {post['id']}). Keine Planung/Veröffentlichung.")
+    if due_at is not None:
+        print(f"Erfolg: verifizierter Buffer-Draft (Post-ID: {post_id}, dueAt={due_at}). Keine Queue/Publikation.")
+    else:
+        print(f"Erfolg: Buffer-Entwurf angelegt (Post-ID: {post_id}). Keine Planung/Veröffentlichung.")
     print(f"GitHub-Beleg: {receipt}")
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Buffer: freigegebene Entwürfe für drei Kanäle übertragen.")
+    parser = argparse.ArgumentParser(description="Buffer: geprüfte Entwürfe für drei Kanäle übertragen.")
     parser.add_argument("--draft", required=True, help="JSON unter drafts/ oder ready-for-buffer/")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true", help="Nur lokal prüfen; keine API-Aufrufe.")

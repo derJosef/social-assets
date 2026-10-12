@@ -1,0 +1,29 @@
+name: Brief Approval – Offline PR Gate
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  brief-approval-offline:
+    name: brief-approval-offline
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Read-only checkout
+        uses: actions/checkout@v5
+
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Offline dependencies
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow>=11,<13' 'numpy>=2,<3'
+
+      - name: Static checks and complete offline regression suite
+        run: |
+          python3 -m py_compile scripts/brief_approval_gate.py tests/test_brief_approval_gate.py
+          python3 -m unittest discover -s tests -v

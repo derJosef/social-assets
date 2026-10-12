@@ -101,9 +101,12 @@ class OrchestratorTests(unittest.TestCase):
             m.load_brief(self.name)
 
     def test_sommerzeit_and_winterzeit(self):
-        a=m.select_times(date(2026,10,9))
-        self.assertTrue(all("+01:00" in v["local"] for v in a.values()))
-        self.assertTrue(all(v["utc"].endswith("Z") for v in a.values()))
+        summer=m.select_times(date(2026,10,12))
+        winter=m.select_times(date(2026,11,3))
+        self.assertTrue(all("+02:00" in v["local"] for v in summer.values()))
+        self.assertTrue(all("+01:00" in v["local"] for v in winter.values()))
+        self.assertTrue(all(v["utc"].endswith("Z") for v in summer.values()))
+        self.assertTrue(all(v["utc"].endswith("Z") for v in winter.values()))
 
     def test_no_reusing_existing_campaign(self):
         (self.root/"campaign-manifests").mkdir()
@@ -193,6 +196,8 @@ class OrchestratorTests(unittest.TestCase):
         self.assertNotIn("render_background",Path(m.__file__).read_text())
         plan=(self.root/p["plan"]).read_text(encoding="utf-8")
         self.assertIn("KEINE automatische",plan)
+        self.assertIn("Zeitstudien und Grenzen der Planung",plan)
+        self.assertIn("buffer.com/resources/best-time-to-post-on-facebook",plan)
         self.assertIn("unabhaengige modellbasierte Faktenpruefung",plan)
         self.assertNotIn("Modellpruefung bestanden",plan)
         self.assertFalse((self.root/f"artwork-requests/{br['campaign_id']}.json").exists())

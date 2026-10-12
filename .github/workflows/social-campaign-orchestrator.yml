@@ -44,7 +44,7 @@ jobs:
           python-version: '3.12'
 
       - name: Bild- und QA-Abhängigkeiten
-        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow>=11,<13' 'numpy>=2,<3'
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0' 'numpy==2.5.4'
 
       - name: Offline-Regressionen (keine API-Aufrufe)
         shell: bash
@@ -70,9 +70,9 @@ jobs:
             [[ "$BEFORE_SHA" =~ ^[0-9a-f]{40}$ && ! "$BEFORE_SHA" =~ ^0+$ ]] || { echo 'Unbekannter vorheriger Commit' >&2; exit 1; }
             tempfile="$(mktemp)"
             trap 'rm -f "$tempfile"' EXIT
-            git diff --no-renames --name-only -z "$BEFORE_SHA" "$GITHUB_SHA" -- orchestration/briefs/ > "$tempfile"
+            git diff --no-renames --diff-filter=A --name-only -z "$BEFORE_SHA" "$GITHUB_SHA" -- orchestration/briefs/ > "$tempfile"
             mapfile -d '' -t changed < "$tempfile"
-            [[ "${#changed[@]}" -eq 1 ]] || { echo 'Pro Push genau einen neuen oder geänderten Auftrag zulässig' >&2; exit 1; }
+            [[ "${#changed[@]}" -eq 1 ]] || { echo 'Pro Push genau eine neue Briefdatei zulässig' >&2; exit 1; }
             BRIEF="${changed[0]}"
             MODE="$(python3 - "$BRIEF" <<'PY'
           import json,sys
@@ -92,20 +92,54 @@ jobs:
           echo "RUN_MODE=$MODE" >> "$GITHUB_ENV"
           echo "CAMPAIGN=$CAMPAIGN" >> "$GITHUB_ENV"
 
-      - name: Variante A – fertige ChatGPT-Texte und 4:5-Bildfreigabe vor Netzwerk prüfen
+      - name: Kampagnen-Duplikat VOR kostenpflichtiger Bildgenerierung ausschließen
+        if: steps.request.outputs.mode == 'drafts'
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch="automation/campaign/$CAMPAIGN"
+          existing="$(git ls-remote --heads origin "refs/heads/$branch")"
+          [[ -z "$existing" ]] || { echo "Kampagnen-Branch bereits vorhanden; Bild-API nicht aufrufen." >&2; exit 1; }
+
+      - name: Fehlende personenfreie Bildquelle automatisch erstellen und zweimal maschinell prüfen
+        if: steps.request.outputs.mode == 'drafts'
+        shell: bash
+        env:
+          SOCIAL_OPENAI_API_KEY: ${{ secrets.SOCIAL_OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -f "visual-reviews/$CAMPAIGN.json" ]]; then
+            echo "Bereits vorhandene Quellbild-Prüfung wird im Preflight unabhängig geprüft."
+          else
+            python3 scripts/automatic_image_source.py --brief "$BRIEF"
+            echo "Neues 4:5-Rohmotiv: ZWEI Maschinenprüfungen, KEINE menschliche Freigabe." >> "$GITHUB_STEP_SUMMARY"
+            echo "Josefs Sichtprüfung findet später am fertigen Buffer-Draft statt." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Vorbereitete ChatGPT-Texte und vorhandenes 4:5-Motiv verifizieren
         if: steps.request.outputs.mode == 'drafts'
         shell: bash
         run: |
           set -euo pipefail
           python3 scripts/prepared_brief_preflight.py --brief "$BRIEF"
 
+      - name: Bisherige automatische Kanaltermine read-only für die Planung laden
+        if: steps.request.outputs.mode == 'drafts'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Fetching all heads also works for the *first* campaign, when no
+          # automation/campaign branch exists yet.
+          git fetch --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+          python3 scripts/campaign_reservations.py
+
       - name: Inter-Schrift nur für die echte Bildproduktion beziehen
         if: steps.request.outputs.mode == 'drafts'
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsSL --retry 2 'https://raw.githubusercontent.com/google/fonts/main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf' -o /tmp/Inter.ttf
-          test -s /tmp/Inter.ttf
+          curl -fsSL --retry 2 'https://raw.githubusercontent.com/google/fonts/e1d6480102fed30739fead0faee463101f892c8f/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf' -o /tmp/Inter.ttf
+          echo '29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031  /tmp/Inter.ttf' | sha256sum --check --status
 
       - name: Orchestrator ausführen (fail closed)
         id: build
@@ -118,33 +152,62 @@ jobs:
           set -euo pipefail
           python3 scripts/social_orchestrator.py --brief "$BRIEF" --mode "$RUN_MODE" --report "$REPORT_PATH"
 
-      - name: Alle neuen Assets atomar nach GitHub übertragen
+      - name: Geprüfte Assets auf unveränderlichem Bild-Commit sichern (NICHT main)
         if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          # The independently reviewed 4:5 source already exists in git.
           test -f "visual-reviews/$CAMPAIGN.json"
+          branch="automation/campaign/$CAMPAIGN"
+          existing="$(git ls-remote --heads origin "refs/heads/$branch")"
+          [[ -z "$existing" ]] || { echo 'Kampagnen-Output-Branch existiert bereits. Keine Wiederholung.' >&2; exit 1; }
+          # First Git commit freezes the brand-verified image and its QA
+          # evidence. Machine-generated raw source+review must travel WITH
+          # that image to the isolated output branch; no changes to main.
+          expected=3
+          auto_source="media/source-images/$CAMPAIGN-source.png"
+          auto_review="visual-reviews/$CAMPAIGN.json"
+          if [[ -f "$auto_source" ]]; then
+            [[ -f "$auto_review" ]] || { echo 'Auto-Bild hat keinen Review-Beleg.' >&2; exit 1; }
+            if ! git ls-files --error-unmatch "$auto_source" >/dev/null 2>&1; then
+              ! git ls-files --error-unmatch "$auto_review" >/dev/null 2>&1 || {
+                echo 'Auto-Bild und Review liegen in verschiedenen Git-Zuständen.' >&2; exit 1;
+              }
+              git add -- "$auto_source" "$auto_review"
+              expected=5
+            fi
+          fi
           git add -- \
             "media/source-images/$CAMPAIGN-base.png" \
             "media/images/$CAMPAIGN-branded.png" \
-            "artwork-receipts/$CAMPAIGN.json" \
+            "artwork-receipts/$CAMPAIGN.json"
+          count="$(git diff --cached --name-only | wc -l)"
+          [[ "$count" -eq "$expected" ]] || { echo "Falsche Anzahl Bild-/Review-Assets: $count statt $expected" >&2; exit 1; }
+          [[ -z "$(git diff --cached --name-status | grep -v '^A[[:space:]]' || true)" ]] || exit 1
+          git commit -m "assets: pin verified artwork for $CAMPAIGN"
+          image_commit="$(git rev-parse HEAD)"
+          python3 scripts/immutable_campaign_assets.py --campaign "$CAMPAIGN" --image-commit "$image_commit"
+          python3 scripts/autonomous_campaign_gate.py --posts \
+            "ready-for-buffer/auto-$CAMPAIGN-linkedin.json" \
+            "ready-for-buffer/auto-$CAMPAIGN-facebook.json" \
+            "ready-for-buffer/auto-$CAMPAIGN-instagram.json"
+          git add -- \
             "campaign-manifests/$CAMPAIGN.json" \
             "drafts/$CAMPAIGN-plan.md" \
             "ready-for-buffer/auto-$CAMPAIGN-linkedin.json" \
             "ready-for-buffer/auto-$CAMPAIGN-facebook.json" \
             "ready-for-buffer/auto-$CAMPAIGN-instagram.json"
           count="$(git diff --cached --name-only | wc -l)"
-          [[ "$count" -eq 8 ]] || { echo "Nur 8 neue Dateien erlaubt; gefunden: $count" >&2; exit 1; }
+          [[ "$count" -eq 5 ]] || { echo "Fünf weitere Kampagnendateien erforderlich; gefunden: $count" >&2; exit 1; }
           if git diff --cached --name-status | grep -v '^A[[:space:]]'; then
             echo 'Bestehende Dateien dürfen nicht geändert werden' >&2
             exit 1
           fi
-          git commit -m "campaign: verified autonomous draft package $CAMPAIGN"
-          git push origin HEAD:main
-          echo "8 neue Kampagnendateien committed; die freigegebene 4:5-Quelle lag bereits im Repository." >> "$GITHUB_STEP_SUMMARY"
+          git commit -m "campaign: immutable media and verified draft package $CAMPAIGN"
+          git push origin "HEAD:refs/heads/$branch"
+          echo "$((expected + 5)) neue Kampagnendateien nur auf $branch (nicht main); Medien per Bild-Commit $image_commit fixiert." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Vorbereitete Beiträge ohne Fremdtrigger DIREKT als Drafts senden
         if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
@@ -163,7 +226,7 @@ jobs:
             python3 scripts/buffer_draft.py --draft "$file" --send
           done
 
-      - name: Unabhängige Buffer-Prüfung (draft und dueAt=null)
+      - name: Unabhängige Buffer-Prüfung (draft und verbindlicher Datumswert, nie Queue)
         if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
         shell: bash
         env:
@@ -203,12 +266,24 @@ jobs:
               json.dump(data,f,ensure_ascii=False,indent=2);f.write("\n")
           print(f"Report status: {data.get('state')}, job={data['job_status']}")
           PY
+          # Read-only report rendering; unverified or partial runs say BLOCKED,
+          # never emit a fictitious Buffer post link or an approval claim.
+          python3 scripts/social_weekly_review.py \
+            --report /tmp/social-final-report/receipt.json \
+            --markdown /tmp/social-final-report/review.md
           file="orchestration/reports/${REQUEST_CAMPAIGN:-preflight}-run-${GITHUB_RUN_ID}.json"
+          review_file="orchestration/reports/${REQUEST_CAMPAIGN:-preflight}-run-${GITHUB_RUN_ID}.md"
           content="$(base64 -w0 /tmp/social-final-report/receipt.json)"
           gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$file" \
             -f message="audit: orchestration run $GITHUB_RUN_ID" \
-            -f content="$content" -f branch=main > /dev/null
-          echo "Prüfbericht: https://github.com/$GITHUB_REPOSITORY/blob/main/$file" >> "$GITHUB_STEP_SUMMARY"
+            -f content="$content" -f branch=automation-receipts > /dev/null
+          markdown_content="$(base64 -w0 /tmp/social-final-report/review.md)"
+          gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$review_file" \
+            -f message="review: Buffer draft snapshot run $GITHUB_RUN_ID" \
+            -f content="$markdown_content" -f branch=automation-receipts > /dev/null
+          echo "Prüfbericht: https://github.com/$GITHUB_REPOSITORY/blob/automation-receipts/$file" >> "$GITHUB_STEP_SUMMARY"
+          echo "Wochenkampagne zur Sichtprüfung: https://github.com/$GITHUB_REPOSITORY/blob/automation-receipts/$review_file" >> "$GITHUB_STEP_SUMMARY"
+          echo "Hinweis: Buffer-Links führen zunächst zum Dashboard. Post-ID ist eindeutiger Identifikator, kein erfundener Deep Link." >> "$GITHUB_STEP_SUMMARY"
           echo "Buffer-Publikation wurde durch diesen Workflow nie aktiviert." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Zusätzliche Artefakt-Sicherung bei fehlgeschlagenem GitHub-Report
@@ -219,5 +294,6 @@ jobs:
           path: |
             ${{ runner.temp }}/social-orchestrator-report.json
             /tmp/social-final-report/receipt.json
+            /tmp/social-final-report/review.md
           if-no-files-found: warn
           retention-days: 30

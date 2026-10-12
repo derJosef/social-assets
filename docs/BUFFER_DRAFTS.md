@@ -9,7 +9,7 @@ Die Eingabedatei entscheidet mit `target` ausdrücklich, zu welcher Plattform ei
 - LinkedIn: Text, Bilder, PDF-Dokumente (wie bisher).
 - Facebook-Seite: Textentwürfe (Format 1) oder Bildentwürfe (Format 2).
 - Instagram: ausschließlich Bildentwürfe (Format 2). Text ohne Bild, PDFs, Reels und Storys sind in diesem Workflow gesperrt. Maximal 10 Bilder und 2.200 Zeichen je Caption. Instagram-Bilder müssen ein geeignetes Seitenverhältnis haben (4:5 bis 1,91:1).
-- Die eigentliche Übertragung ist weiterhin ausschließlich ein Buffer-Entwurf mit `saveToDraft: true`. Kein Terminieren, kein Queueing, kein Veröffentlichen.
+- Die eigentliche Übertragung ist weiterhin ausschließlich ein Buffer-Entwurf mit `saveToDraft: true`. Keine Queue-Aktivierung oder Veröffentlichung. Für ausdrücklich genehmigte automatische Kampagnen wird im separaten, noch ungemergten Integrations-PR ein `dueAt` im Entwurf gespeichert (Details: `docs/APPROVED_DATED_BUFFER_DRAFTS.md`).
 - Buffer-Kanäle werden nach ihrem `service`-Wert unterschieden. Sollte mehr als ein Facebook- oder Instagram-Kanal verbunden sein, stoppt der Transfer, bevor Buffer einen Entwurf erstellt. Dann kann die richtige ID ausdrücklich über das GitHub Actions Secret `BUFFER_FACEBOOK_CHANNEL_ID` bzw. `BUFFER_INSTAGRAM_CHANNEL_ID` ausgewählt werden. `BUFFER_CHANNEL_ID` bleibt die bisherige LinkedIn-Option.
 - Neue Vorlagen: [Facebook-Text](../drafts/vorlage-facebook-text.json) und [Instagram-Bild](../drafts/vorlage-instagram-bild.json). Keine dieser Vorlagen wird automatisch versendet, solange sie unter `drafts/` liegt.
 - `ready-for-buffer/` bleibt das **einzige** automatische Freigabeverzeichnis. Ein neuer Dateiname wird durch einen separaten Empfangsbeleg gegen wiederholten Versand geschützt.
@@ -112,7 +112,7 @@ Der Workflow [buffer-auto-drafts.yml](../.github/workflows/buffer-auto-drafts.ym
 
 Ablauf:
 1. Beitrag unter `drafts/` vorbereiten und inhaltlich prüfen. **Das Anlegen oder Bearbeiten dieser Datei löst keinen Buffer-Transfer aus.**
-2. **Erst nach ausdrücklicher Freigabe durch Josef** eine neue JSON-Datei unter `ready-for-buffer/<eindeutiger-dateiname>.json` erstellen oder dorthin übertragen und nach `main` committen/pushen. Git behandelt Umbenennungen bei der Freigabe absichtlich als neu hinzugefügte Datei.
+2. **Manueller Legacy-Transfer:** Ein explizit persönlich freigegebener Einzelbeitrag kann weiter unter `ready-for-buffer/<eindeutiger-dateiname>.json` auf `main` eintreffen; diese manuelle Anleitung ist **nicht** der autonome AI-Agent-Builder-Wochenweg. **Autonome Wochenkampagnen:** Nach Josefs Korrektur vom 12.10.2026 dürfen qualitätsgeprüfte datierte Buffer-Drafts **vor** seiner redaktionellen Freigabe erzeugt werden – über den isolierten Kampagnenbranch, mit verifiziertem `draft` und `dueAt`. Erst nach Sichtung und gegebenenfalls Änderungen in Buffer darf Josef die Queue freigeben. Git behandelt Umbenennungen bei der Freigabe absichtlich als neu hinzugefügte Datei.
 3. Der GitHub-Push startet den automatischen Workflow. Nur auf diesem Push **hinzugefügte** JSON-Dateien werden übertragen; Bearbeitungen vorhandener Dateien lösen keinen zweiten Versand aus. Pro Dateiname erzeugt das Skript einen dauerhaften Reservierungs-/Ergebnisbeleg und blockiert Wiederholungen.
 4. Buffer erhält ausschließlich einen **Entwurf**, niemals eine Queue-Aufnahme oder Veröffentlichung. Kontrolle und Veröffentlichung bleiben manuell in Buffer.
 

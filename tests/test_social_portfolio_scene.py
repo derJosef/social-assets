@@ -153,5 +153,115 @@ class SceneTests(unittest.TestCase):
         self.assertNotIn("saveToDraft: false", source)
 
 
+    def use_person_review(self, *, face=False, edited=False, approved=True):
+        self.spec["visual_review"]["no_people"] = False
+        self.spec["visual_review"].update({
+            "photorealistic_ai_face": face,
+            "ai_altered_real_person": edited,
+            "person_use_approved": approved,
+        })
+        self.spec["person_approval_evidence"] = (
+            "SYNTHETIC TEST ONLY - simulated Josef-specific approval evidence, "
+            "NEVER VALID FOR A LIVE PICTURE"
+        )
+
+    def test_ai_generated_photorealistic_face_must_be_classified_and_approved(self):
+        self.use_person_review(face=True)
+        self.assertEqual(m.validate_spec(self.spec,self.root),self.source)
+        self.assertTrue(m.needs_disclosure(self.spec))
+
+    def test_ai_modified_real_photo_requires_same_caption(self):
+        self.use_person_review(edited=True)
+        m.validate_spec(self.spec,self.root)
+        self.assertTrue(m.needs_disclosure(self.spec))
+
+    def test_stylized_person_does_not_trigger_caption_but_needs_approval(self):
+        self.use_person_review()
+        m.validate_spec(self.spec,self.root)
+        self.assertFalse(m.needs_disclosure(self.spec))
+
+    def test_person_without_individual_approval_blocked(self):
+        self.use_person_review(face=True,approved=False)
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec,self.root)
+
+    def test_person_without_approval_proof_blocked(self):
+        self.use_person_review(edited=True)
+        self.spec.pop("person_approval_evidence")
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec,self.root)
+
+    def test_person_with_short_approval_proof_blocked(self):
+        self.use_person_review(face=True)
+        self.spec["person_approval_evidence"]="yes"
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec,self.root)
+
+    def test_ai_face_and_no_people_inconsistent(self):
+        self.use_person_review(face=True)
+        self.spec["visual_review"]["no_people"]=True
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec,self.root)
+
+    def test_legacy_falsely_declared_person_without_new_fields_rejected(self):
+        self.spec["visual_review"]["no_people"]=False
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec,self.root)
+
+    def test_unapproved_stylized_person_still_blocked(self):
+        self.use_person_review(approved=False)
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec,self.root)
+
+    def test_person_review_cannot_use_string_true(self):
+        self.use_person_review(face=True)
+        self.spec["visual_review"]["person_use_approved"]="true"
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec,self.root)
+
+    def test_clean_scene_with_explicit_negative_classification_accepted(self):
+        self.spec["visual_review"].update({
+            "photorealistic_ai_face": False,
+            "ai_altered_real_person": False,
+            "person_use_approved": False,
+        })
+        m.validate_spec(self.spec,self.root)
+        self.assertFalse(m.needs_disclosure(self.spec))
+
+    def test_end_to_end_person_capability_uses_two_independent_image_gates(self):
+        import shutil
+        from PIL import ImageFont
+        font = ImageFont.load_default(size=42)
+        source = getattr(font, "path", None)
+        if not hasattr(source, "getvalue"):
+            self.skipTest("Pillow wheel cannot export synthetic test TTF")
+        font_path = self.root/"Inter-for-fixtures.ttf"
+        font_path.write_bytes(source.getvalue())
+        self.use_person_review(face=True)
+        self.spec["layout"]="logo_only"
+        self.spec["heading"]=None
+        spec_dir=self.root/"visual-reviews"
+        spec_dir.mkdir()
+        spec_path=spec_dir/"synthetic-person.json"
+        spec_path.write_text(json.dumps(self.spec),encoding="utf-8")
+        scripts=self.root/"scripts"
+        scripts.mkdir()
+        root_scripts=Path(m.__file__).resolve().parent
+        shutil.copy2(root_scripts/"logo_composite.py",scripts/"logo_composite.py")
+        original=root_scripts.parent/"media/brand/logo-pauderer-original.png"
+        base=self.root/"media/source-images/synthetic-disclosure-base.png"
+        final=self.root/"media/images/synthetic-disclosure-final.png"
+        result=m.build(spec_path,self.root,base,final,font_path,original)
+        self.assertTrue(result["ai_disclosure"]["required"])
+        self.assertTrue(result["ai_disclosure"]["pixel_verified"])
+        self.assertTrue(result["ai_disclosure"]["logo_disjoint_verified"])
+        self.assertTrue(result["ai_disclosure"]["final_pixel_verified"])
+        self.assertTrue(result["logo_qa"]["logo_verified"])
+        from ai_disclosure import verify_label_region, verify_no_logo_overlap
+        caption=verify_label_region(base,font_path)
+        verify_no_logo_overlap(final,caption)
+        self.assertEqual(result["size"],[1080,1350])
+
+
 if __name__ == "__main__":
     unittest.main()
