@@ -58,7 +58,10 @@ class DatedDraftTest(unittest.TestCase):
                 encoding="utf-8",
             )
         (self.root / "orchestration/briefs" / f"{CAMPAIGN}.json").write_text(
-            json.dumps({"prepared_content": {"posts": self.post_texts}}), encoding="utf-8",
+            json.dumps({"brand": "ai-agent-builder", "campaign_id": CAMPAIGN,
+                        "execution_mode": "drafts",
+                        "image_review": f"visual-reviews/{CAMPAIGN}.json",
+                        "prepared_content": {"posts": self.post_texts}}), encoding="utf-8",
         )
         root = mock.patch.object(sender, "ROOT", self.root)
         root.start()
