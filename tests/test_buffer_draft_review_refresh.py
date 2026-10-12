@@ -150,6 +150,20 @@ class BufferLiveReviewRefreshTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "no complete Buffer confirmation"):
                 reader.refresh(self.snapshot, now=self.now)
 
+    def test_read_only_dispatch_workflow_cannot_write_repo_or_publish(self):
+        wf = (Path(__file__).resolve().parents[1]
+              / ".github/workflows/buffer-draft-live-review.yml").read_text(encoding="utf-8")
+        self.assertIn("workflow_dispatch:", wf)
+        self.assertIn("contents: read", wf)
+        self.assertNotIn("contents: write", wf)
+        self.assertNotIn("pull_request:", wf)
+        self.assertNotIn("  push:", wf)
+        self.assertNotIn("gh api -X PUT", wf)
+        self.assertNotIn("gh api -X POST", wf)
+        self.assertIn("scripts/buffer_draft_review_refresh.py", wf)
+        self.assertIn("--verified-report", wf)
+        self.assertIn("workflow_dispatch", wf)
+
     def test_module_contains_no_graphql_mutation(self):
         code = Path(reader.__file__).read_text(encoding="utf-8")
         self.assertNotIn("mutation Create", code)
