@@ -246,16 +246,22 @@ class DatedDraftTest(unittest.TestCase):
         self.assertLess(orchestrator.index("scripts/prepared_brief_preflight.py"),
                         orchestrator.index("python3 scripts/social_orchestrator.py --brief"))
 
-    def test_orchestrator_reconciliation_requires_receipt_and_date_per_channel(self):
+    def test_orchestrator_reconciliation_requires_live_text_image_and_date(self):
         channels = {name: f"channel-{name}" for name in TARGETS}
+        ids = {target: ("%024x" % (i + 1)) for i, target in enumerate(TARGETS)}
+        pinned_image = (
+            "https://raw.githubusercontent.com/derJosef/social-assets/"
+            + "a" * 40 + f"/media/images/{CAMPAIGN}-branded.png"
+        )
         def receipt(token, path):
             target = next(t for t in TARGETS if path == sender.receipt_path(
                 f"ready-for-buffer/auto-{CAMPAIGN}-{t}.json"))
             record = {
                 "draft_file": f"ready-for-buffer/auto-{CAMPAIGN}-{target}.json",
+                "target": target,
                 "state": "verified_prescheduled_draft_not_queued",
                 "due_at_utc": self.times[target]["utc"],
-                "buffer_post_id": POST_ID,
+                "buffer_post_id": ids[target],
                 "channel_id": channels[target],
             }
             return {"content": base64.b64encode(json.dumps(record).encode()).decode()}
@@ -263,16 +269,66 @@ class DatedDraftTest(unittest.TestCase):
         def graphql(token, query, variables):
             target = TARGETS[len(queried)]
             queried.append(target)
-            return {"post": {"id": POST_ID, "channelId": channels[target],
-                             "status": "draft", "dueAt": self.times[target]["utc"]}}
+            self.assertEqual(variables, {"id": ids[target]})
+            self.assertIn("assets { type source }", query)
+            return {"post": {
+                "id": ids[target], "channelId": channels[target],
+                "channelService": target, "status": "draft",
+                "dueAt": self.times[target]["utc"],
+                "text": self.post_texts[target],
+                "assets": [{"type": "image", "source": pinned_image}],
+            }}
         env = {"GITHUB_TOKEN": "synthetic", "BUFFER_API_KEY": "synthetic"}
         with mock.patch.dict(os.environ, env), \
-             mock.patch.object(reconciliation, "planned_due_at", side_effect=lambda path, t: self.times[t]["utc"]), \
+             mock.patch.object(reconciliation, "planned_due_at",
+                               side_effect=lambda path, t: self.times[t]["utc"]), \
+             mock.patch.object(reconciliation, "load_expected",
+                               side_effect=lambda c, t: (self.post_texts[t], pinned_image)), \
              mock.patch.object(reconciliation, "fetch_receipt", side_effect=receipt), \
              mock.patch.object(reconciliation, "buffer_graphql", side_effect=graphql):
             result = reconciliation.verify(CAMPAIGN)
         self.assertEqual(queried, list(TARGETS))
         self.assertEqual(result["linkedin"]["dueAt"], self.due)
+        self.assertEqual(result["facebook"]["post_id"], ids["facebook"])
+        self.assertEqual(result["instagram"]["text"], self.post_texts["instagram"])
+        self.assertTrue(result["linkedin"]["image_attached_in_buffer"])
+        self.assertEqual(result["linkedin"]["buffer_dashboard_url"],
+                         "https://publish.buffer.com")
+        self.assertIsNone(result["linkedin"]["buffer_direct_post_url"])
+        self.assertEqual(result["linkedin"]["status"], "draft")
+        self.assertFalse(result["linkedin"]["published"])
+
+    def test_orchestrator_reconciliation_does_not_accept_changed_buffer_text(self):
+        ids = [("%024x" % i) for i in (1, 2, 3)]
+        def graphql(token, query, variables):
+            target = TARGETS[ids.index(variables["id"])]
+            return {"post": {"id": variables["id"],
+                             "channelId": f"channel-{target}",
+                             "channelService": target, "status": "draft",
+                             "dueAt": self.times[target]["utc"],
+                             "text": "Buffer text was modified before report",
+                             "assets": [{"type": "image", "source":
+                                         "https://example.com/a.png"}]}}
+        def receipt(token, path):
+            target = next(t for t in TARGETS if path == sender.receipt_path(
+                f"ready-for-buffer/auto-{CAMPAIGN}-{t}.json"))
+            rec = {"draft_file": f"ready-for-buffer/auto-{CAMPAIGN}-{target}.json",
+                   "target": target, "state": "verified_prescheduled_draft_not_queued",
+                   "due_at_utc": self.times[target]["utc"],
+                   "buffer_post_id": ids[TARGETS.index(target)],
+                   "channel_id": f"channel-{target}"}
+            return {"content": base64.b64encode(json.dumps(rec).encode()).decode()}
+        env = {"GITHUB_TOKEN": "synthetic", "BUFFER_API_KEY": "synthetic"}
+        with mock.patch.dict(os.environ, env), \
+             mock.patch.object(reconciliation, "planned_due_at",
+                               side_effect=lambda path, t: self.times[t]["utc"]), \
+             mock.patch.object(reconciliation, "load_expected",
+                               side_effect=lambda c, t: (self.post_texts[t],
+                                                        "https://example.com/expected.png")), \
+             mock.patch.object(reconciliation, "fetch_receipt", side_effect=receipt), \
+             mock.patch.object(reconciliation, "buffer_graphql", side_effect=graphql):
+            with self.assertRaisesRegex(RuntimeError, "Buffer text differs"):
+                reconciliation.verify(CAMPAIGN)
 
     def test_orchestrator_reconciliation_rejects_undated_old_receipt(self):
         old = {"state": "draft_created", "draft_file": POST,
