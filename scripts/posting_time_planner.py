@@ -22,19 +22,31 @@ MAX_LOOKAHEAD_DAYS = 35
 MIN_CHANNEL_GAP = timedelta(days=3)
 UTC_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
-# (weekday with Monday = 0, local hour): ranked 2026 engagement benchmarks.
-# Primary source: Buffer platform-level engagement analyses (see docs).
-# Weights prioritize better researched windows but penalize long delays.
+# (weekday with Monday=0, local hour), ranked editorial pilot candidates.
+# Independently checked Buffer AND Sprout Social 2026 data on 2026-10-12.
+# Different source populations disagree, especially Facebook overall;
+# Sprout's Software & Tech segment also supports weekday mornings.
+# These are audience-level hypotheses, not Josef's own engagement statistics.
 SLOTS = {
-    "linkedin": ((2, 16), (4, 15), (3, 17), (1, 16)),
+    "linkedin": ((2, 16), (3, 17), (1, 16), (2, 15)),
     "facebook": ((3, 9), (2, 8), (1, 8), (4, 8)),
-    "instagram": ((2, 18), (3, 9), (2, 12), (1, 19)),
+    "instagram": ((2, 18), (2, 12), (1, 19)),
 }
 
+RESEARCH_CHECKED_AT = date(2026, 10, 12)
 RESEARCH_URLS = {
-    "linkedin": "https://buffer.com/resources/best-time-to-post-on-linkedin/",
-    "facebook": "https://buffer.com/resources/best-time-to-post-on-facebook/",
-    "instagram": "https://buffer.com/resources/when-is-the-best-time-to-post-on-instagram/",
+    "linkedin": (
+        "https://buffer.com/resources/best-time-to-post-on-linkedin/",
+        "https://sproutsocial.com/insights/best-times-to-post-on-linkedin/",
+    ),
+    "facebook": (
+        "https://buffer.com/resources/best-time-to-post-on-facebook/",
+        "https://sproutsocial.com/insights/best-times-to-post-on-facebook/",
+    ),
+    "instagram": (
+        "https://buffer.com/resources/when-is-the-best-time-to-post-on-instagram/",
+        "https://sproutsocial.com/insights/best-times-to-post-on-instagram/",
+    ),
 }
 
 
@@ -98,9 +110,22 @@ def load_reserved(root: Path) -> dict[str, set[datetime]]:
     return reserved
 
 
-def propose_times(today: date, root: Path) -> dict[str, dict[str, str]]:
-    """Return Berlin + UTC times; no reservation files or Buffer calls."""
+def propose_times(
+    today: date, root: Path, *, research_checked_at: date = RESEARCH_CHECKED_AT
+) -> dict[str, dict[str, str]]:
+    """Return Berlin + UTC; stop if independent research is older than 30 days."""
     require(isinstance(today, date) and not isinstance(today, datetime), "today muss Datum sein")
+    require(isinstance(research_checked_at, date)
+            and not isinstance(research_checked_at, datetime)
+            and 0 <= (today - research_checked_at).days <= 30,
+            "Postingzeiten-Recherche aelter als 30 Tage oder aus der Zukunft")
+    require(set(RESEARCH_URLS) == set(TARGETS), "Quellennachweise je Kanal fehlen")
+    for target in TARGETS:
+        references = RESEARCH_URLS[target]
+        require(len(references) >= 2
+                and any("buffer.com/" in uri for uri in references)
+                and any("sproutsocial.com/" in uri for uri in references),
+                f"Zwei unabhängige Postingzeiten-Studien fehlen: {target}")
     earliest = today + timedelta(days=MIN_REVIEW_DAYS)
     cutoff = today + timedelta(days=MAX_LOOKAHEAD_DAYS)
     reserved = load_reserved(root)
