@@ -3,6 +3,28 @@
 **Stand 12.10.2026 – nur Integrationsentwurf [PR #13](https://github.com/derJosef/social-assets/pull/13).**
 Kein PR-Merge, keine produktiven Buffer-Mutationen durch diese Änderung.
 
+## Automatischer Start über den geschützten GitHub-Standardbranch
+
+Nach der Aktivierung schreibt die ChatGPT-Wochenaufgabe keinen neuen
+Brief direkt in das geschützte `main`. Stattdessen legt sie per verbundenem
+GitHub-Connector genau **ein Eigentümer-Issue** mit
+`AIAGENT_BRIEF:YYYY-MM-DD-slug` als Titel und dem vollständigen
+öffentlichen Brief-JSON als Body an. Nur bestätigte `derJosef`-`OWNER`-
+Issues dürfen das Github-`issues: opened`-Ereignis für eine Kampagne
+nutzen. `scripts/issue_brief_intake.py` validiert Identität, JSON,
+Kampagnenkennung, drei vorbereitete Posts und kanonisches Markenformat,
+bevor der vertrauenswürdige Hauptworkflow Bild-/Qualitätsprüfungen
+durchführt. Der Brief wird zusammen mit der entstandenen Kampagne im
+isolierten Output-Branch archiviert, nicht auf `main` zurückgeschrieben.
+Ein Vorab-PR-Merge je Wochenkampagne ist ausdrücklich **nicht** erforderlich.
+
+In einem read-only Identitätstest
+[GitHub-Issue #15](https://github.com/derJosef/social-assets/issues/15)
+wurde bestätigt, dass die verbundene GitHub-App Issues als
+`derJosef` mit `author_association=OWNER` erstellt; das harmlose
+Test-Issue wurde geschlossen. Dies ist noch **kein** Live-Nachweis
+der kompletten GitHub-Issues→Buffer-Pipeline.
+
 ## Was tatsächlich geschieht
 
 Die Wochenkampagne soll automatisiert **drei datierte, aber unveröffentlichte
