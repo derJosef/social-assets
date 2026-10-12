@@ -149,9 +149,12 @@ class WorkflowBoundaryTests(unittest.TestCase):
         orchestrator = (root / ".github/workflows/social-campaign-orchestrator.yml").read_text()
         self.assertIn("git push origin \"HEAD:refs/heads/$branch\"", orchestrator)
         self.assertIn("-f content=\"$content\" -f branch=automation-receipts", orchestrator)
-        self.assertIn("'orchestration/approvals/*.json'", orchestrator)
-        self.assertIn('BRIEF="orchestration/briefs/$(basename "$changed_file")"', orchestrator)
-        self.assertLess(orchestrator.index("--dated-draft"), orchestrator.index("scripts/campaign_reservations.py"))
+        self.assertNotIn("orchestration/approvals/", orchestrator)
+        self.assertIn("'orchestration/briefs/*.json'", orchestrator)
+        self.assertIn("--diff-filter=A", orchestrator)
+        self.assertNotIn("--dated-draft", orchestrator)
+        self.assertLess(orchestrator.index("scripts/prepared_brief_preflight.py"),
+                        orchestrator.index("scripts/campaign_reservations.py"))
         self.assertLess(orchestrator.index("scripts/campaign_reservations.py"), orchestrator.index("scripts/social_orchestrator.py --brief"))
         self.assertLess(orchestrator.index("git push origin \"HEAD:refs/heads/$branch\""),
                         orchestrator.index("python3 scripts/buffer_draft.py --draft"))
