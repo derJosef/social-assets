@@ -209,6 +209,10 @@ def create_source(relative: str, root: Path = ROOT, *,
     topic = brief["topic"]
     encoded = portrait_without_cropping(generate_image(topic, key))
     reviews = [audit_image(encoded, topic, key, i) for i in (1, 2)]
+    require(all(isinstance(audit, dict) and set(audit) == set(FIELDS)
+                and all(audit[field] is True for field in FIELDS)
+                for audit in reviews),
+            "Bildgutachten unvollständig oder beanstandet Menschen/Roboter/Text")
     require(reviews[0] == reviews[1], "Zwei Bildgutachten widersprechen sich")
     src_hash = sha256(encoded)
     spec = {
