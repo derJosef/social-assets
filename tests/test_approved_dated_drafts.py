@@ -1,4 +1,4 @@
-"""Offline tests for the production path enabled ONLY after a protected brief approval.
+"""Offline tests for QA-verified, pre-dated Buffer drafts awaiting Josef review.
 
 There are no GitHub or Buffer network calls in this module.
 """
@@ -13,7 +13,6 @@ from unittest import mock
 from zoneinfo import ZoneInfo
 
 from scripts import buffer_draft as sender
-from scripts import brief_approval_gate as approvals
 from scripts import orchestrator_verify_buffer as reconciliation
 
 
@@ -129,19 +128,34 @@ class DatedDraftTest(unittest.TestCase):
                 self.assertFalse(sender.verified_dated_post({**obj, key: value},
                     post_id=POST_ID, channel_id="li", due_at=self.due))
 
-    def test_local_output_must_match_approved_editorial_text(self):
+    def test_qa_only_then_exact_prepared_copy_without_prior_approval(self):
         import scripts.autonomous_campaign_gate as qa
-        original_read = qa.read_draft
-        with mock.patch.object(qa, "check_campaign", return_value={}), \
-             mock.patch.object(approvals, "authorize_draft", return_value={"approved_pr": 42}):
-            self.assertEqual(sender.authorize_auto_dated_draft(POST), {"approved_pr": 42})
+        fake_evidence = {"status": "eligible_for_draft_only", "campaign": CAMPAIGN,
+                         "targets": list(TARGETS), "image_sha256": "a" * 64}
+        with mock.patch.object(qa, "check_campaign", return_value=fake_evidence) as gate:
+            evidence = sender.authorize_auto_dated_draft(POST)
+            self.assertEqual(evidence["quality_gate"], "passed")
+            self.assertEqual(evidence["image_sha256"], "a" * 64)
+            gate.assert_called_once()
             changed = self.root / POST
-            changed.write_text(json.dumps({"format_version":1,"target":"linkedin","text":"Unapproved change"}))
-            with self.assertRaisesRegex(RuntimeError, "weicht"):
+            changed.write_text(json.dumps({"format_version":1,"target":"linkedin",
+                                           "text":"Changed without regenerated brief"}))
+            with self.assertRaisesRegex(RuntimeError, "vorbereiteten"):
                 sender.authorize_auto_dated_draft(POST)
-        self.assertIs(qa.read_draft, original_read)
 
-    def run_send(self, *, response_post=None, read_post=None, exists=None, approval_error=None):
+    def test_missing_full_campaign_quality_blocks_without_personal_approval(self):
+        import scripts.autonomous_campaign_gate as qa
+        with mock.patch.object(qa, "check_campaign", side_effect=ValueError("image QA missing")):
+            with self.assertRaisesRegex(ValueError, "image QA missing"):
+                sender.authorize_auto_dated_draft(POST)
+
+    def test_incomplete_quality_evidence_is_not_an_authorization(self):
+        import scripts.autonomous_campaign_gate as qa
+        with mock.patch.object(qa, "check_campaign", return_value={"campaign": CAMPAIGN}):
+            with self.assertRaisesRegex(RuntimeError, "Qualitätsnachweis"):
+                sender.authorize_auto_dated_draft(POST)
+
+    def run_send(self, *, response_post=None, read_post=None, exists=None, quality_error=None):
         _, text, raw = sender.read_draft(POST)
         default = {"id": POST_ID, "channelId": "li-channel", "status": "draft", "dueAt": self.due}
         created = response_post if response_post is not None else default
@@ -153,16 +167,16 @@ class DatedDraftTest(unittest.TestCase):
             return ("sha-one", "sha-two", "sha-three")[len(saved_records) - 1]
         receipt_put = mock.Mock(side_effect=save_receipt)
         receipt_put.saved_records = saved_records
-        approved = mock.Mock(return_value={"approved_pr": 42})
-        if approval_error is not None:
-            approved.side_effect = approval_error
+        quality_gate = mock.Mock(return_value={"quality_gate": "passed"})
+        if quality_error is not None:
+            quality_gate.side_effect = quality_error
         env = {
             "GITHUB_REPOSITORY": sender.REPOSITORY, "GITHUB_REF": "refs/heads/main",
             "GITHUB_TOKEN": "synthetic-gh", "BUFFER_API_KEY": "synthetic-buffer",
             "GITHUB_RUN_ID": "9999",
         }
         with mock.patch.dict(os.environ, env), \
-             mock.patch.object(sender, "authorize_auto_dated_draft", approved), \
+             mock.patch.object(sender, "authorize_auto_dated_draft", quality_gate), \
              mock.patch.object(sender, "resolve_channel", return_value="li-channel"), \
              mock.patch.object(sender, "fetch_receipt", return_value=exists), \
              mock.patch.object(sender, "put_receipt", receipt_put), \
@@ -172,10 +186,10 @@ class DatedDraftTest(unittest.TestCase):
                 error = None
             except (RuntimeError, ValueError) as exc:
                 error = str(exc)
-        return graph, receipt_put, approved, error
+        return graph, receipt_put, quality_gate, error
 
     def test_success_uses_one_create_and_readback_after_reservation(self):
-        graph, receipts, approval, error = self.run_send()
+        graph, receipts, quality_gate, error = self.run_send()
         self.assertIsNone(error)
         self.assertEqual(graph.call_count, 2)
         self.assertEqual(graph.call_args_list[0].args[1], sender.CREATE_DATED_DRAFT)
@@ -185,7 +199,9 @@ class DatedDraftTest(unittest.TestCase):
         self.assertEqual(receipts.saved_records[0]["state"], "pending_manual_reconciliation_on_failure")
         self.assertEqual(receipts.saved_records[1]["state"], "created_requires_independent_check")
         self.assertEqual(receipts.saved_records[2]["state"], "verified_prescheduled_draft_not_queued")
-        approval.assert_called_once_with(POST)
+        quality_gate.assert_called_once_with(POST)
+        self.assertEqual(receipts.saved_records[0]["campaign_quality"], {"quality_gate": "passed"})
+        self.assertNotIn("brief_approval", receipts.saved_records[0])
 
     def test_wrong_create_status_raises_alarm_and_never_retries(self):
         scheduled = {"id": POST_ID, "channelId": "li-channel", "status": "scheduled", "dueAt": self.due}
@@ -207,9 +223,9 @@ class DatedDraftTest(unittest.TestCase):
         self.assertEqual(graph.call_count, 0)
         self.assertEqual(receipts.call_count, 0)
 
-    def test_unapproved_brief_blocks_before_buffer_and_github_receipt(self):
-        graph, receipts, _, error = self.run_send(approval_error=ValueError("brief not approved"))
-        self.assertIn("brief not approved", error)
+    def test_failed_quality_gate_blocks_before_buffer_and_github_receipt(self):
+        graph, receipts, _, error = self.run_send(quality_error=ValueError("campaign QA failed"))
+        self.assertIn("campaign QA failed", error)
         self.assertEqual(graph.call_count, 0)
         self.assertEqual(receipts.call_count, 0)
 
@@ -221,8 +237,10 @@ class DatedDraftTest(unittest.TestCase):
         self.assertIn("scripts/buffer_draft.py --draft", manual)
         self.assertIn("scripts/buffer_draft.py --draft", automatic)
         self.assertIn("scripts/buffer_draft.py --draft", orchestrator)
-        self.assertIn("--dated-draft", orchestrator)
-        self.assertLess(orchestrator.index("--dated-draft"),
+        self.assertNotIn("--dated-draft", orchestrator)
+        self.assertNotIn("orchestration/approvals/", orchestrator)
+        self.assertIn("scripts/prepared_brief_preflight.py", orchestrator)
+        self.assertLess(orchestrator.index("scripts/prepared_brief_preflight.py"),
                         orchestrator.index("python3 scripts/social_orchestrator.py --brief"))
 
     def test_orchestrator_reconciliation_requires_receipt_and_date_per_channel(self):
