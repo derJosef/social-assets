@@ -21,8 +21,9 @@ verbundenen GitHub-App **genau ein neues Issue** an:
   bestehenden vollständigen `orchestration/briefs/YYYY-MM-DD-slug.json`-
   Schema (`format_version: 1`, Marke `ai-agent-builder`,
   `execution_mode: drafts`, mindestens zwei unabhängige Inhaltsquellen und sechs Postingzeit-Quellen,
-  `image_review: visual-reviews/<slug>.json`, alle drei
-  `prepared_content.posts`, sechs Hüte und die Bild-/Risikokonzeption).
+  `image_review: visual-reviews/<slug>.json`, alle drei `prepared_content.posts` (je Kanal 250 bis 3.000 Zeichen,
+  Instagram maximal 2.200), `prepared_content.visual=null`,
+  sechs vollständige Hüte und `prepared_content.risks`).
   **Kein Markdown-Codeblock** und keine persönlichen oder geheimen Daten.
 - Das GitHub-`issues: opened`-Ereignis startet GitHub Actions mit dem
   **vertrauenswürdigen Workflow-Code auf dem geschützten Default-Branch
