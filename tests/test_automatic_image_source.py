@@ -69,7 +69,7 @@ class AutomaticDraftImageTests(unittest.TestCase):
         with Image.open(io.BytesIO(out)) as im:
             self.assertEqual(im.size, (1080, 1350))
             self.assertEqual(im.format, "PNG")
-            self.assertNotEqual(im.getpixel((540, 675)), (7, 17, 31))
+            self.assertNotEqual(im.getpixel((540, 550)), (7, 17, 31))
 
     def test_missing_api_credential_blocks_before_image_call(self):
         with mock.patch.object(automatic, "generate_image", side_effect=AssertionError("No network")):
@@ -109,7 +109,7 @@ class AutomaticDraftImageTests(unittest.TestCase):
     def test_invalid_campaign_or_brand_rejected(self):
         self.data["brand"] = "picturefix"
         (self.root / BRIEF).write_text(json.dumps(self.data))
-        with self.assertRaisesRegex(automatic.ImageSourceBlocked, "AI Agent"):
+        with self.assertRaisesRegex(automatic.ImageSourceBlocked, "eindeutigen Draft-Brief"):
             automatic.load_request(BRIEF, self.root)
         self.data["brand"] = "ai-agent-builder"
         self.data["execution_mode"] = "smoke"
