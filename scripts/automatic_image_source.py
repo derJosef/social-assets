@@ -235,7 +235,10 @@ def create_source(relative: str, root: Path = ROOT, *,
     with source.open("xb") as out:
         out.write(encoded)
     try:
-        from social_portfolio_scene import validate_spec
+        if __package__:
+            from .social_portfolio_scene import validate_spec
+        else:
+            from social_portfolio_scene import validate_spec
         validate_spec(spec, root.resolve())
         with review_path.open("x", encoding="utf-8") as out:
             json.dump(spec, out, ensure_ascii=False, indent=2)
