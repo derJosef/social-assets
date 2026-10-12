@@ -13,6 +13,8 @@ on:
       - 'scripts/autonomous_campaign_gate.py'
       - 'scripts/buffer_draft.py'
       - 'scripts/orchestrator_verify_buffer.py'
+      - 'scripts/production_activation_guard.py'
+      - 'tests/test_production_activation_guard.py'
       - 'scripts/social_weekly_review.py'
       - 'scripts/buffer_draft_review_refresh.py'
       - 'tests/test_buffer_draft_review_refresh.py'
