@@ -50,8 +50,8 @@ class PostingTimePlannerTests(unittest.TestCase):
         file = self.root / "ready-to-schedule/prior.json"
         file.write_text(before)
         result = self.propose()
-        # A nearby, research-supported Friday slot avoids the booked Wednesday.
-        self.assertEqual(result["linkedin"]["local"], "2026-10-16T15:00:00+02:00")
+        # The next unreserved Wednesday fits both independent studies.
+        self.assertEqual(result["linkedin"]["local"], "2026-10-28T16:00:00+01:00")
         self.assertEqual(file.read_text(), before)
 
     def test_manifest_proposals_also_reserve_times(self):
@@ -77,7 +77,8 @@ class PostingTimePlannerTests(unittest.TestCase):
             self.assertEqual(utc.astimezone(ZoneInfo("Europe/Berlin")), local)
 
     def test_daylight_saving_summer(self):
-        result = self.propose(date(2027, 3, 23))
+        result = planner.propose_times(date(2027, 3, 23), self.root,
+                                       research_checked_at=date(2027, 3, 22))
         self.assertTrue(all("+02:00" in item["local"] for item in result.values()))
 
     def test_every_slot_has_five_day_review_lead_and_max_35_days(self):
@@ -113,6 +114,22 @@ class PostingTimePlannerTests(unittest.TestCase):
     def test_cannot_accept_datetime_as_today(self):
         with self.assertRaisesRegex(planner.TimePlanningBlocked, "Datum"):
             planner.propose_times(datetime(2026, 10, 11, tzinfo=timezone.utc), self.root)
+
+    def test_two_independent_studies_are_recorded_per_channel(self):
+        for target in planner.TARGETS:
+            urls = planner.RESEARCH_URLS[target]
+            self.assertEqual(len(urls), 2)
+            self.assertTrue(any("buffer.com" in url for url in urls))
+            self.assertTrue(any("sproutsocial.com" in url for url in urls))
+        self.assertEqual(planner.RESEARCH_CHECKED_AT, date(2026, 10, 12))
+        self.assertEqual(planner.SLOTS["linkedin"][0], (2, 16))
+        self.assertEqual(planner.SLOTS["instagram"][0], (2, 18))
+
+    def test_research_older_than_thirty_days_blocks_before_planning(self):
+        with self.assertRaisesRegex(planner.TimePlanningBlocked, "30 Tage"):
+            planner.propose_times(date(2026, 11, 12), self.root)
+        with self.assertRaisesRegex(planner.TimePlanningBlocked, "aus der Zukunft"):
+            planner.propose_times(date(2026, 10, 11), self.root)
 
     def test_no_writes_or_network_imports(self):
         before = sorted(p.relative_to(self.root) for p in self.root.rglob("*") if p.is_file())
