@@ -15,11 +15,21 @@ Buffer-Drafts frei, nicht den vorbereitenden Brief.
 | Delivery-Receipts und Kampagnen-Reports | `automation-receipts`-Branch | niemals blind erneut senden; `pending` verhindert Duplikate |
 | Finale Entscheidung zur Veröffentlichung | Josef nach ChatGPT-/Buffer-Draft-Ansicht | keine vorherige Brief-SHA-Freigabe; keine Bot-Queue ohne konkrete finale Freigabe |
 
-Der Orchestrator läuft aus `main`, prüft die neue
-`orchestration/briefs/*.json` durch `prepared_brief_preflight.py` und
-erstellt nur nach inhaltlichen und technischen Gates die drei datierten
-Buffer-Drafts. Änderungen bestehender Brief-Dateien und alte
-`orchestration/approvals/*.json` starten keine erneute automatische Kampagne.
+Der Orchestrator läuft aus geschütztem `main` und bietet nun einen
+**vollständig automatischen Owner-Issue-Eingang**, der ohne wöchentlichen
+Brief-Merge auskommt: ChatGPT erstellt genau ein neues Issue
+`AIAGENT_BRIEF:YYYY-MM-DD-slug` als Eigentümer `derJosef`, der GitHub-
+`issues: opened`-Trigger verwendet den vertrauenswürdigen Code auf
+`main`, und `issue_brief_intake.py` schreibt den strikt geprüften
+JSON-Brief nur lokal im Runner. Der Original-Brief wird im isolierten
+Kampagnen-Branch archiviert. Kein öffentlicher Fremd-Issue darf einen
+Draft-Prozess starten. Der zuvor bestehende Pfad über neue
+`orchestration/briefs/*.json`-Dateien auf `main` bleibt als manuelle
+PR-Alternative erhalten, ist aber **nicht** der autonome Wochenweg.
+`prepared_brief_preflight.py` und volle fachliche, technische und
+bildseitige QA bleiben verpflichtend. Änderungen bestehender Briefe,
+Issues und alte `orchestration/approvals/*.json` starten keine erneute
+automatische Kampagne.
 Das historische `brief_approval_gate.py` ist kein produktives Draft-Gate mehr.
 Die fachliche Qualitätsprüfung liegt unmittelbar vor Buffer nochmals im
 gemeinsamen Sender `buffer_draft.py`; dies schützt alle drei Einstiegspfade.
