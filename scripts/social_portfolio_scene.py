@@ -51,7 +51,8 @@ def validate_spec(spec: dict, root: Path) -> Path:
         "heading", "visual_review", "review_evidence"
     }
     if not isinstance(spec, dict) or set(spec) not in (
-        legacy_fields, legacy_fields | {"person_approval_evidence"}
+        legacy_fields, legacy_fields | {"person_approval_evidence"},
+        legacy_fields | {"automated_review"},
     ):
         raise InvalidScene("Exact version-1 scene specification required")
     if spec["format_version"] != 1 or spec["brand"] != "ai-agent-builder":
@@ -100,7 +101,31 @@ def validate_spec(spec: dict, root: Path) -> Path:
             raise InvalidScene("Person approval may not be invented for a person-free scene")
     evidence = spec["review_evidence"]
     if not isinstance(evidence, str) or len(evidence.strip()) < 15:
-        raise InvalidScene("Independent manual review evidence is required")
+        raise InvalidScene("Traceable visual review evidence is required")
+    auto = spec.get("automated_review")
+    if auto is not None:
+        # Machine review is ONLY provisional and permitted for Buffer drafts,
+        # never a substitute for Josefs final visual publication approval.
+        if not isinstance(auto, dict) or set(auto) != {
+            "kind", "generator", "auditor", "source_sha256", "prompt_sha256",
+            "reviewed_at", "checks",
+        }:
+            raise InvalidScene("Incomplete automated draft-only review record")
+        if (auto["kind"] != "machine_draft_only"
+                or auto["generator"] != "gpt-image-1.5"
+                or auto["auditor"] != "gpt-4.1-mini"
+                or auto["source_sha256"] != spec["source_sha256"]
+                or not isinstance(auto["prompt_sha256"], str)
+                or not re.fullmatch(r"[a-f0-9]{64}", auto["prompt_sha256"])
+                or not isinstance(auto["reviewed_at"], str)
+                or not re.match(r"20[0-9]{2}-[0-9]{2}-[0-9]{2}T", auto["reviewed_at"])
+                or not isinstance(auto["checks"], list) or len(auto["checks"]) != 2
+                or any(not isinstance(check, dict) or set(check) != set(REVIEW_KEYS)
+                       or any(check[k] is not True for k in REVIEW_KEYS)
+                       for check in auto["checks"])):
+            raise InvalidScene("Automated visual checks incomplete or inconsistent")
+        if person_review or review["no_people"] is not True or "NOT a human" not in evidence:
+            raise InvalidScene("Automated scene must have no people and no invented manual review")
     source_path = (root / source).resolve()
     if not source_path.is_relative_to(root.resolve()) or not source_path.is_file():
         raise InvalidScene("Source file missing or outside asset repository")
@@ -205,7 +230,9 @@ def build(spec_path: Path, root: Path, base: Path, final: Path,
                  "--frame", "on", "--margin-ratio", "0.05", "--stroke-ratio", "0.03")
             call("verify", final, base, "--original", logo)
             qa = {"profile": "logo_only", "validator": "personalos_canonical",
-                  "logo_verified": True, "source_visual_review": "manual",
+                  "logo_verified": True,
+                  "source_visual_review": ("machine_draft_only"
+                                           if "automated_review" in spec else "manual"),
                   "review_evidence": spec["review_evidence"]}
         else:
             if bbox is None:
