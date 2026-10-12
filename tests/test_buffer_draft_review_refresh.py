@@ -8,7 +8,7 @@ from pathlib import Path
 from unittest import mock
 
 from scripts import buffer_draft_review_refresh as reader
-from tests.test_social_weekly_review import example_report
+from test_social_weekly_review import example_report
 
 
 class BufferLiveReviewRefreshTests(unittest.TestCase):
