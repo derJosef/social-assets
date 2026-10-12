@@ -92,6 +92,16 @@ jobs:
           echo "RUN_MODE=$MODE" >> "$GITHUB_ENV"
           echo "CAMPAIGN=$CAMPAIGN" >> "$GITHUB_ENV"
 
+      - name: Protected main und geschützt schreibbaren Receipt-Ledger vor Live-Drafts prüfen
+        if: steps.request.outputs.mode == 'drafts'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/production_activation_guard.py
+          echo "GitHub-Schutz für main und Receipt-Branch bestätigt; keine Queue-/Publish-Freigabe." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Kampagnen-Duplikat VOR kostenpflichtiger Bildgenerierung ausschließen
         if: steps.request.outputs.mode == 'drafts'
         shell: bash
