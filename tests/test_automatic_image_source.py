@@ -64,6 +64,31 @@ class AutomaticDraftImageTests(unittest.TestCase):
         with Image.open(src) as im:
             self.assertEqual(im.size, (1080, 1350))
 
+    def test_offline_full_source_to_original_logo_4x5_image(self):
+        """A synthetic image must actually pass the canonical compositor."""
+        import shutil
+        repo = Path(__file__).resolve().parents[1]
+        logo = self.root / "media/brand/logo-pauderer-original.png"
+        logo.parent.mkdir(parents=True)
+        shutil.copy2(repo / "media/brand/logo-pauderer-original.png", logo)
+        script = self.root / "scripts/logo_composite.py"
+        script.parent.mkdir(parents=True)
+        shutil.copy2(repo / "scripts/logo_composite.py", script)
+        with mock.patch.object(automatic, "generate_image", return_value=self.original), \\
+             mock.patch.object(automatic, "audit_image",
+                               return_value={name: True for name in automatic.FIELDS}):
+            automatic.create_source(BRIEF, self.root, api_key="synthetic")
+        result = scene.build(self.root / REVIEW, self.root,
+                             self.root / f"media/source-images/{CID}-base.png",
+                             self.root / f"media/images/{CID}-branded.png",
+                             Path("/tmp/Inter.ttf"), logo)
+        self.assertEqual(result["size"], [1080, 1350])
+        self.assertEqual(result["logo_qa"]["source_visual_review"],
+                         "machine_draft_only")
+        self.assertEqual(result["ai_disclosure"]["required"], False)
+        self.assertEqual(result["sha256"],
+                         hashlib.sha256((self.root / f"media/images/{CID}-branded.png").read_bytes()).hexdigest())
+
     def test_no_crop_output_preserves_all_central_frame(self):
         out = automatic.portrait_without_cropping(self.original)
         with Image.open(io.BytesIO(out)) as im:
