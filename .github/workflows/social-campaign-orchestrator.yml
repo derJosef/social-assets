@@ -1,6 +1,8 @@
 name: AI Agent Builder – Recherche bis geprüfter Buffer-Entwurf
 
 on:
+  issues:
+    types: [opened]
   push:
     branches: [main]
     paths:
@@ -20,6 +22,7 @@ on:
 
 permissions:
   contents: write
+  issues: read
 
 concurrency:
   group: social-campaign-orchestrator
@@ -28,6 +31,16 @@ concurrency:
 jobs:
   orchestrate:
     name: Research → QA → Original-Logo → Buffer Drafts (or safe stop)
+    # Issue events run only on DEFAULT BRANCH workflow code. The public body
+    # is data, never an instruction; only the confirmed owner may trigger.
+    if: >-
+      ${{
+        github.event_name != 'issues' ||
+        (github.event.action == 'opened' &&
+         github.event.issue.user.login == 'derJosef' &&
+         github.event.issue.author_association == 'OWNER' &&
+         startsWith(github.event.issue.title, 'AIAGENT_BRIEF:'))
+      }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
 
@@ -63,7 +76,17 @@ jobs:
           INPUT_MODE: ${{ inputs.mode }}
         run: |
           set -euo pipefail
-          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+          if [[ "$EVENT_NAME" == "issues" ]]; then
+            # GitHub server-authenticated issue event; never run body as shell.
+            python3 scripts/issue_brief_intake.py --event "$GITHUB_EVENT_PATH"
+            BRIEF="$(python3 - "$GITHUB_EVENT_PATH" <<'PY'
+          import json,sys
+          with open(sys.argv[1],encoding='utf-8') as f: issue=json.load(f)['issue']
+          print('orchestration/briefs/'+issue['title'].split(':',1)[1]+'.json')
+          PY
+          )"
+            MODE="drafts"
+          elif [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             BRIEF="$INPUT_BRIEF"
             MODE="$INPUT_MODE"
           else
@@ -203,6 +226,16 @@ jobs:
             "ready-for-buffer/auto-$CAMPAIGN-linkedin.json" \
             "ready-for-buffer/auto-$CAMPAIGN-facebook.json" \
             "ready-for-buffer/auto-$CAMPAIGN-instagram.json"
+          expected_post_count=5
+          if [[ "$GITHUB_EVENT_NAME" == "issues" ]]; then
+            # Owner-authored brief must be auditable alongside generated media
+            # on output branch; NEVER copied to protected main.
+            ! git ls-files --error-unmatch "$BRIEF" >/dev/null 2>&1 || {
+              echo "Issue-Brief darf nicht bereits in main sein." >&2; exit 1;
+            }
+            git add -- "$BRIEF"
+            expected_post_count=6
+          fi
           git add -- \
             "campaign-manifests/$CAMPAIGN.json" \
             "drafts/$CAMPAIGN-plan.md" \
@@ -210,14 +243,14 @@ jobs:
             "ready-for-buffer/auto-$CAMPAIGN-facebook.json" \
             "ready-for-buffer/auto-$CAMPAIGN-instagram.json"
           count="$(git diff --cached --name-only | wc -l)"
-          [[ "$count" -eq 5 ]] || { echo "Fünf weitere Kampagnendateien erforderlich; gefunden: $count" >&2; exit 1; }
+          [[ "$count" -eq "$expected_post_count" ]] || { echo "Falsche Anzahl Kampagnendateien: $count statt $expected_post_count" >&2; exit 1; }
           if git diff --cached --name-status | grep -v '^A[[:space:]]'; then
             echo 'Bestehende Dateien dürfen nicht geändert werden' >&2
             exit 1
           fi
           git commit -m "campaign: immutable media and verified draft package $CAMPAIGN"
           git push origin "HEAD:refs/heads/$branch"
-          echo "$((expected + 5)) neue Kampagnendateien nur auf $branch (nicht main); Medien per Bild-Commit $image_commit fixiert." >> "$GITHUB_STEP_SUMMARY"
+          echo "$((expected + expected_post_count)) neue Kampagnendateien nur auf $branch (nicht main); Medien per Bild-Commit $image_commit fixiert." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Vorbereitete Beiträge ohne Fremdtrigger DIREKT als Drafts senden
         if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
