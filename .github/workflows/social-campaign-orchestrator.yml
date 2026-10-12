@@ -266,12 +266,24 @@ jobs:
               json.dump(data,f,ensure_ascii=False,indent=2);f.write("\n")
           print(f"Report status: {data.get('state')}, job={data['job_status']}")
           PY
+          # Read-only report rendering; unverified or partial runs say BLOCKED,
+          # never emit a fictitious Buffer post link or an approval claim.
+          python3 scripts/social_weekly_review.py \
+            --report /tmp/social-final-report/receipt.json \
+            --markdown /tmp/social-final-report/review.md
           file="orchestration/reports/${REQUEST_CAMPAIGN:-preflight}-run-${GITHUB_RUN_ID}.json"
+          review_file="orchestration/reports/${REQUEST_CAMPAIGN:-preflight}-run-${GITHUB_RUN_ID}.md"
           content="$(base64 -w0 /tmp/social-final-report/receipt.json)"
           gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$file" \
             -f message="audit: orchestration run $GITHUB_RUN_ID" \
             -f content="$content" -f branch=automation-receipts > /dev/null
+          markdown_content="$(base64 -w0 /tmp/social-final-report/review.md)"
+          gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$review_file" \
+            -f message="review: Buffer draft snapshot run $GITHUB_RUN_ID" \
+            -f content="$markdown_content" -f branch=automation-receipts > /dev/null
           echo "Prüfbericht: https://github.com/$GITHUB_REPOSITORY/blob/automation-receipts/$file" >> "$GITHUB_STEP_SUMMARY"
+          echo "Wochenkampagne zur Sichtprüfung: https://github.com/$GITHUB_REPOSITORY/blob/automation-receipts/$review_file" >> "$GITHUB_STEP_SUMMARY"
+          echo "Hinweis: Buffer-Links führen zunächst zum Dashboard. Post-ID ist eindeutiger Identifikator, kein erfundener Deep Link." >> "$GITHUB_STEP_SUMMARY"
           echo "Buffer-Publikation wurde durch diesen Workflow nie aktiviert." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Zusätzliche Artefakt-Sicherung bei fehlgeschlagenem GitHub-Report
@@ -282,5 +294,6 @@ jobs:
           path: |
             ${{ runner.temp }}/social-orchestrator-report.json
             /tmp/social-final-report/receipt.json
+            /tmp/social-final-report/review.md
           if-no-files-found: warn
           retention-days: 30
