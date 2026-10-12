@@ -1,87 +1,102 @@
-# Social-Media-Zeitfenster 2026 – geprüfte Vorschläge, kein Scheduling
+# Postingzeiten 2026: zwei unabhängige Studien je Kanal
 
-**Status:** Review-Entwurf. Diese Regel wählt ausschließlich Datum und Uhrzeit
-für `campaign-manifests/<kampagne>.json::posting_times` und den lesbaren
-Kampagnenplan. Sie ruft Buffer nicht auf und berechtigt weder einen Draft-Transfer
-noch einen Wechsel auf `scheduled`.
+**Stand: 12. Oktober 2026.** Gilt für den Entwurfszeitplan der
+AI-Agent-Builder-Wochenkampagne. Das Modul `scripts/posting_time_planner.py`
+berechnet Uhrzeit und Datum in Europe/Berlin und UTC. Es ruft keine Buffer-API
+auf und berechtigt keinesfalls zur Veröffentlichung.
 
-## Was die bisherige Zeitwahl auf `main` nicht abdeckt
+## Tatsächliche Quellen und Messbasis
 
-Die bisherige Orchestrierung verwendet unveränderliche Wochentage und verschiebt
-eine **komplette neue Kampagne** immer hinter das letzte Datum aller bereits
-geplanten Kampagnen, zusätzlich um sieben Tage. Damit können Beiträge trotz
-freier geeigneter Zeitfenster wochenlang hinter andere Entwürfe rutschen.
-Insbesondere berücksichtigt sie die `ready-to-schedule/`-Anfragen nicht.
-
-## Belegbasis und vorläufige Prioritäten
-
-Die Plattformauswertungen von Buffer sind allgemeine Engagement-Benchmarks,
-**keine** Leistungsprognose für Josef Pauderers eigenes B2B-Publikum.
-
-| Plattform | Bevorzugte Start-Slots (Europe/Berlin) | Datenbasis |
+| Kanal | Buffer-Studie (herausgegeben / Datensatz) | Sprout-Social-Studie (herausgegeben / Datensatz) |
 | --- | --- | --- |
-| LinkedIn | Mittwoch 16 Uhr; danach Freitag 15, Donnerstag 17, Dienstag 16 | [Buffer, Sept. 2026, 4,8 Mio. Beiträge](https://buffer.com/resources/best-time-to-post-on-linkedin/) |
-| Facebook | Donnerstag 09 Uhr; danach Mittwoch 08, Dienstag 08, Freitag 08 | [Buffer, 2026, 14 Mio. Beiträge](https://buffer.com/resources/best-time-to-post-on-facebook/) |
-| Instagram | Mittwoch 18 Uhr; danach Donnerstag 09, Mittwoch 12, Dienstag 19 | [Buffer, Sept. 2026, 9,6 Mio. Beiträge](https://buffer.com/resources/when-is-the-best-time-to-post-on-instagram/) |
+| LinkedIn | [Buffer, 09.09.2026](https://buffer.com/resources/best-time-to-post-on-linkedin/): 4,8 Mio. Beiträge; lokale Engagement-Zeiten | [Sprout, 31.03.2026](https://sproutsocial.com/insights/best-times-to-post-on-linkedin/): Teil der ca. 2 Mrd. Interaktionen / 307.000 Profile, Messzeitraum 27.11.2025–27.02.2026 |
+| Facebook | [Buffer, 26.02.2026](https://buffer.com/resources/best-time-to-post-on-facebook/): 14 Mio. Beiträge | [Sprout, 31.03.2026](https://sproutsocial.com/insights/best-times-to-post-on-facebook/): gleiche unabhängige Sprout-Stichprobe; zusätzlich branchenspezifisch Software & Tech |
+| Instagram | [Buffer, 23.09.2026](https://buffer.com/resources/when-is-the-best-time-to-post-on-instagram/): 9,6 Mio. Beiträge, 200.000+ Accounts, Messzeitraum 01/2024–12/2025 | [Sprout, 31.03.2026](https://sproutsocial.com/insights/best-times-to-post-on-instagram/): Teil der ca. 2 Mrd. Interaktionen / 307.000 Profile, Messzeitraum 27.11.2025–27.02.2026 |
 
-Die sekundären Slots dienen als pragmatische Alternativen aus denselben Studien.
-Diese Reihenfolge ist eine **redaktionelle Heuristik** und keine mathematisch
-ermittelte Rangfolge einer individuellen Kanalanalyse. Vor dem produktiven
-Einsatz soll sie mit eigenen Reichweiten- und Interaktionsdaten abgeglichen
-werden, soweit diese verfügbar und zulässig sind. Quellen/Studien können
-altern; eine neue Studie erfordert eine bewusste Code-/Testanpassung.
+**Unabhängigkeit:** Buffer wertet über Buffer gesendete Beiträge aus,
+Sprout Social die Profile/Interaktionen seiner eigenen Kunden. Diese
+Populationen, Messgrößen und Erhebungszeiträume sind nicht identisch;
+die Prozent- oder Engagementwerte dürfen nicht unmittelbar gleichgesetzt
+werden. Beide Anbieter formulieren ihre Zeitfenster in **lokaler Zeit**.
 
-## Auswahlregel
+**Aktualitätsprüfung:** Originalseiten am 12.10.2026 direkt geöffnet und
+inhaltlich geprüft. Die Recherche ist spätestens nach 30 Tagen neu
+abzugleichen (**11.11.2026**). Das Programm stoppt bei älteren Daten
+absichtlich fail-closed, statt still veraltete Spitzenzeiten als
+aktuell auszugeben. Kein automatischer erneuter Abruf oder Änderung von
+Dateien wird durch einen Testlauf vorgetäuscht.
 
-1. Beginne mindestens **fünf Kalendertage** nach Erstellung als Vorlauf für
-   die menschliche Brief- und spätere Veröffentlichungsfreigabe.
-2. Betrachte höchstens die folgenden **35 Tage**. Falls nichts frei ist,
-   stoppe mit Fehlermeldung statt beliebig weit vorzudatieren.
-3. Prüfe die Zeitvorschläge jeder Plattform **unabhängig**, statt alle drei
-   Kanäle gemeinsam um Wochen zu verzögern.
-4. Blockiere pro Kanal Zeitfenster innerhalb von **72 Stunden** um vorhandene
-   `campaign-manifests/`-Vorschläge und um `ready-to-schedule/`-Anfragen.
-   Die Quellen werden read-only und fail-closed gelesen. Ein GitHub-Dokument
-   ist kein Nachweis für den aktuellen Buffer-Status.
-5. Suche im freien Kandidatenraum den besten Wert aus
-   `8 × Slot-Rang + Kalendertage seit frühestem erlaubtem Tag`.
-   Dadurch ist ein besserer Slot einige Tage später oft sinnvoll, aber es
-   entsteht keine Wartezeit von vielen Wochen nur wegen eines Top-Slots.
-6. Speichere Berliner Ortszeit mit tatsächlichem MEZ/MESZ-Offset und die
-   exakte UTC-Zeit im **unveränderten bisherigen Manifest-Schema**.
+## Fachlicher Abgleich statt Scheingenauigkeit
 
-Diese Zahlen sind überprüfbare Erstvorgaben für eine sichere Vorschau, keine
-von Josef bereits gebilligte Marketingstrategie. Das Script ändert keine
-bestehenden Manifeste und reserviert keine Termine durch einen GitHub-Commit.
+**LinkedIn:** Buffer beobachtet stärkere spätere Slots, vor allem
+Mittwoch 16 Uhr, Donnerstag 17 Uhr und Dienstag 16 Uhr. Sprout findet
+Dienstag bis Donnerstag überwiegend 11–17 Uhr. Die Schnittmenge unterstützt
+Mittwoch 16, Donnerstag 17, Dienstag 16 und Mittwoch 15 Uhr. Buffer bewertet
+Freitag 15 Uhr gut, Sprout hält Freitag vornehmlich 11 und 13–14 Uhr für
+stark; der strittige Freitagsslot wurde deshalb nicht übernommen.
 
-## Beispiele, nur offline
+**Facebook:** Die Gesamtmarktstudien widersprechen sich:
+Buffer bevorzugt insbesondere Donnerstag 9 Uhr und Werktagsmorgende
+(6–11 Uhr), Sprout insgesamt Dienstag/Mittwoch 12–20 Uhr. Für die hier
+angenommene **B2B-/Software-&-Tech-Zielgruppe** zeigt Sprouts
+branchenspezifische Aufschlüsselung jedoch Dienstag 7–11 Uhr, Mittwoch
+8–11 Uhr sowie Donnerstag/Freitag 7–10 Uhr. Als bewusst
+**branchenspezifische Pilot-Hypothese** bleiben Donnerstag 9,
+Mittwoch 8, Dienstag 8, Freitag 8 Uhr. Es gibt keine statistische
+Sicherheit, dass Josefs Facebook-Follower diesen Mustern entsprechen.
 
-Ausgehend vom 11.10.2026 ohne belegte Buchungen wäre der Vorschlag etwa:
+**Instagram:** Buffer bevorzugt Donnerstag 9, Mittwoch 12 und 18 Uhr;
+Sprout zeigt höhere Gesamt-Engagementfenster Mittwoch 12–21 Uhr,
+Dienstag 13–19 Uhr, Donnerstag 12–14 Uhr. Die robuste Schnittmenge
+lautet Mittwoch 18 und 12 Uhr sowie Dienstag 19 Uhr.
+Der widersprüchliche Donnerstagmorgen wird nicht als Standard verwendet.
 
-- LinkedIn Mittwoch 21.10.2026 16:00 MESZ
-- Facebook Donnerstag 22.10.2026 09:00 MESZ
-- Instagram Mittwoch 21.10.2026 18:00 MESZ
+Damit sind die priorisierten **Test-Slots** (Montag=0 im Programm):
 
-Das echte Repository enthält bereits einen anderen LinkedIn-Termin für den
-21.10.2026. Dieser wird **nicht** überschrieben; die neue Auswahl findet ein
-anderes freies Zeitfenster. In der gestapelten Integrationsvariante mit der
-Bot-Schreibtrennung werden ältere Kampagnenmanifeste zuvor ausschließlich
-lesend aus `automation/campaign/*` importiert. Die Planung berücksichtigt
-dadurch auch bereits vorbereitete, aber nicht auf `main` liegende Termine.
+| LinkedIn | Facebook | Instagram |
+| --- | --- | --- |
+| Mi 16, Do 17, Di 16, Mi 15 | Do 09, Mi 08, Di 08, Fr 08 | Mi 18, Mi 12, Di 19 |
 
-Die Tests sind völlig offline:
+Die Reihenfolge ist eine **redaktionelle Heuristik**. Sie ist kein
+experimentell ermitteltes Optimum für Josef. Eigene valide Kanalstatistik,
+sofern künftig lesbar und ausreichend groß, hat Vorrang vor diesen
+übergreifenden Studien.
 
+## Algorithmus und sichere Grenzen
+
+1. Mindestens fünf Kalendertage Vorlauf zwischen Recherche und dem ersten
+   vorgeschlagenen Publikationsdatum.
+2. Maximal 35 Tage Suchhorizont, ohne automatische Verlängerung.
+3. Pro Plattform/Channel werden gespeicherte Manifestzeiten und
+   `ready-to-schedule/`-Anfragen separat und nur lesend als Reservierungen
+   berücksichtigt. Der Abstand beträgt mindestens 72 Stunden.
+4. Der Zielwert priorisiert den Slot-Rang (Gewicht 8) und berücksichtigt
+   Wartezeit in Tagen. Ein besserer Slot gewinnt innerhalb dieses
+   nachvollziehbaren Rankings.
+5. Ausgabe immer in Europe/Berlin inklusive tatsächlich zutreffendem
+   MEZ-/MESZ-Offset und als korrespondierende UTC-ISO-Zeit.
+6. Wenn die Quellenrecherche veraltet, die Reservierung ungültig oder
+   kein Fenster frei ist, stoppt die Planung – **niemals erfinden**.
+7. Die ausgewählten Zeiten werden in Buffer zunächst nur als
+   `status=draft` und als `dueAt` gespeichert. Erst Josefs
+   nachgelagerte Freigabe darf eine bestehende Post-ID aktivieren.
+
+## Bereits getestete technische Grenzen
+
+- Das Modul schreibt selbst keine Dateien und ruft weder Buffer noch
+  GitHub-API auf. Alle Determinismus- und DST-Tests sind offline.
+- Historische Kampagnen aus separaten Output-Branches werden durch
+  `scripts/campaign_reservations.py` read-only importiert, nicht
+  auf `main` zurückgeschrieben.
+- Ein früherer von Josef ausgelöster
+  [Buffer-Einmaltest](https://github.com/derJosef/social-assets/actions/runs/38179032859)
+  bewies die API-Kombination `saveToDraft:true` +
+  `mode:customScheduled` + `dueAt` mit `status=draft`.
+  Das ist **kein** neuer Live-Test und keine Freigabe der Integration.
+- Quellzeitpunkte ohne echte Buffer-Kanalstatistik und die bildseitige
+  Vollautomation bleiben separate Produktionsrisiken.
+
+Offline testen:
 ```bash
-PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_posting_time_planner.py' -v
+python3 -B -m unittest discover -s tests -p 'test_posting_time_planner.py' -v
 ```
-
-**Diese Zeitplaner-Änderung:** keine Buffer-API-Schreiboperation, keine
-Änderung bestehender `ready-to-schedule/`-Anträge, keine automatische
-Queue/Veröffentlichung und keine PersonalOS-Schreiboperation.
-
-Ein früherer, ausdrücklich freigegebener Einzel-Abnahmelauf hat bereits
-einen datierten Buffer-**Draft** mit unabhängig geprüftem `draft`-Status
-bestätigt. Das ist keine Freigabe für erneute Live-Tests oder für einen
-Merge dieser Integrationsvariante. Die produktive Aktivierung erfordert
-weiterhin persönlich freigegebene Merges und den dokumentierten
-Branch-/Ledger-Schutz.
