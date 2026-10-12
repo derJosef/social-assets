@@ -218,7 +218,9 @@ def create_packages(brief, evidences, g):
         "source_sha256":verified["source_sha256"],
         "ai_disclosure":verified["ai_disclosure"],
         "logo_original_sha256":SHA_LOGO,
-        "manual_review":verified["logo_qa"].get("source_visual_review","separate-review")
+        "review_method":verified["logo_qa"].get("source_visual_review","separate-review"),
+        "human_visual_review":("pending_in_buffer"
+              if "automated_review" in source_spec else "recorded_in_original_review")
     })
     today=datetime.now(timezone.utc).date()
     times=select_times(today)
