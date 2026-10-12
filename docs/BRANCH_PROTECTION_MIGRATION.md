@@ -1,101 +1,93 @@
-# Vorbereitung: geschütztes `main`, funktionsfähige Automatisierung
+# Migrationsplan: geschütztes main ohne Stillstand der Wochenkampagne
 
-**Status: eigenständiger Draft-PR auf PR #11, kein Live-Rollout.** Keine
-Kampagne ist dadurch genehmigt, kein Buffer-Entwurf wird durch diesen PR
-angelegt, keine Terminierung/Publikation freigegeben.
+**Status 12.10.2026: Review-Zweig PR #13, kein Live-Rollout.**
+Die zwischenzeitlich verlangte persönliche Brief-Freigabe **vor** Buffer-Drafts
+ist widerrufen. Josef gibt erst die vollständig erstellten, vorab datierten
+Buffer-Drafts frei, nicht den vorbereitenden Brief.
 
-## Was wohin geschrieben wird
+## Schreib- und Vertrauensgrenzen
 
-| Datentyp | Quelle / Ziel nach Aktivierung | Schreibende Instanz | Vertrauensgrenze |
-|---|---|---|---|
-| Brief, Quellenbild-Review, Freigabe-JSON, Code | geschütztes `main` | Josef per PR-Merge | `orchestration/approvals/*`: alleiniger PR mit SHA-Bindung und Josefs echtem Merge |
-| Automatisch erzeugte Kampagnenbilder, Manifests und drei Posts | einzigartiger `automation/campaign/<kampagne>`-Branch | Orchestrator `GITHUB_TOKEN` | vor Buffer: vollständige QA und SHA-256-Bildprüfung |
-| Bild-URL für alle drei Buffer-Drafts | `raw.githubusercontent.com/.../<40-stelliger Bild-Commit-SHA>/media/images/...` | Orchestrator pinnt den unveränderlichen Git-Commit | Bild wird zusätzlich **öffentlich heruntergeladen und gehasht**, bevor der Sender eine Einmalreservierung schreibt |
-| Versand- und Terminierungsbelege, Orchestrator-Reports | `automation-receipts` | Actions-Token | alter `main`-Receipt hat Vorrang; `pending` blockiert jede Wiederholung |
-| Einzelne manuell ausgelöste Visual-Produktion | `automation/visual/run-<runid>` | Visual-Workflow | Aufnahme auf `main` weiterhin nur nach einem gesonderten PR |
+| Objekt | Ziel | Berechtigung / Kontrolle |
+| --- | --- | --- |
+| Redaktioneller Kampagnen-Brief, geprüfter Quellbildreview und Workflow-Code | geschütztes `main` | kontrollierte Änderungen; neue Briefdatei startet Qualitätsprüfung und Draft-Produktion |
+| Neues Original-Logo-Markenbild, Manifest und drei Postdateien | einmaliger `automation/campaign/<kampagne>`-Branch | Bot; SHA-256-Bildcheck, 4:5-Review, Original-Logo, optional Powered by AI |
+| Media-Links der drei Buffer-Drafts | exakter, unveränderlicher 40-stelliger Git-Commit-SHA | unabhängiger öffentlicher Download und Byte-Hashprüfung vor Buffer |
+| Delivery-Receipts und Kampagnen-Reports | `automation-receipts`-Branch | niemals blind erneut senden; `pending` verhindert Duplikate |
+| Finale Entscheidung zur Veröffentlichung | Josef nach ChatGPT-/Buffer-Draft-Ansicht | keine vorherige Brief-SHA-Freigabe; keine Bot-Queue ohne konkrete finale Freigabe |
 
-Der Orchestrator läuft weiterhin **auf `main`**: Nur der tatsächlich geschützte
-Brief samt Freigabe wird dort geladen. Vor externer Recherche und vor jedem
-schreibenden Aufruf muss `brief_approval_gate.py` die persönliche Merge-Provenienz
-prüfen. Der **Ein-Datei-Freigabe-PR-Merge** löst den Job über
-`orchestration/approvals/*.json` ohne zusätzlichen manuellen Dispatch aus.
-Er liest vorherige automatisch generierte Kampagnenmanifest-Termine aus den
-vorhandenen Output-Branches **nur lesend** in sein temporäres Arbeitsverzeichnis
-ein; so kann die Zeitplanung (#9) frühere Kanaltermine berücksichtigen,
-obwohl `main` nicht durch Bots beschrieben wird.
-Die generierten acht Dateien werden in **zwei lokalen Git-Commits**
-geschrieben (3 Bild-/Bildbelegdateien, dann 5 Manifest-/Textdateien). Erst
-nach dem zweiten lokalen Qualitätscheck wird der einmalige Output-Branch
-gepusht. **Keine Direktpushes auf `main`.** Ein GitHub-Actions-Push mit dem
-`GITHUB_TOKEN` startet absichtlich keine erneute automatische Push-Action;
-die drei Sender laufen wie bisher im ursprünglichen Job.
+Der Orchestrator läuft aus `main`, prüft die neue
+`orchestration/briefs/*.json` durch `prepared_brief_preflight.py` und
+erstellt nur nach inhaltlichen und technischen Gates die drei datierten
+Buffer-Drafts. Änderungen bestehender Brief-Dateien und alte
+`orchestration/approvals/*.json` starten keine erneute automatische Kampagne.
+Das historische `brief_approval_gate.py` ist kein produktives Draft-Gate mehr.
+Die fachliche Qualitätsprüfung liegt unmittelbar vor Buffer nochmals im
+gemeinsamen Sender `buffer_draft.py`; dies schützt alle drei Einstiegspfade.
 
-## Dauerhafter Einmal-Beleg
+Der Output-Branch wird einmalig und atomar in zwei Commits aufgebaut:
+zuerst das geprüfte Bild, danach die mit diesem Bild-Commit-SHA verbundenen
+fünf Plan-/Postdateien. Kein Bot-Direktpush auf `main`.
 
-`buffer_draft.fetch_receipt` prüft zuerst den historischen Pfad **auf `main`**.
-Ein alter `pending`- oder Erfolgsbeleg verhindert dieselbe Buffer-Aktion
-weiterhin. Nur falls dort kein Beleg existiert, wird die Existenz des separaten
-Ledger-Branches nachgewiesen, danach der dortige Pfad geprüft. Ein 404 beim
-Branch-Nachweis **stoppt** den Versand; es gibt kein automatisches Erstellen
-oder Wiederholen. Neue Reservierungen und Bestätigungen gehen ausschließlich
-auf `automation-receipts`. Die aus `main` geladene manuelle Terminierungsstrecke
-liest ältere Receipts direkt und neue via separat gefetchtem Ledger-Ref;
-ohne Beleg verweigert sie die Terminierung.
+## Receipt- und Wiederholungsschutz
 
-## Reihenfolge der Aktivierung – NICHT durch diesen PR ausgeführt
+Die bisherigen Receipts auf `main` bleiben lesbar und gelten vorrangig.
+Fehlt dort ein Receipt, muss der `automation-receipts`-Branch existieren;
+neue Reservierungs- und Erfolgsbelege werden nur dort geschrieben.
+Ein vorhandener Erfolgs- oder Pending-Beleg sperrt einen erneuten Buffer-
+Aufruf. Ein fehlender Ledger-Branch stoppt den Versand, niemals automatische
+Ledger-Erstellung oder ungesicherte Wiederholung.
 
-1. Gestapelte PRs **#7 → #11 → diesen PR** sowie das separate Timing-PR #9
-   auf den finalen Zustand prüfen. Ihre Merge-Freigabe ist eine eigene,
-   ausdrückliche Entscheidung Josefs.
-2. Einmal den öffentlichen Branch `automation-receipts` erstellen und lesend
-   nachprüfen; die bisherigen GitHub-Belege auf `main` **nicht löschen**.
-   Den Branch gegen **Force-Push und Löschung** sichern, aber normale
-   neue, nicht-überschreibende Contents-API-Commits durch Actions zulassen.
-   Ohne Branch kein Live-Senden.
-3. Erst wenn alle Bot-Direktpushes von `main` entfernt und die betroffenen
-   Workflows erfolgreich *offline* getestet sind: GitHub `Settings → Branches`
-   oder Rulesets für `main`: **Pull Request erforderlich**, erzwungene
-   Statusprüfungen (nur zuvor beobachtete Check-Namen), keine Force-Pushes,
-   keine Löschung, **Administrator-Bypass nicht zulassen**. Bei nur einem
-   Repository-Eigentümer keinen unlösbaren fremden Review erzwingen. Für die
-   Brief-Genehmigung zählt der vom Eigentümer tatsächlich selbst gemergte
-   **Ein-Datei-PR**, nicht ein frei editierbares `approved_by`-Feld.
-4. Nach Aktivierung `branches/main.protected == true` prüfen, danach nur
-   read-only/offline die drei Pfade (Orchestrator, automatische `auto-*`-Posts,
-   manueller Draft-Dispatch), bestehende und neue Receipt-Lookups,
-   den Visual-Branch, die Berichtsablage und die manuelle Terminierung
-   prüfen. Kein erneuter Live-Buffer-Probeversand: Die datierte Draft-Funktion
-   ist durch GitHub-Lauf #38179032859 bereits bestätigt.
+## Sichere Aktivierungsreihenfolge – noch NICHT ausgeführt
 
-## Wichtige Grenzen
+1. Vollständigen Draft-first-Integrationszustand aus PR #13 zusammen mit den
+   Vorläufer-PRs #7/#11/#12 sowie #6/#9 überprüfen; kein Merge ungefragt.
+   Gestaffelte Alt-PR-Merges dürfen die Wochenkampagne nicht zwischenzeitlich
+   wieder an einen persönlichen Brief-Freigabe-PR koppeln. Bevorzugt eine
+   einzige überprüfbare Integration oder ein klarer atomarer Aktivierungsplan.
+2. `automation-receipts` einmalig initialisieren, Inhalt und Rechte
+   unabhängig lesen; Branch gegen Löschen und Force-Push schützen, aber
+   normale append-artige Belegschreibungen des Bots erlauben.
+3. `main` erst nach Entfernung aller Bot-Direktpushes über GitHub Ruleset
+   oder Branch-Protection schützen: PR-Pflicht, vorher grün beobachtete
+   erforderliche Checks, kein ungeprüfter Administrator-Bypass, keine
+   Force-Pushes oder Löschung. Nicht aus Versehen den einzigen Eigentümer
+   mit fremder Review-Pflicht aussperren.
+4. `branches/main.protected == true` lesen und genau drei Wege offline/
+   read-only prüfen: Kampagnenorchestrator, `auto-*`-Sender und manueller
+   Draft-Dispatch. Asset-Branches, Receipts, Kollisions- und DST-Planung
+   sowie öffentliche Bild-URLs ebenfalls prüfen. Kein weiterer Live-Probe-
+   Buffer-Post: Test [38179032859](https://github.com/derJosef/social-assets/actions/runs/38179032859)
+   belegt `draft` mit `dueAt` bereits.
+5. Die tatsächliche wöchentliche Bild-/Asset-Quelle und die Fähigkeit,
+   fertige Buffer-Links in der ChatGPT-Aufgabe auszugeben, separat
+   End-to-End nachweisen, bevor von produktiver Wochenautomation gesprochen
+   wird. Ein grüner synthetischer PR-Test allein genügt nicht.
 
-- `automation-receipts` ist ein operationelles Audit-Ledger, **keine
-  menschliche Freigabequelle**. Deshalb hängt das Approval-Gate weiterhin
-  ausschließlich an geschütztem `main` und GitHub-Merge-Metadaten.
-- Der dynamische Output-Branch ist nicht durch die Branch-Protection
-  derselben Vertrauensklasse wie `main`. Deshalb wird nicht die Branch-URL,
-  sondern der Bild-Commit-SHA im Post gespeichert und vor dem Buffer-Aufruf
-  der Remote-Bildhash mit dem lokalen, visuell geprüften SHA-256 verglichen.
-- Bilder unter commit-gepinnten URLs müssen weiterhin öffentlich abrufbar
-  bleiben. Ein fehlender/abweichender Remote-Download stoppt den Sender
-  **vor** dessen Reservierungsbeleg und vor Buffer.
-- Temporär eingelesene ältere Kampagnenmanifests werden **nicht** in `main`
-  oder in den neuen Kampagnen-Output-Branch zurückgeschrieben. Ungültige,
-  widersprüchliche oder nicht lesbare alte Zeitdaten blockieren den Lauf.
-- Die alten `ready-to-schedule`-Anfragen behalten ihre **eigenständige,
-  explizite Terminierungsfreigabe**. Datierte Drafts (`state=
-  verified_prescheduled_draft_not_queued`) sind dafür nicht geeignet.
-  **Keine automatische Queue, keine automatische Veröffentlichung.**
-- Aktionen sind erst nach finaler Freigabe der jeweiligen Kampagne zulässig.
-  Alle lokalen und PR-CI-Tests sind synthetisch, ohne Buffer-Mutation.
+## Finale Freigabe: Buffer-Bearbeitungen erhalten
 
-## Synthetische Abnahme
+Bei `freigegeben` müssen die **drei bestehenden Buffer-Post-IDs** erneut
+gelesen und Draft-Status, Kanal, Zukunftstermin, Text, Bilder/Medien und
+mögliche manuelle Änderungen berücksichtigt werden. Keine zweite Post-
+Anlage und kein erneutes Zurückspielen eines alten GitHub-Texts.
 
-```bash
-python3 -B -m unittest discover -s tests -q
-```
+**Offener technischer Blocker:** Der bisherige `buffer_schedule.py`-
+Workflow unterstützt datierte Receipts und in Buffer veränderte Texte/
+Medien noch nicht verlustfrei. Deshalb keine Nutzung dieses Legacy-
+Releasewegs für diese neuen Posts, bis eine gesonderte sichere Lösung
+mit unabhängigen Tests und Live-Readback vorliegt. Der alte Weg darf
+keinesfalls stillschweigend in dieser Migration aktiviert werden.
 
-Enthalten: alte Belege vor neuen, nicht vorhandener Ledger-Branch als
-Blocker, Receipt-Schreibziel, Git-Commit-Herkunft und Bildhash,
-unveränderliche Bild-URLs, atomare Post-Pin-Prüfung und statische Kontrolle
-der Workflow-`main`-Schreibgrenze.
+## Weitere Grenzen
+
+- Mindestens zwei methodisch unabhängige aktuelle Postingzeiten-Studien
+  pro Kanal; Datumsvergleich, Aktualitätsprüfung, eigene verfügbare
+  Accountdaten und Europe/Berlin-DST.
+- Neue 4:5-Basisgrafik plus geprüftes Original-Logo; KI-Personenbilder
+  inklusive notwendiger Kennzeichnung.
+- Veraltete `ready-to-schedule`-Anfragen bleiben gesondert,
+  explizit genehmigungspflichtig. Sie sind kein Mechanismus, um
+  datierte Drafts mit ungeprüften Änderungen freizugeben.
+- Kein Queue- oder Veröffentlichungsaufruf ohne Josefs abschließende
+  persönliche Freigabe. Kein Merge oder Buffer-Live-Test durch dieses Dokument.
+
+Offline-Tests: `python3 -B -m unittest discover -s tests -q`.
