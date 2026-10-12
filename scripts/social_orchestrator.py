@@ -259,13 +259,14 @@ def create_packages(brief, evidences, g):
     plan += ["","## Geplante Termine (NICHT in Buffer aktiviert)",""]
     plan += [f"- {t}: {times[t]['local']} Berlin / {times[t]['utc']} UTC" for t in TARGETS]
     plan += ["", "## Zeitstudien und Grenzen der Planung", "",
-             "Die Vorschläge beruhen auf allgemeinen Buffer-Engagementdaten aus 2026, "
+             "Die Vorschläge beruhen auf zwei unabhängigen 2026-Studien je Kanal (Buffer und Sprout Social), "
              "nicht auf einem nachgewiesenen Optimum für unsere eigenen Follower. "
              "Fünf Tage Vorlauf, mindestens drei Tage Abstand je Kanal, "
              "bestehende GitHub-Manifeste und bereits beantragte Termine werden berücksichtigt. "
              "Für eine endgültige Veröffentlichungsentscheidung sind aktuelle Kanalmetriken, "
              "Anlass und Kollisionen erneut zu prüfen."]
-    plan += [f"- {t}: {RESEARCH_URLS[t]}" for t in TARGETS]
+    plan += [f"- {t} / Quelle {i+1}: {url}" for t in TARGETS
+             for i, url in enumerate(RESEARCH_URLS[t])]
     method_note = (
         "Vorbereitete Redaktionstexte (prepared_content): externe Quellen wurden im Lauf "
         "abgerufen und formale Strukturpruefungen durchgefuehrt. KEINE automatische "
