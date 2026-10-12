@@ -8,6 +8,8 @@ on:
       - '.github/workflows/buffer-draft.yml'
       - '.github/workflows/social-campaign-orchestrator.yml'
       - 'scripts/brief_approval_gate.py'
+      - 'scripts/automatic_image_source.py'
+      - 'tests/test_automatic_image_source.py'
       - 'scripts/autonomous_campaign_gate.py'
       - 'scripts/buffer_draft.py'
       - 'scripts/orchestrator_verify_buffer.py'
