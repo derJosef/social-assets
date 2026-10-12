@@ -133,3 +133,40 @@ Der neue Review-Renderer hat keine Buffer-Mutation und akzeptiert
 nur einen vollständig nachgewiesenen Drei-Kanal-PASS. Die Tests sind
 synthetisch und **beweisen keinen neuen Live-Buffer- oder
 Browser-Deep-Link-Lauf**.
+
+
+## Read-only-Kontrolle nach eigenen Änderungen in Buffer
+
+Wenn Josef nach dem ersten Bericht direkt in Buffer Texte, Bilder oder
+Termine bearbeitet hat, darf ChatGPT **nicht** die alten GitHub-Dateien
+erneut in Buffer zurückspielen. Hierfür ist auf dem Entwicklungszweig
+ein neuer getrennt startbarer Workflow vorgesehen:
+
+\` .github/workflows/buffer-draft-live-review.yml \` (ohne umschließende
+Leerzeichen im tatsächlichen Dateipfad). GitHub → Actions → 
+**Buffer – bestehende Drafts lesend auf Änderungen prüfen** →
+\`Run workflow\` mit Kampagnenkennung und der ursprünglichen
+bestätigten \`GITHUB_RUN_ID\`.
+
+Dieser GitHub-Job besitzt ausschließlich \`contents: read\`, liest
+über die Buffer-GraphQL-API nur die bereits bekannten drei Posts und
+vergleicht die **jetzt tatsächlich dort gespeicherten** Texte,
+Bild-Asset-URLs und \`dueAt\`-Werte mit dem ursprünglichen Snapshot.
+Die neue Prüfung verlangt weiterhin \`status=draft\` und dieselbe
+Post-/Channel-ID. Bei fehlender Grafik, fremdem Kanal oder bereits
+veröffentlichtem/terminiertem Post stoppt sie sicher.
+
+Das Ergebnis ist ein JSON-Artefakt mit dem Namen
+\`buffer-read-only-review-<GITHUB_RUN_ID>\`, das die **aktuellen**
+Buffer-Texte und Bildlinks ausweist sowie unter
+\`changes_since_original\` die Änderungen \`text\`, \`media\` und
+\`time\` auflistet. Änderungen müssen im nächsten Freigabeschritt
+beibehalten werden. Ein fehlender oder vergangener Termin wird
+als offener Konflikt kenntlich gemacht, **nicht** eigenmächtig ersetzt.
+
+Dieser Weg **erstellt keine neuen Posts, terminiert nichts und ruft
+keine Buffer-Mutation auf**. Selbst nach einer ChatGPT-Nachricht
+„freigegeben“ ist daher eine getrennte finale Veröffentlichungs-
+implementierung samt unmittelbarer Buffer-Readback/Prüfung der aktuell
+bearbeiteten Fassung erforderlich. Bis dahin kann Josef die vorhandenen
+Entwürfe unmittelbar in Buffer zur Queue freigeben.
