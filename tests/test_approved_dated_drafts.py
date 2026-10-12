@@ -336,6 +336,8 @@ class DatedDraftTest(unittest.TestCase):
         content = base64.b64encode(json.dumps(old).encode()).decode()
         with mock.patch.dict(os.environ, {"GITHUB_TOKEN": "synthetic", "BUFFER_API_KEY": "synthetic"}), \
              mock.patch.object(reconciliation, "planned_due_at", return_value=self.due), \
+             mock.patch.object(reconciliation, "load_expected",
+                               return_value=("Prepared text", "https://example.com/image.png")), \
              mock.patch.object(reconciliation, "fetch_receipt", return_value={"content": content}), \
              mock.patch.object(reconciliation, "buffer_graphql", side_effect=AssertionError("No Buffer API")):
             with self.assertRaisesRegex(RuntimeError, "independently verified"):
