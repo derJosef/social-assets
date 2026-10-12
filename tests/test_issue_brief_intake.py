@@ -29,12 +29,16 @@ def event():
         ],
         "prepared_content": {
             "posts": {
-                "linkedin": "Synthetischer LinkedIn-Beitrag",
-                "facebook": "Synthetischer Facebook-Beitrag",
-                "instagram": "Synthetischer Instagram-Beitrag",
+                "linkedin": "Synthetischer LinkedIn-Beitrag mit vielen technischen Details. " * 6,
+                "facebook": "Synthetischer Facebook-Beitrag mit verständlichem Praxisbeispiel. " * 6,
+                "instagram": "Synthetischer Instagram-Beitrag zu kontrollierten Arbeitsabläufen. " * 6,
             },
-            "visual": {"layout": "logo_only"},
-            "six_hats": {"white": "facts"}, "risks": ["Synthetic only"],
+            "visual": None,
+            "six_hats": {
+                color: f"Konkrete und längere synthetische Erläuterung aus Sicht {color}."
+                for color in ("white", "red", "black", "yellow", "green", "blue")
+            },
+            "risks": ["Synthetic only"],
         }
     }
     return {
@@ -127,6 +131,26 @@ class OwnerIssueIntakeTests(unittest.TestCase):
         with self.assertRaisesRegex(intake.IssueBriefBlocked, "All three"):
             intake.stage(self.event_file, self.root)
         self.assertFalse((self.root / f"orchestration/briefs/{CID}.json").exists())
+
+    def test_legacy_card_visual_blocks_before_image_provider(self):
+        body = json.loads(self.e["issue"]["body"])
+        body["prepared_content"]["visual"] = {"cards": [{"title": "old"}]}
+        self.e["issue"]["body"] = json.dumps(body)
+        with self.assertRaisesRegex(intake.IssueBriefBlocked, "visual must be null"):
+            intake.extract(self.e)
+
+    def test_short_platform_post_or_incomplete_six_hats_block(self):
+        for change in ("short_post", "missing_hat"):
+            with self.subTest(change=change):
+                altered = json.loads(json.dumps(self.e))
+                body = json.loads(altered["issue"]["body"])
+                if change == "short_post":
+                    body["prepared_content"]["posts"]["linkedin"] = "Short"
+                else:
+                    body["prepared_content"]["six_hats"].pop("blue")
+                altered["issue"]["body"] = json.dumps(body)
+                with self.assertRaises(intake.IssueBriefBlocked):
+                    intake.extract(altered)
 
     def test_extra_unknown_fields_fail_closed(self):
         b = json.loads(self.e["issue"]["body"])
