@@ -426,13 +426,13 @@ def channel_preference(target: str) -> str:
 def planned_due_at(draft_path: str, target: str, *, now: datetime | None = None) -> str | None:
     """Bind an auto-draft's time to its manifest, never to editable draft fields.
 
-    Legacy `ready-for-buffer/` entries cannot silently evade brief approval.
+    Legacy `ready-for-buffer/` entries lack three-channel quality evidence and stay blocked.
     Directly dispatched `drafts/` entries keep their original undated behavior.
     """
     match = AUTO_DRAFT_RE.fullmatch(draft_path)
     if match is None:
         if draft_path.startswith("ready-for-buffer/"):
-            raise RuntimeError("Legacy-ready-for-buffer ohne gebundene Brief-Freigabe gesperrt")
+            raise RuntimeError("Legacy-ready-for-buffer ohne gebundene Kampagnen-Qualitaetspruefung gesperrt")
         if not draft_path.startswith("drafts/"):
             raise RuntimeError("Unbekannter Entwurfseingang")
         return None
@@ -476,33 +476,43 @@ def planned_due_at(draft_path: str, target: str, *, now: datetime | None = None)
 
 
 def authorize_auto_dated_draft(draft_path: str) -> dict:
-    """Use PR #7's protected-main approval, plus the full campaign QA gate."""
+    """Require campaign QA before Buffer, not Josef's approval before draft.
+
+    The separate personal decision happens only on the finished Buffer posts.
+    Image-source, logo, disclosure, time and three-platform gates remain.
+    """
     if __package__:
-        from .brief_approval_gate import authorize_draft
         from .autonomous_campaign_gate import check_campaign
     else:
-        from brief_approval_gate import authorize_draft
         from autonomous_campaign_gate import check_campaign
     match = AUTO_DRAFT_RE.fullmatch(draft_path)
     if match is None:
         raise RuntimeError("Automatischer datierter Entwurf benötigt eindeutige Kampagne")
     campaign = match.group(1)
-    posts = [f"ready-for-buffer/auto-{campaign}-{target}.json"
-             for target in ("linkedin", "facebook", "instagram")]
-    check_campaign(posts, verify_image=True)
-    evidence = authorize_draft(draft_path, expected_purpose="dated_buffer_draft_not_queued")
-    # The protected approval pins the brief bytes. Enforce its actual approved
-    # editorial text, not just the three valid output filenames and image.
-    brief = json.loads((ROOT / "orchestration" / "briefs" / f"{campaign}.json").read_text(encoding="utf-8"))
+    targets = ("linkedin", "facebook", "instagram")
+    posts = [f"ready-for-buffer/auto-{campaign}-{target}.json" for target in targets]
+    evidence = check_campaign(posts, verify_image=True)
+    if (not isinstance(evidence, dict) or evidence.get("status") != "eligible_for_draft_only"
+            or evidence.get("campaign") != campaign
+            or evidence.get("targets") != list(targets)):
+        raise RuntimeError("Unvollständiger Drei-Kanal-Kampagnen-Qualitätsnachweis")
+    brief_path = ROOT / "orchestration" / "briefs" / f"{campaign}.json"
+    brief = json.loads(brief_path.read_text(encoding="utf-8"))
+    if (not isinstance(brief, dict) or brief.get("campaign_id") != campaign
+            or brief.get("brand") != "ai-agent-builder"
+            or brief.get("execution_mode") != "drafts"
+            or brief.get("image_review") != f"visual-reviews/{campaign}.json"):
+        raise RuntimeError("Unpassender Kampagnen-Brief zur Bildprüfung")
     prepared = brief.get("prepared_content")
     expected_posts = prepared.get("posts") if isinstance(prepared, dict) else None
-    if not isinstance(expected_posts, dict) or set(expected_posts) != {"linkedin", "facebook", "instagram"}:
-        raise RuntimeError("Freigegebene plattformspezifische Brief-Texte fehlen")
-    for target, filename in zip(("linkedin", "facebook", "instagram"), posts):
+    if not isinstance(expected_posts, dict) or set(expected_posts) != set(targets):
+        raise RuntimeError("Geprüfte plattformspezifische Brief-Texte fehlen")
+    for target, filename in zip(targets, posts):
         _, actual, _ = read_draft(filename)
         if actual != expected_posts[target]:
-            raise RuntimeError("Buffer-Draft-Text weicht vom freigegebenen Brief ab")
-    return evidence
+            raise RuntimeError("Buffer-Draft-Text weicht vom vorbereiteten geprüften Brief ab")
+    return {"campaign": campaign, "quality_gate": "passed",
+            "image_sha256": evidence.get("image_sha256", "")}
 
 
 def verified_dated_post(record: object, *, post_id: str, channel_id: str, due_at: str) -> bool:
@@ -539,7 +549,7 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
 
     target = json.loads(raw.decode("utf-8"))["target"]
     due_at = planned_due_at(draft_path, target)
-    approval = authorize_auto_dated_draft(draft_path) if due_at is not None else None
+    quality = authorize_auto_dated_draft(draft_path) if due_at is not None else None
     channel_id = resolve_channel(buffer_key, target, channel_preference(target))
     assets = parse_assets(raw)
     verify_media_access(assets)
@@ -558,7 +568,7 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
         "github_run_id": os.environ.get("GITHUB_RUN_ID", "unknown"),
     }
     if due_at is not None:
-        pending.update({"due_at_utc": due_at, "channel_id": channel_id, "brief_approval": approval})
+        pending.update({"due_at_utc": due_at, "channel_id": channel_id, "campaign_quality": quality})
     receipt_sha = put_receipt(
         github_token, receipt, pending, f"buffer: reserve draft transfer for {draft_path}"
     )
@@ -615,7 +625,7 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Buffer: freigegebene Entwürfe für drei Kanäle übertragen.")
+    parser = argparse.ArgumentParser(description="Buffer: geprüfte Entwürfe für drei Kanäle übertragen.")
     parser.add_argument("--draft", required=True, help="JSON unter drafts/ oder ready-for-buffer/")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true", help="Nur lokal prüfen; keine API-Aufrufe.")
