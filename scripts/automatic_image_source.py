@@ -145,6 +145,8 @@ def portrait_without_cropping(raw: bytes) -> bytes:
             require(opened.format == "PNG" and opened.size == MODEL_SIZE,
                     "Nur PNG im geprüften Provider-Format 1024x1536")
             original = opened.convert("RGB")
+    except ImageSourceBlocked:
+        raise
     except (OSError, ValueError, Image.DecompressionBombError) as exc:
         raise ImageSourceBlocked("PNG ist beschädigt oder zu groß") from exc
     centered = original.resize((900, 1350), Image.Resampling.LANCZOS)
