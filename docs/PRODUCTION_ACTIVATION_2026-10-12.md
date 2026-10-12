@@ -20,7 +20,7 @@ verbundenen GitHub-App **genau ein neues Issue** an:
 - **Body:** ausschließlich ein gültiges UTF-8-JSON-Objekt nach dem
   bestehenden vollständigen `orchestration/briefs/YYYY-MM-DD-slug.json`-
   Schema (`format_version: 1`, Marke `ai-agent-builder`,
-  `execution_mode: drafts`, die sechs Buchhaltungs-/Recherche-/Zeitquellen,
+  `execution_mode: drafts`, mindestens zwei unabhängige Inhaltsquellen und sechs Postingzeit-Quellen,
   `image_review: visual-reviews/<slug>.json`, alle drei
   `prepared_content.posts`, sechs Hüte und die Bild-/Risikokonzeption).
   **Kein Markdown-Codeblock** und keine persönlichen oder geheimen Daten.
