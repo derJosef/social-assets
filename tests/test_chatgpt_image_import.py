@@ -75,6 +75,36 @@ class ChatGPTImageImportTest(unittest.TestCase):
         self.assertFalse((self.root / PNG).exists())
         self.assertFalse((self.root / REVIEW).exists())
 
+    def test_ambiguous_tiny_mark_keeps_transfer_and_explicit_pending_review(self):
+        self.brief["chatgpt_image"]["visual_review"]["no_foreign_logo"] = None
+        self.brief["chatgpt_image"]["visual_review"]["no_generated_text"] = None
+        self.brief["chatgpt_image"]["review_evidence"] = (
+            "ChatGPT inspected the actual original. Tiny blurry marking unklar "
+            "am Monitorrahmen, Fremdlogo/Schrift nicht eindeutig; NOT a human review."
+        )
+        self.update()
+        result = tr.import_image(BRIEF, self.root, fetch=lambda url: self.raw)
+        self.assertEqual(result["visual_review_pending"],
+                         ["no_foreign_logo", "no_generated_text"])
+        review = json.loads((self.root / REVIEW).read_text())
+        self.assertIsNone(review["visual_review"]["no_foreign_logo"])
+        self.assertIsNone(review["visual_review"]["no_generated_text"])
+        self.assertEqual(review["source_sha256"], hashlib.sha256(self.raw).hexdigest())
+
+    def test_clear_foreign_logo_blocks_before_any_transfer(self):
+        self.brief["chatgpt_image"]["visual_review"]["no_foreign_logo"] = False
+        self.update()
+        with self.assertRaises(tr.ChatImageBlocked):
+            tr.import_image(BRIEF, self.root,
+                            fetch=lambda url: self.fail("must not fetch"))
+
+    def test_ambiguous_mark_without_explicit_evidence_fails(self):
+        self.brief["chatgpt_image"]["visual_review"]["no_generated_text"] = None
+        self.update()
+        with self.assertRaisesRegex(tr.ChatImageBlocked, "Unklare Logo"):
+            tr.import_image(BRIEF, self.root,
+                            fetch=lambda url: self.fail("must not fetch"))
+
     def test_non_4_by_5_png_blocked(self):
         wrong_size = fake_png((1024, 1536))
         self.brief["chatgpt_image"]["sha256"] = hashlib.sha256(wrong_size).hexdigest()
