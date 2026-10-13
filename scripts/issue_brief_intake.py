@@ -61,8 +61,15 @@ def extract(event: dict) -> tuple[str, dict, int]:
         obj = json.loads(body)
     except (ValueError, UnicodeError):
         raise IssueBriefBlocked("Issue body must be one JSON campaign brief, not Markdown") from None
-    require(isinstance(obj, dict) and set(obj) == EXPECTED_KEYS,
-            "Unexpected brief fields; only version-1 fully prepared briefs")
+    require(isinstance(obj, dict) and set(obj) == EXPECTED_KEYS | {"chatgpt_image"},
+            "ChatGPT image transfer required; no paid image-API fallback")
+    # Reuse the proven ChatGPT -> Adobe file transfer -> pinned GitHub import.
+    # This validates the public owner issue BEFORE any network/Image/Buffer call.
+    from chatgpt_image_import import inspect_brief, ChatImageBlocked
+    try:
+        inspect_brief(obj)
+    except ChatImageBlocked as exc:
+        raise IssueBriefBlocked(str(exc)) from None
     require(obj.get("format_version") == 1
             and obj.get("brand") == "ai-agent-builder"
             and obj.get("campaign_id") == campaign
