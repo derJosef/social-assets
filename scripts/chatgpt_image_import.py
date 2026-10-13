@@ -144,6 +144,10 @@ def import_image(brief_file: str, root: Path = ROOT, *, fetch=fetch_image) -> di
         "source_sha256": img["sha256"], "layout": "logo_only",
         "heading": None, "visual_review": img["visual_review"],
         "review_evidence": img["review_evidence"],
+        "chatgpt_review": {
+            "kind": "chatgpt_visual_inspection_draft_only",
+            "source_sha256": img["sha256"],
+        },
     }
     src.parent.mkdir(parents=True, exist_ok=True)
     review.parent.mkdir(parents=True, exist_ok=True)
