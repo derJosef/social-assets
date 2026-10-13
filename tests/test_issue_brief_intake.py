@@ -185,7 +185,7 @@ class OwnerIssueIntakeTests(unittest.TestCase):
         self.assertIn("scripts/issue_brief_intake.py", yml)
         self.assertIn("scripts/production_activation_guard.py", yml)
         self.assertLess(yml.index("issue_brief_intake.py"),
-                        yml.index("automatic_image_source.py"))
+                        yml.index("chatgpt_image_import.py"))
         self.assertIn('expected_post_count=6', yml)
         self.assertIn("orchestration/briefs/", yml)
 
