@@ -1,0 +1,95 @@
+name: Buffer – bestehende drei Kampagnendrafts nur lesen
+
+# Strictly read-only recovery of the three ALREADY SENT drafts after a
+# verification-script failure. NEVER dispatch a campaign orchestrator rerun.
+on:
+  workflow_dispatch:
+    inputs:
+      campaign:
+        description: 'Existierende Kampagne YYYY-MM-DD-slug, kein Neuanlegen'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: buffer-existing-campaign-readback
+  cancel-in-progress: false
+
+jobs:
+  read-only:
+    if: github.actor == 'derJosef' && github.ref == 'refs/heads/main'
+    name: Three existing Buffer posts – no mutations
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Trusted code from protected main, no saved write credentials
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Import ONLY data from immutable campaign output branch
+        env:
+          CAMPAIGN: ${{ inputs.campaign }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$CAMPAIGN" =~ ^20[0-9]{2}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*$ ]] || {
+            echo "Invalid campaign id" >&2; exit 1;
+          }
+          branch="automation/campaign/$CAMPAIGN"
+          git fetch --no-tags --depth=1 origin "refs/heads/$branch:refs/remotes/origin/$branch"
+          for path in \
+            "campaign-manifests/$CAMPAIGN.json" \
+            "ready-for-buffer/auto-$CAMPAIGN-linkedin.json" \
+            "ready-for-buffer/auto-$CAMPAIGN-facebook.json" \
+            "ready-for-buffer/auto-$CAMPAIGN-instagram.json"; do
+            mkdir -p "$(dirname "$path")"
+            # Untrusted output branch is DATA ONLY: never check out its Python/workflows.
+            git show "refs/remotes/origin/$branch:$path" > "$path"
+          done
+          echo "CAMPAIGN=$CAMPAIGN" >> "$GITHUB_ENV"
+
+      - name: Verify same three posts directly in Buffer, READ ONLY
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$BUFFER_API_KEY"
+          printf '{"state":"read_only_existing_draft_recovery"}\n' > "$RUNNER_TEMP/verified-existing.json"
+          python3 -B scripts/orchestrator_verify_buffer.py \
+            --campaign "$CAMPAIGN" \
+            --report "$RUNNER_TEMP/verified-existing.json"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          data = json.loads((Path(os.environ["RUNNER_TEMP"]) / "verified-existing.json").read_text())
+          assert data["state"] == "buffer_drafts_verified"
+          assert data["buffer_verification"]["status"] == "PASS"
+          posts = data["buffer_verification"]["posts"]
+          assert set(posts) == {"linkedin", "facebook", "instagram"}
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as out:
+              out.write("### Existing Buffer drafts: READ-ONLY PASS (3/3)\n\n")
+              for channel, row in posts.items():
+                  out.write(f"- {channel}: `{row['post_id']}`, status=draft, dueAt={row['scheduled_local']}, image_attached={row['image_attached_in_buffer']}\n")
+              out.write("\nNo createPost, editPost, queue, schedule or publish calls.\n")
+          PY
+
+      - name: Archive read-only proof, NEVER overwrite authoritative failed run report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buffer-existing-readback-${{ github.run_id }}
+          path: ${{ runner.temp }}/verified-existing.json
+          if-no-files-found: warn
+          retention-days: 30

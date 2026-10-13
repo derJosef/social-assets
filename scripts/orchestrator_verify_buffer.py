@@ -95,7 +95,10 @@ def decode_receipt(receipt: object, target: str) -> dict:
     if not isinstance(receipt, dict) or not isinstance(receipt.get("content"), str):
         raise RuntimeError(f"Missing GitHub receipt for {target}")
     try:
-        decoded = base64.b64decode(receipt["content"], validate=True)
+        # GitHub Contents API folds Base64 into multiple lines. Preserve
+        # strict validation of the alphabet/padding after removing ONLY CR/LF.
+        encoded = receipt["content"].replace("\r", "").replace("\n", "")
+        decoded = base64.b64decode(encoded, validate=True)
         record = json.loads(decoded)
     except (ValueError, binascii.Error, UnicodeError, json.JSONDecodeError) as exc:
         raise RuntimeError(f"Corrupt delivery receipt for {target}") from exc
