@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "source": "media/source-images/2026-10-13-lieferanten-pdf-prueftor-e2e-003-source.png",
+  "source_sha256": "d20f8fc1ec6a3f18129f9be96bebf8e917ce03b1118169981df25905fac3be08",
+  "layout": "logo_only",
+  "heading": null,
+  "visual_review": {
+    "heading_and_logo_space": true,
+    "matches_topic": true,
+    "no_foreign_logo": null,
+    "no_generated_text": null,
+    "no_people": true,
+    "no_robot": true,
+    "plausible_details": true
+  },
+  "review_evidence": "ChatGPT inspected the actual 1080x1350 PNG: menschenfreies technisches Buero mit Eingangstor/Schutzgrenze und Papierstapel als abstrakte Visualisierung der Trennung von Lieferanten-Unterlagen und Befehlen. Eine kleine unscharfe, unleserliche moegliche Monitor-Markierung laesst no_foreign_logo und no_generated_text unklar (null); keine Aussage ueber echte Fremdmarke. Original-Logo wird nur separat montiert. NOT a human review; Josef prueft den Buffer-Draft vor jeder Freigabe.",
+  "chatgpt_review": {
+    "kind": "chatgpt_visual_inspection_draft_only",
+    "source_sha256": "d20f8fc1ec6a3f18129f9be96bebf8e917ce03b1118169981df25905fac3be08"
+  }
+}

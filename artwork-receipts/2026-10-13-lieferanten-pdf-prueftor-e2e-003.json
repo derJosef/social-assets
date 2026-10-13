@@ -1,0 +1,23 @@
+{
+  "campaign_id": "2026-10-13-lieferanten-pdf-prueftor-e2e-003",
+  "brand": "ai-agent-builder",
+  "status": "verified_image_only",
+  "base": "media/source-images/2026-10-13-lieferanten-pdf-prueftor-e2e-003-base.png",
+  "final": "media/images/2026-10-13-lieferanten-pdf-prueftor-e2e-003-branded.png",
+  "sha256": "a7367c120d337c65003459c729e15be67e728dbd1e492eed297feb48c63b70ea",
+  "layout": "logo_only",
+  "image_review": "visual-reviews/2026-10-13-lieferanten-pdf-prueftor-e2e-003.json",
+  "source_sha256": "d20f8fc1ec6a3f18129f9be96bebf8e917ce03b1118169981df25905fac3be08",
+  "ai_disclosure": {
+    "required": false,
+    "text": null,
+    "pixel_verified": false
+  },
+  "logo_original_sha256": "15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0",
+  "review_method": "chatgpt_visual_inspection_draft_only",
+  "visual_review_pending": [
+    "no_foreign_logo",
+    "no_generated_text"
+  ],
+  "human_visual_review": "pending_in_buffer"
+}
