@@ -9,6 +9,11 @@ on:
         description: 'Existierende Kampagne YYYY-MM-DD-slug, kein Neuanlegen'
         type: string
         required: true
+  # Restricted one-time recovery when the connected GitHub app cannot call
+  # workflow_dispatch. Only a very specific owner comment on issue #19 is
+  # accepted below; all unrelated comments cause a skipped read-only job.
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: read
@@ -19,7 +24,24 @@ concurrency:
 
 jobs:
   read-only:
-    if: github.actor == 'derJosef' && github.ref == 'refs/heads/main'
+    if: >-
+      ${{
+        github.actor == 'derJosef' &&
+        github.ref == 'refs/heads/main' &&
+        (
+          github.event_name == 'workflow_dispatch' ||
+          (
+            github.event_name == 'issue_comment' &&
+            github.event.action == 'created' &&
+            github.event.issue.number == 19 &&
+            !github.event.issue.pull_request &&
+            github.event.issue.user.login == 'derJosef' &&
+            github.event.issue.title == 'AIAGENT_BRIEF:2026-10-13-lieferanten-pdf-prueftor-e2e-003' &&
+            github.event.comment.user.login == 'derJosef' &&
+            github.event.comment.body == 'RUN_READ_ONLY_DRAFTS_20261013_E2E003'
+          )
+        )
+      }}
     name: Three existing Buffer posts – no mutations
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -38,7 +60,7 @@ jobs:
 
       - name: Import ONLY data from immutable campaign output branch
         env:
-          CAMPAIGN: ${{ inputs.campaign }}
+          CAMPAIGN: ${{ github.event_name == 'issue_comment' && '2026-10-13-lieferanten-pdf-prueftor-e2e-003' || inputs.campaign }}
         shell: bash
         run: |
           set -euo pipefail
