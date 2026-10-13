@@ -53,6 +53,7 @@ def validate_spec(spec: dict, root: Path) -> Path:
     if not isinstance(spec, dict) or set(spec) not in (
         legacy_fields, legacy_fields | {"person_approval_evidence"},
         legacy_fields | {"automated_review"},
+        legacy_fields | {"chatgpt_review"},
     ):
         raise InvalidScene("Exact version-1 scene specification required")
     if spec["format_version"] != 1 or spec["brand"] != "ai-agent-builder":
@@ -102,6 +103,18 @@ def validate_spec(spec: dict, root: Path) -> Path:
     evidence = spec["review_evidence"]
     if not isinstance(evidence, str) or len(evidence.strip()) < 15:
         raise InvalidScene("Traceable visual review evidence is required")
+    # ChatGPT-native visual inspection is not a human sign-off. Provenance
+    # remains explicit until Josef checks the finished Buffer draft.
+    chatgpt = spec.get("chatgpt_review")
+    if chatgpt is not None:
+        if (not isinstance(chatgpt, dict)
+                or set(chatgpt) != {"kind", "source_sha256"}
+                or chatgpt["kind"] != "chatgpt_visual_inspection_draft_only"
+                or chatgpt["source_sha256"] != spec["source_sha256"]
+                or person_review or review["no_people"] is not True
+                or "ChatGPT" not in evidence or "NOT a human" not in evidence):
+            raise InvalidScene("ChatGPT draft-only visual provenance missing or falsely labeled")
+
     auto = spec.get("automated_review")
     if auto is not None:
         # Machine review is ONLY provisional and permitted for Buffer drafts,
@@ -231,8 +244,9 @@ def build(spec_path: Path, root: Path, base: Path, final: Path,
             call("verify", final, base, "--original", logo)
             qa = {"profile": "logo_only", "validator": "personalos_canonical",
                   "logo_verified": True,
-                  "source_visual_review": ("machine_draft_only"
-                                           if "automated_review" in spec else "manual"),
+                  "source_visual_review": ("machine_draft_only" if "automated_review" in spec else
+                                            "chatgpt_visual_inspection_draft_only" if "chatgpt_review" in spec
+                                            else "manual"),
                   "review_evidence": spec["review_evidence"]}
         else:
             if bbox is None:
