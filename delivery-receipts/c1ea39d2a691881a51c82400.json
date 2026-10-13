@@ -2,7 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-13-lieferanten-pdf-prueftor-e2e-003-instagram.json",
   "target": "instagram",
   "draft_sha256": "7dbb62acac0c4f01f7e4ee4d5a80a9c38266a9731bd936767ef4f4958c3bc1ca",
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "created_requires_independent_check",
   "github_run_id": "38371440634",
   "due_at_utc": "2026-10-21T16:00:00Z",
   "channel_id": "6ac79a686a5c39ccb650f94b",
@@ -10,5 +10,6 @@
     "campaign": "2026-10-13-lieferanten-pdf-prueftor-e2e-003",
     "quality_gate": "passed",
     "image_sha256": "a7367c120d337c65003459c729e15be67e728dbd1e492eed297feb48c63b70ea"
-  }
+  },
+  "buffer_post_id": "6acdefd2ca68ebbd369b7cf6"
 }
