@@ -76,8 +76,11 @@ class ChatGPTImageImportTest(unittest.TestCase):
         self.assertFalse((self.root / REVIEW).exists())
 
     def test_non_4_by_5_png_blocked(self):
+        wrong_size = fake_png((1024, 1536))
+        self.brief["chatgpt_image"]["sha256"] = hashlib.sha256(wrong_size).hexdigest()
+        self.update()
         with self.assertRaisesRegex(tr.ChatImageBlocked, "1080 x 1350"):
-            tr.import_image(BRIEF, self.root, fetch=lambda url: fake_png((1024, 1536)))
+            tr.import_image(BRIEF, self.root, fetch=lambda url: wrong_size)
         self.assertFalse((self.root / PNG).exists())
 
     def test_missing_transport_blocked_before_fetch(self):
@@ -104,7 +107,7 @@ class ChatGPTImageImportTest(unittest.TestCase):
     def test_no_unchecked_people_or_made_up_human_review(self):
         self.brief["chatgpt_image"]["visual_review"]["no_people"] = False
         self.update()
-        with self.assertRaisesRegex(tr.ChatImageBlocked, "Sichtprüfungen"):
+        with self.assertRaisesRegex(tr.ChatImageBlocked, "Bildsichtprüfungen"):
             tr.import_image(BRIEF, self.root,
                             fetch=lambda url: self.fail("must not fetch"))
         self.brief["chatgpt_image"]["visual_review"]["no_people"] = True
