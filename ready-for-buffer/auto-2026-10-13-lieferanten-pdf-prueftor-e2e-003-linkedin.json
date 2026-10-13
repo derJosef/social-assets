@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "linkedin",
+  "text": "Eine Lieferanten-PDF kann technische Daten enthalten. Sie kann aber auch Anweisungen enthalten, die gar nicht an deinen KI-Agenten gerichtet sein dürfen.\n\nStell dir vor, ein KI-Agent soll aus einer eingehenden Produktbeschreibung die wichtigsten Maße und Rückfragen für den Einkauf vorbereiten. Die Datei kommt von außerhalb des Unternehmens. Zwischen Stücklisten und Datenblättern steht plötzlich eine Aufforderung, interne Informationen an eine fremde Adresse zu senden.\n\nDer Unterschied ist entscheidend: Eine PDF ist eine Informationsquelle, keine neue Befehlsinstanz. Der Agent darf daraus Fakten für seine Aufgabe entnehmen, aber nicht eigenständig seine Berechtigungen oder seinen Auftrag ändern.\n\nFür die Praxis würde ich drei Grenzen einbauen:\n• Externe Dokumente klar als nicht vertrauenswürdige Daten behandeln.\n• Werkzeuge und Zugriffsrechte auf die tatsächlich benötigten Funktionen beschränken.\n• Versand, Datenweitergabe und andere folgenreiche Aktionen erst nach überprüfbarer Freigabe erlauben.\n\nDiese Grundsätze stehen im Einklang mit den Empfehlungen von Microsoft zu indirekter Prompt Injection, den OWASP-Risiken für agentische Systeme und den NIST-Untersuchungen zu Agent Hijacking. Sie sind keine Garantie gegen jeden Angriff; konkrete Abläufe müssen getestet werden.\n\nWelche Entscheidung darf ein KI-Agent bei dir vorbereiten – und welche sollte er niemals ohne Freigabe ausführen?\n\nQuellen: Microsoft Learn, „Defend against indirect prompt injection attacks“ (23.03.2026); OWASP, „Top 10 for Agentic Applications“ (09.12.2025); NIST, „Strengthening AI Agent Hijacking Evaluations“ (17.01.2025).\n#KIAgenten #Mittelstand #Informationssicherheit #Prozessgestaltung",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/df80d5c5016ba53c4fc70e3c9e7f3de2caf0d209/media/images/2026-10-13-lieferanten-pdf-prueftor-e2e-003-branded.png",
+        "alt_text": "Technische Darstellung zum Thema Kontrollierter KI-Agent im Einkauf: Externe Lieferanten-PDFs sind Informationen, niemals Befehle. Praxisbeispiel eines rein hypothetischen Prozesses zur Sichtung tec; Original-Pauderer-Logo unten rechts."
+      }
+    ]
+  }
+}

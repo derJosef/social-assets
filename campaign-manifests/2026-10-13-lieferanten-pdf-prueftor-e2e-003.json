@@ -1,0 +1,61 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-13-lieferanten-pdf-prueftor-e2e-003",
+  "checked_at": "2026-10-13",
+  "sources": [
+    {
+      "url": "https://learn.microsoft.com/en-us/security/zero-trust/sfi/defend-indirect-prompt-injection",
+      "published_at": "2026-03-23",
+      "checked_at": "2026-10-13"
+    },
+    {
+      "url": "https://www.nist.gov/news-events/news/2025/01/technical-blog-strengthening-ai-agent-hijacking-evaluations",
+      "published_at": "2025-01-17",
+      "checked_at": "2026-10-13"
+    }
+  ],
+  "checks": {
+    "novelty": true,
+    "claims_with_sources": true,
+    "language_and_cta": true,
+    "six_hats": true,
+    "privacy_and_rights": true,
+    "brand_image": true,
+    "posting_time_research": true
+  },
+  "image": {
+    "final": "media/images/2026-10-13-lieferanten-pdf-prueftor-e2e-003-branded.png",
+    "base": "media/source-images/2026-10-13-lieferanten-pdf-prueftor-e2e-003-base.png",
+    "sha256": "a7367c120d337c65003459c729e15be67e728dbd1e492eed297feb48c63b70ea",
+    "layout": "logo_only",
+    "review_spec": "visual-reviews/2026-10-13-lieferanten-pdf-prueftor-e2e-003.json",
+    "source_sha256": "d20f8fc1ec6a3f18129f9be96bebf8e917ce03b1118169981df25905fac3be08",
+    "ai_disclosure": {
+      "required": false,
+      "text": null,
+      "pixel_verified": false
+    },
+    "heading_corner": null,
+    "heading_box": null
+  },
+  "posts": {
+    "linkedin": "ready-for-buffer/auto-2026-10-13-lieferanten-pdf-prueftor-e2e-003-linkedin.json",
+    "facebook": "ready-for-buffer/auto-2026-10-13-lieferanten-pdf-prueftor-e2e-003-facebook.json",
+    "instagram": "ready-for-buffer/auto-2026-10-13-lieferanten-pdf-prueftor-e2e-003-instagram.json"
+  },
+  "posting_times": {
+    "linkedin": {
+      "local": "2026-10-28T16:00:00+01:00",
+      "utc": "2026-10-28T15:00:00Z"
+    },
+    "facebook": {
+      "local": "2026-10-22T09:00:00+02:00",
+      "utc": "2026-10-22T07:00:00Z"
+    },
+    "instagram": {
+      "local": "2026-10-21T18:00:00+02:00",
+      "utc": "2026-10-21T16:00:00Z"
+    }
+  }
+}

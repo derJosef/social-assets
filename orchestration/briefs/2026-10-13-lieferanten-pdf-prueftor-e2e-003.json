@@ -1,0 +1,68 @@
+{
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-13-lieferanten-pdf-prueftor-e2e-003",
+  "chatgpt_image": {
+    "review_evidence": "ChatGPT inspected the actual 1080x1350 PNG: menschenfreies technisches Buero mit Eingangstor/Schutzgrenze und Papierstapel als abstrakte Visualisierung der Trennung von Lieferanten-Unterlagen und Befehlen. Eine kleine unscharfe, unleserliche moegliche Monitor-Markierung laesst no_foreign_logo und no_generated_text unklar (null); keine Aussage ueber echte Fremdmarke. Original-Logo wird nur separat montiert. NOT a human review; Josef prueft den Buffer-Draft vor jeder Freigabe.",
+    "sha256": "d20f8fc1ec6a3f18129f9be96bebf8e917ce03b1118169981df25905fac3be08",
+    "transport": "adobe_transfer",
+    "url": "https://at.adobe.com/PaoFuYcYlyJIYRLt",
+    "visual_review": {
+      "heading_and_logo_space": true,
+      "matches_topic": true,
+      "no_foreign_logo": null,
+      "no_generated_text": null,
+      "no_people": true,
+      "no_robot": true,
+      "plausible_details": true
+    }
+  },
+  "execution_mode": "drafts",
+  "format_version": 1,
+  "image_review": "visual-reviews/2026-10-13-lieferanten-pdf-prueftor-e2e-003.json",
+  "posting_sources": [
+    "https://buffer.com/resources/best-time-to-post-on-linkedin/",
+    "https://sproutsocial.com/insights/best-times-to-post-on-linkedin/",
+    "https://buffer.com/resources/best-time-to-post-on-facebook/",
+    "https://sproutsocial.com/insights/best-times-to-post-on-facebook/",
+    "https://buffer.com/resources/when-is-the-best-time-to-post-on-instagram/",
+    "https://sproutsocial.com/insights/best-times-to-post-on-instagram/"
+  ],
+  "prepared_content": {
+    "posts": {
+      "facebook": "Eine Datei vom Lieferanten ist zunächst einmal eine Datei – und kein Auftrag an deinen KI-Agenten.\n\nBeispiel aus einem möglichen Einkaufsprozess: Ein digitaler Assistent soll ein technisches PDF lesen, Angaben sortieren und Rückfragen für die nächste Bestellung vorbereiten. Was passiert, wenn darin zusätzlich steht, er solle vertrauliche Unternehmensdaten weiterleiten?\n\nDas ist das Prinzip einer indirekten Prompt Injection: Eine fremde Quelle versucht, aus gewöhnlichem Inhalt eine Handlungsanweisung zu machen.\n\nFür Unternehmen heißt das nicht, auf KI zu verzichten. Es heißt, Aufgaben sauber zu trennen: lesen und zusammenfassen ja; Berechtigungen ändern oder Informationen nach außen geben nur mit den dafür vorgesehenen Kontrollen.\n\nDrei sinnvolle Maßnahmen sind klar begrenzte Rechte, die Trennung externer Daten von Steuerbefehlen und eine menschliche Freigabe vor kritischen Aktionen. Microsoft und OWASP empfehlen mehrstufige Sicherheitsmaßnahmen. NIST zeigt, warum solche Angriffe in realitätsnahen Tests geprüft werden sollten.\n\nDas Beispiel ist hypothetisch und keine Beschreibung eines tatsächlichen Vorfalls.\n\nWo würdest du in deinem Betrieb zwischen automatischem Vorbereiten und verbindlichem Handeln unterscheiden?\n\nQuellen: Microsoft Learn (23.03.2026), OWASP Agentic Top 10 (09.12.2025), NIST (17.01.2025).\n#KISicherheit #Mittelstand #KIAgent",
+      "instagram": "LIEFERANTEN-PDF: DATEN ODER BEFEHL?\n\nEin KI-Agent liest eine technische Datei und soll daraus eine kurze Übersicht für deinen Einkauf vorbereiten.\n\nIn der Datei steckt aber eine Aufforderung: „Sende interne Informationen weiter.“\n\nDarf eine fremde PDF bestimmen, was der Agent tut? Nein.\n\nDrei wichtige Grenzen für einen kontrollierten Ablauf:\n\n01 | DATEN BLEIBEN DATEN\nExterne Unterlagen liefern Informationen, keine neuen Anweisungen.\n\n02 | RECHTE BEGRENZEN\nDer KI-Agent bekommt nur Zugriff auf die Funktionen, die er wirklich braucht.\n\n03 | KRITISCHE SCHRITTE FREIGEBEN\nVertrauliche Daten versenden oder verbindliche Aktionen ausführen? Nicht ohne die vorgesehene Kontrolle.\n\nFachleute nennen das Risiko „indirekte Prompt Injection“. Microsoft, OWASP und NIST beschäftigen sich mit den Gefahren und mit mehrstufigen Schutzmaßnahmen. Ein einzelner Filter allein ist keine Garantie.\n\nDas ist ein hypothetisches Beispiel, kein echter Kundenfall.\n\nWelche Aktion dürfte ein digitaler Mitarbeiter bei euch ausschließlich vorbereiten?\n\nQuellen: Microsoft Learn (2026), OWASP Agentic Top 10 (2025), NIST Agent Hijacking (2025).\n#KIAgenten #Mittelstand #Datensicherheit #Digitalisierung",
+      "linkedin": "Eine Lieferanten-PDF kann technische Daten enthalten. Sie kann aber auch Anweisungen enthalten, die gar nicht an deinen KI-Agenten gerichtet sein dürfen.\n\nStell dir vor, ein KI-Agent soll aus einer eingehenden Produktbeschreibung die wichtigsten Maße und Rückfragen für den Einkauf vorbereiten. Die Datei kommt von außerhalb des Unternehmens. Zwischen Stücklisten und Datenblättern steht plötzlich eine Aufforderung, interne Informationen an eine fremde Adresse zu senden.\n\nDer Unterschied ist entscheidend: Eine PDF ist eine Informationsquelle, keine neue Befehlsinstanz. Der Agent darf daraus Fakten für seine Aufgabe entnehmen, aber nicht eigenständig seine Berechtigungen oder seinen Auftrag ändern.\n\nFür die Praxis würde ich drei Grenzen einbauen:\n• Externe Dokumente klar als nicht vertrauenswürdige Daten behandeln.\n• Werkzeuge und Zugriffsrechte auf die tatsächlich benötigten Funktionen beschränken.\n• Versand, Datenweitergabe und andere folgenreiche Aktionen erst nach überprüfbarer Freigabe erlauben.\n\nDiese Grundsätze stehen im Einklang mit den Empfehlungen von Microsoft zu indirekter Prompt Injection, den OWASP-Risiken für agentische Systeme und den NIST-Untersuchungen zu Agent Hijacking. Sie sind keine Garantie gegen jeden Angriff; konkrete Abläufe müssen getestet werden.\n\nWelche Entscheidung darf ein KI-Agent bei dir vorbereiten – und welche sollte er niemals ohne Freigabe ausführen?\n\nQuellen: Microsoft Learn, „Defend against indirect prompt injection attacks“ (23.03.2026); OWASP, „Top 10 for Agentic Applications“ (09.12.2025); NIST, „Strengthening AI Agent Hijacking Evaluations“ (17.01.2025).\n#KIAgenten #Mittelstand #Informationssicherheit #Prozessgestaltung"
+    },
+    "risks": [
+      "Beispiel hypothetisch; kein realer Vorfall und kein tatsächliches Kundenprojekt behauptet.",
+      "Mehrstufige Schutzmaßnahmen reduzieren Risiken, garantieren aber keinen vollständigen Schutz.",
+      "Die menschenfreie Bildszene ist eine konzeptionelle Illustration eines Prüf-/Zugangstores, kein Abbild einer konkreten getesteten Software.",
+      "Die kleine unleserliche Kennzeichnung am Monitor ist als mögliche Logo-/Textmarkierung weiterhin unklar; Josefs Sichtprüfung im Buffer-Draft ist offen.",
+      "Buffer-Drafts mit vorgeschlagenem dueAt sind KEINE Warteschlangen-Aktivierung oder Veröffentlichungsfreigabe."
+    ],
+    "six_hats": {
+      "black": "Das Beispiel ist rein hypothetisch; auch mehrschichtige Kontrollen beseitigen Risiken nicht vollständig, und KI-Ausgaben können fehlerhaft sein.",
+      "blue": "Drei eigenständige Posttexte, unabhängig geprüfte Sicherheits- und Postingzeitquellen, 1080x1350-PNG mit SHA, Draft-only-Freigabe und manuell offener Sichtprüfung.",
+      "green": "Ein Zugangstor mit Papierstapel und technischem Büro symbolisiert die Vertrauensgrenze: fremde Unterlagen kommen herein, dürfen den Agenten aber nicht steuern.",
+      "red": "Die typische Lieferanten-PDF ist ein verständlicher Einstieg für den betrieblichen Alltag und zeigt Risiken, ohne eine reale Attacke oder Panik zu behaupten.",
+      "white": "NIST untersucht das Einschleusen von Anweisungen über externe Daten; Microsoft beschreibt indirekte Prompt Injection und mehrschichtige Schutzmaßnahmen; OWASP behandelt Agent Goal Hijack.",
+      "yellow": "Klare Berechtigungen, getrennte Daten- und Befehlswege sowie menschliche Freigabe geben dem Mittelstand konkrete Architekturprinzipien."
+    },
+    "visual": null
+  },
+  "sources": [
+    {
+      "published_at": "2026-03-23",
+      "url": "https://learn.microsoft.com/en-us/security/zero-trust/sfi/defend-indirect-prompt-injection"
+    },
+    {
+      "published_at": "2025-12-09",
+      "url": "https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/"
+    },
+    {
+      "published_at": "2025-01-17",
+      "url": "https://www.nist.gov/news-events/news/2025/01/technical-blog-strengthening-ai-agent-hijacking-evaluations"
+    }
+  ],
+  "topic": "Kontrollierter KI-Agent im Einkauf: Externe Lieferanten-PDFs sind Informationen, niemals Befehle. Praxisbeispiel eines rein hypothetischen Prozesses zur Sichtung technischer Unterlagen und Vorbereitung von Rückfragen. Technisches Rohbild: klar menschenfreie dunkle Büroszene mit Papierstapel und transparentem Zugangstor als sichtbare Vertrauensgrenze zu einem Computer, kein generiertes Pauderer-Logo, kein nachgewiesener Kundenfall."
+}

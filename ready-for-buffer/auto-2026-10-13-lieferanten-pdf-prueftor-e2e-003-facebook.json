@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "facebook",
+  "text": "Eine Datei vom Lieferanten ist zunächst einmal eine Datei – und kein Auftrag an deinen KI-Agenten.\n\nBeispiel aus einem möglichen Einkaufsprozess: Ein digitaler Assistent soll ein technisches PDF lesen, Angaben sortieren und Rückfragen für die nächste Bestellung vorbereiten. Was passiert, wenn darin zusätzlich steht, er solle vertrauliche Unternehmensdaten weiterleiten?\n\nDas ist das Prinzip einer indirekten Prompt Injection: Eine fremde Quelle versucht, aus gewöhnlichem Inhalt eine Handlungsanweisung zu machen.\n\nFür Unternehmen heißt das nicht, auf KI zu verzichten. Es heißt, Aufgaben sauber zu trennen: lesen und zusammenfassen ja; Berechtigungen ändern oder Informationen nach außen geben nur mit den dafür vorgesehenen Kontrollen.\n\nDrei sinnvolle Maßnahmen sind klar begrenzte Rechte, die Trennung externer Daten von Steuerbefehlen und eine menschliche Freigabe vor kritischen Aktionen. Microsoft und OWASP empfehlen mehrstufige Sicherheitsmaßnahmen. NIST zeigt, warum solche Angriffe in realitätsnahen Tests geprüft werden sollten.\n\nDas Beispiel ist hypothetisch und keine Beschreibung eines tatsächlichen Vorfalls.\n\nWo würdest du in deinem Betrieb zwischen automatischem Vorbereiten und verbindlichem Handeln unterscheiden?\n\nQuellen: Microsoft Learn (23.03.2026), OWASP Agentic Top 10 (09.12.2025), NIST (17.01.2025).\n#KISicherheit #Mittelstand #KIAgent",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/df80d5c5016ba53c4fc70e3c9e7f3de2caf0d209/media/images/2026-10-13-lieferanten-pdf-prueftor-e2e-003-branded.png",
+        "alt_text": "Technische Darstellung zum Thema Kontrollierter KI-Agent im Einkauf: Externe Lieferanten-PDFs sind Informationen, niemals Befehle. Praxisbeispiel eines rein hypothetischen Prozesses zur Sichtung tec; Original-Pauderer-Logo unten rechts."
+      }
+    ]
+  }
+}
