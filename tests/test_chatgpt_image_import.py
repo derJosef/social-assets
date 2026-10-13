@@ -137,7 +137,7 @@ class ChatGPTImageImportTest(unittest.TestCase):
     def test_no_unchecked_people_or_made_up_human_review(self):
         self.brief["chatgpt_image"]["visual_review"]["no_people"] = False
         self.update()
-        with self.assertRaisesRegex(tr.ChatImageBlocked, "Bildsichtprüfungen"):
+        with self.assertRaisesRegex(tr.ChatImageBlocked, "Klare Maengel/Personen"):
             tr.import_image(BRIEF, self.root,
                             fetch=lambda url: self.fail("must not fetch"))
         self.brief["chatgpt_image"]["visual_review"]["no_people"] = True
