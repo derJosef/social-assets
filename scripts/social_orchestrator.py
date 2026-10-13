@@ -15,17 +15,16 @@ import sys
 import urllib.parse
 import urllib.request
 import urllib.error
-from datetime import date, datetime, timedelta, time, timezone
+from datetime import date, datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
-from zoneinfo import ZoneInfo
+from posting_time_planner import RESEARCH_URLS, propose_times
 
 ROOT = Path(__file__).resolve().parents[1]
 BRIEF_RE = re.compile(r"^orchestration/briefs/(20\d{2}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*)\.json$")
 TARGETS = ("linkedin", "facebook", "instagram")
 SHA_LOGO = "15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0"
 DEFAULT_REPORT = "orchestration/last-run-report.json"
-TIMEZONE = ZoneInfo("Europe/Berlin")
 
 class Blocked(Exception):
     pass
@@ -158,27 +157,9 @@ def call_model(messages, *, max_tokens=3100):
         raise Blocked("Modell hat kein gültiges strukturiertes JSON geliefert") from None
 
 def select_times(today):
-    # Only proposals! UTC conversion uses actual Europe/Berlin DST.
-    floor=max(today + timedelta(days=14), date(2026,11,2))
-    # Avoid previously documented proposed publishing slots.
-    for file in (ROOT/"campaign-manifests").glob("*.json"):
-        try:
-            previous=json.loads(file.read_text(encoding="utf-8"))
-            for timing in previous.get("posting_times",{}).values():
-                last_day=datetime.fromisoformat(timing["local"]).astimezone(TIMEZONE).date()
-                floor=max(floor,last_day+timedelta(days=7))
-        except (OSError,ValueError,KeyError,TypeError):
-            continue
-    targets=[("linkedin",2,16),("facebook",1,19),("instagram",2,18)]
-    out={}
-    for target,weekday,hour in targets:
-        delta=(weekday-floor.weekday())%7
-        day=floor+timedelta(days=delta)
-        local=datetime.combine(day,time(hour,0),tzinfo=TIMEZONE)
-        out[target]={"local":local.isoformat(timespec="seconds"),
-                     "utc":local.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
-        floor=day+timedelta(days=1)
-    return out
+    # The existing manifest schema is unchanged. This is only a proposed
+    # posting time: never authorize scheduling or publication from a proposal.
+    return propose_times(today, ROOT)
 
 def assess_generated(g):
     require(isinstance(g,dict) and set(g)=={"posts","visual","six_hats","risks"}, "LLM-Antwortstruktur ungültig")
@@ -235,8 +216,11 @@ def create_packages(brief, evidences, g):
         "base":p["base"],"final":p["final"],"sha256":digest,
         "layout":verified["layout"],"image_review":brief["image_review"],
         "source_sha256":verified["source_sha256"],
+        "ai_disclosure":verified["ai_disclosure"],
         "logo_original_sha256":SHA_LOGO,
-        "manual_review":verified["logo_qa"].get("source_visual_review","separate-review")
+        "review_method":verified["logo_qa"].get("source_visual_review","separate-review"),
+        "human_visual_review":("pending_in_buffer"
+              if "automated_review" in source_spec else "recorded_in_original_review")
     })
     today=datetime.now(timezone.utc).date()
     times=select_times(today)
@@ -251,6 +235,7 @@ def create_packages(brief, evidences, g):
       "image":{"final":p["final"],"base":p["base"],"sha256":digest,
                "layout":verified["layout"],"review_spec":brief["image_review"],
                "source_sha256":verified["source_sha256"],
+               "ai_disclosure":verified["ai_disclosure"],
                "heading_corner":"top-left" if verified["layout"]=="headline" else None,
                "heading_box":verified["heading_box"]},
       "posts":{t:f"ready-for-buffer/auto-{c}-{t}.json" for t in TARGETS},
@@ -261,16 +246,29 @@ def create_packages(brief, evidences, g):
         write_json(ROOT/manifest["posts"][t],{
             "format_version":2,"target":t,"text":g["posts"][t],
             "media":{"type":"images","images":[{"url":url,
-              "alt_text":"Technische Darstellung zum Thema "+brief["topic"][:165]+"; Original-Pauderer-Logo unten rechts."}]}
+              "alt_text":"Technische Darstellung zum Thema "+brief["topic"][:165]+"; Original-Pauderer-Logo unten rechts." +
+              (" Im Bild: Powered by AI." if verified["ai_disclosure"]["required"] else "")}]}
         })
     write_json(ROOT/p["manifest"],manifest)
     plan=["# "+c,"","## Faktenquellen",""]
     plan += [f"- {s['url']} (Publikationsdatum laut Brief: {s['published_at']})" for s in brief["sources"]]
     plan += ["","## Vier-Augen- und sechs-Hüte-Prüfung",""]
     plan += [f"- **{k}:** {v}" for k,v in g["six_hats"].items()]
+    plan += ["","## Powered-by-AI-Bildpruefung",
+             f"- Hinweis erforderlich: {verified['ai_disclosure']['required']}",
+             f"- Eigenstaendiges Pixel-Gate: {verified['ai_disclosure']['pixel_verified']}"]
     plan += ["","## Offene Risiken",""]+[f"- {str(v)[:500]}" for v in g["risks"]]
     plan += ["","## Geplante Termine (NICHT in Buffer aktiviert)",""]
     plan += [f"- {t}: {times[t]['local']} Berlin / {times[t]['utc']} UTC" for t in TARGETS]
+    plan += ["", "## Zeitstudien und Grenzen der Planung", "",
+             "Die Vorschläge beruhen auf zwei unabhängigen 2026-Studien je Kanal (Buffer und Sprout Social), "
+             "nicht auf einem nachgewiesenen Optimum für unsere eigenen Follower. "
+             "Fünf Tage Vorlauf, mindestens drei Tage Abstand je Kanal, "
+             "bestehende GitHub-Manifeste und bereits beantragte Termine werden berücksichtigt. "
+             "Für eine endgültige Veröffentlichungsentscheidung sind aktuelle Kanalmetriken, "
+             "Anlass und Kollisionen erneut zu prüfen."]
+    plan += [f"- {t} / Quelle {i+1}: {url}" for t in TARGETS
+             for i, url in enumerate(RESEARCH_URLS[t])]
     method_note = (
         "Vorbereitete Redaktionstexte (prepared_content): externe Quellen wurden im Lauf "
         "abgerufen und formale Strukturpruefungen durchgefuehrt. KEINE automatische "

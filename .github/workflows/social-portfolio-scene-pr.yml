@@ -4,13 +4,25 @@ on:
   pull_request:
     paths:
       - 'scripts/social_portfolio_scene.py'
+      - 'scripts/ai_disclosure.py'
+      - 'tests/test_ai_disclosure.py'
       - 'scripts/social_orchestrator.py'
+      - 'scripts/production_activation_guard.py'
+      - 'tests/test_production_activation_guard.py'
+      - 'scripts/social_weekly_review.py'
+      - 'scripts/buffer_draft_review_refresh.py'
+      - 'tests/test_buffer_draft_review_refresh.py'
+      - '.github/workflows/buffer-draft-live-review.yml'
+      - 'tests/test_social_weekly_review.py'
+      - 'scripts/automatic_image_source.py'
+      - 'tests/test_automatic_image_source.py'
       - 'scripts/autonomous_campaign_gate.py'
       - 'tests/test_social_orchestrator.py'
       - 'scripts/prepared_brief_preflight.py'
       - 'tests/test_prepared_brief_preflight.py'
       - 'tests/test_autonomous_campaign_gate.py'
       - '.github/workflows/social-campaign-orchestrator.yml'
+      - '.github/workflows/buffer-auto-drafts.yml'
       - 'scripts/logo_composite.py'
       - 'scripts/test_logo_composite.py'
       - 'tests/test_social_portfolio_scene.py'
@@ -31,11 +43,18 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-      - run: python -m pip install --disable-pip-version-check 'Pillow>=11,<13' 'numpy>=2,<3'
+      - run: python -m pip install --disable-pip-version-check 'Pillow==12.3.0' 'numpy==2.5.4'
+      - name: Check real pinned Inter Medium pixels (read-only, no Buffer)
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 2 'https://raw.githubusercontent.com/google/fonts/e1d6480102fed30739fead0faee463101f892c8f/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf' -o /tmp/Inter.ttf
+          echo '29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031  /tmp/Inter.ttf' | sha256sum --check --status
+          SOCIAL_FONT_SMOKE=1 python -m unittest discover -s tests -p 'test_ai_disclosure.py' -v
       - name: Offline scene validation without API secrets or Buffer calls
         run: |
-          python -m py_compile scripts/social_portfolio_scene.py scripts/logo_composite.py scripts/test_logo_composite.py tests/test_social_portfolio_scene.py
+          python -m py_compile scripts/social_portfolio_scene.py scripts/ai_disclosure.py scripts/logo_composite.py scripts/test_logo_composite.py tests/test_social_portfolio_scene.py tests/test_ai_disclosure.py
           python -m unittest discover -s scripts -p 'test_logo_composite.py' -v
+          python -m unittest discover -s tests -p 'test_ai_disclosure.py' -v
           python -m unittest discover -s tests -p 'test_social_portfolio_scene.py' -v
           python -m unittest discover -s tests -p 'test_social_orchestrator.py' -v
           python -m unittest discover -s tests -p 'test_prepared_brief_preflight.py' -v

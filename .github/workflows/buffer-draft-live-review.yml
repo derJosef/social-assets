@@ -1,0 +1,101 @@
+name: Buffer – bestehende Drafts lesend auf Änderungen prüfen
+
+on:
+  workflow_dispatch:
+    inputs:
+      campaign:
+        description: 'Bestehende Kampagne: YYYY-MM-DD-slug (KEIN Transfer)'
+        type: string
+        required: true
+      source_run_id:
+        description: 'GitHub-Lauf-ID des belegten 3/3 Buffer-Draft-Reports'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: read-only-buffer-draft-review
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    name: Read-only comparison – no createPost/editPost/Queue
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout without write credentials
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Install Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Validate identifiers (no interpolation into script)
+        shell: bash
+        env:
+          CAMPAIGN: ${{ inputs.campaign }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          set -euo pipefail
+          [[ "$CAMPAIGN" =~ ^20[0-9]{2}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*$ ]] || exit 1
+          [[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]{6,14}$ ]] || exit 1
+          echo "CAMPAIGN=$CAMPAIGN" >> "$GITHUB_ENV"
+          echo "SOURCE_RUN_ID=$SOURCE_RUN_ID" >> "$GITHUB_ENV"
+
+      - name: Import immutable prior Buffer verification (read only)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          path="orchestration/reports/$CAMPAIGN-run-$SOURCE_RUN_ID.json"
+          gh api -H 'Accept: application/vnd.github+json' \
+            "repos/$GITHUB_REPOSITORY/contents/$path?ref=automation-receipts" \
+            --jq '.content' | base64 --decode > "$RUNNER_TEMP/verified-buffer-drafts.json"
+          python3 - "$RUNNER_TEMP/verified-buffer-drafts.json" "$CAMPAIGN" <<'PY'
+          import json, sys
+          from scripts.social_weekly_review import validate
+          with open(sys.argv[1], encoding="utf-8") as file:
+              report = json.load(file)
+          campaign, _ = validate(report)
+          assert campaign == sys.argv[2], "Wrong source campaign"
+          print("SOURCE_RECEIPT_PASS: exactly 3 independent Buffer draft confirmations")
+          PY
+
+      - name: Buffer in present state ONLY READ, identify Josefs edits
+        shell: bash
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$BUFFER_API_KEY" || { echo 'BUFFER_API_KEY fehlt' >&2; exit 1; }
+          python3 scripts/buffer_draft_review_refresh.py \
+            --verified-report "$RUNNER_TEMP/verified-buffer-drafts.json" \
+            --output "$RUNNER_TEMP/current-buffer-drafts-read-only.json"
+          python3 - "$RUNNER_TEMP/current-buffer-drafts-read-only.json" <<'PY'
+          import json, os, sys
+          with open(sys.argv[1], encoding="utf-8") as f:
+              status=json.load(f)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
+              f.write("## Buffer-Drafts: ausschließlich lesender Abgleich\n\n")
+              f.write("Drei bestehende Posts: Status draft; keinerlei Scheduling-/Publish-Aktion.\n\n")
+              for channel, item in status["posts"].items():
+                  flags = ",".join(item["changes_since_original"]) or "keine"
+                  f.write(f"- {channel}: Post-ID {item['post_id']}, Änderungen: {flags}; Zukunftstermin: {item['has_future_date']}\n")
+              f.write("\nDie im Buffer aktuell gespeicherte Fassung bleibt führend. "
+                      "**Keine Freigabe zur Veröffentlichung durch diesen Lauf.**\n")
+          PY
+
+      - name: Persist read-only inspection artifact (not a Git commit)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buffer-read-only-review-${{ github.run_id }}
+          path: ${{ runner.temp }}/current-buffer-drafts-read-only.json
+          if-no-files-found: warn
+          retention-days: 14

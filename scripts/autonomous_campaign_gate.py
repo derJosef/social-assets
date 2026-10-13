@@ -17,7 +17,10 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
-from buffer_draft import read_draft
+if __package__:
+    from .buffer_draft import read_draft
+else:
+    from buffer_draft import read_draft
 
 ROOT = Path(__file__).resolve().parents[1]
 BRAND = "ai-agent-builder"
@@ -30,6 +33,7 @@ REQUIRED_CHECKS = (
     "privacy_and_rights", "brand_image", "posting_time_research"
 )
 IMG_BASE = "https://raw.githubusercontent.com/derJosef/social-assets/main/"
+IMG_REPO_BASE = "https://raw.githubusercontent.com/derJosef/social-assets/"
 HEADING_CORNERS = {"top-left", "top-right", "bottom-left", "bottom-right"}
 PATH_IMG_RE = re.compile(r"^media/images/[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}\.png$")
 PATH_BASE_RE = re.compile(r"^media/source-images/[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}\.png$")
@@ -103,13 +107,14 @@ def check_campaign(post_paths: list[str], today: date | None = None, verify_imag
     require(isinstance(image, dict), "Unvollstaendiger Bildnachweis")
     legacy_keys={"final","base","sha256","heading_corner","heading_box"}
     new_keys=legacy_keys | {"layout","review_spec","source_sha256"}
-    require(set(image) in (legacy_keys,new_keys),
+    disclosure_keys = new_keys | {"ai_disclosure"}
+    require(set(image) in (legacy_keys,new_keys,disclosure_keys),
             "Unerwartete Bildmetadaten: kein ungeprueftes Layout zulassen")
     require(isinstance(image["final"], str) and PATH_IMG_RE.fullmatch(image["final"]),
             "Finales Bild muss PNG unter media/images/ sein")
     require(isinstance(image["base"], str) and PATH_BASE_RE.fullmatch(image["base"]),
             "Logo-freies Basisbild unter media/source-images/ erforderlich")
-    new_format=set(image)==new_keys
+    new_format=set(image) in (new_keys, disclosure_keys)
     require(new_format, "Altes 1:1-Drei-Karten-Bildformat ist nicht mehr fuer neue autonome Kampagnen erlaubt")
     if new_format:
         from social_portfolio_scene import validate_spec
@@ -117,6 +122,24 @@ def check_campaign(post_paths: list[str], today: date | None = None, verify_imag
         require(isinstance(review_path,str) and review_path==f"visual-reviews/{campaign}.json",
                 "Review muss exakt zur Kampagne gehoeren")
         source_spec=json.loads(require_file(review_path).read_text(encoding="utf-8"))
+        from social_portfolio_scene import needs_disclosure
+        expected_caption = needs_disclosure(source_spec)
+        if expected_caption:
+            require("ai_disclosure" in image,
+                    "A person with AI-generated/modified appearance requires disclosure receipt")
+            qa = image["ai_disclosure"]
+            require(isinstance(qa, dict)
+                    and qa.get("required") is True
+                    and qa.get("text") == "Powered by AI"
+                    and qa.get("font_size_px") == 42
+                    and qa.get("margin_px") == 54
+                    and qa.get("pixel_verified") is True
+                    and qa.get("logo_disjoint_verified") is True,
+                    "Powered by AI verification receipt absent or false")
+        elif "ai_disclosure" in image:
+            qa = image["ai_disclosure"]
+            require(isinstance(qa, dict) and qa.get("required") is False,
+                    "Unnecessary disclosure: caption contradicts person review")
         try:
             source=validate_spec(source_spec,ROOT)
         except (ValueError,OSError) as e:
@@ -161,6 +184,10 @@ def check_campaign(post_paths: list[str], today: date | None = None, verify_imag
             cmd.extend(["--heading-corner",image["heading_corner"],
                         "--heading-box",",".join(str(n) for n in image["heading_box"])])
         subprocess.run(cmd, cwd=ROOT, check=True)
+        if new_format and expected_caption:
+            from ai_disclosure import verify_final_disclosure
+            verify_final_disclosure(ROOT / image["base"], ROOT / image["final"],
+                                    Path("/tmp/Inter.ttf"))
     for target in TARGETS:
         filename = entries[target]
         relative, _, raw = read_draft(filename)
@@ -169,8 +196,18 @@ def check_campaign(post_paths: list[str], today: date | None = None, verify_imag
         require(item["format_version"] == 2 and item["target"] == target,
                 "Plattform/Format falsch")
         media = item["media"]
+        media_url = media["images"][0]["url"] if (
+            isinstance(media, dict) and isinstance(media.get("images"), list)
+            and len(media["images"]) == 1 and isinstance(media["images"][0], dict)
+        ) else None
+        media_ref = None
+        if isinstance(media_url, str) and media_url.startswith(IMG_REPO_BASE):
+            remainder = media_url[len(IMG_REPO_BASE):]
+            media_ref, separator, media_path = remainder.partition("/")
+            if not separator or media_path != image["final"]:
+                media_ref = None
         require(media["type"] == "images" and len(media["images"]) == 1
-                and media["images"][0]["url"] == IMG_BASE + image["final"],
+                and (media_ref == "main" or bool(re.fullmatch(r"[a-f0-9]{40}", media_ref or ""))),
                 "Nur das zuvor verifizierte Original-Logo-Bild ist zulaessig")
     times = manifest["posting_times"]
     require(isinstance(times, dict) and set(times) == set(TARGETS), "Drei Plattformzeiten erforderlich")

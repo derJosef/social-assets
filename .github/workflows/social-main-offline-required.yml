@@ -1,0 +1,39 @@
+name: Social Main – mandatory offline acceptance
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  social-main-offline-required:
+    name: social-main-offline-required
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Read-only checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Python for deterministic validation
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned offline image dependencies
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0' 'numpy==2.5.4'
+
+      - name: Syntax and entire safety regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m compileall -q scripts tests
+          python3 -B -m unittest discover -s tests -q
+
+      - name: Confirm no live provider or Buffer mutation
+        run: |
+          echo "Mandatory offline CI gate, no Buffer/API keys, scheduling, publishing or draft creation."

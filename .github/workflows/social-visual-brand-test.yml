@@ -146,7 +146,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Commit only verified user-supplied image (never send to Buffer)
+      - name: Save verified image on isolated review branch (never main / Buffer)
         if: env.SOURCE_MODE == 'existing'
         shell: bash
         run: |
@@ -156,6 +156,8 @@ jobs:
           git add -- "$FINAL_IMAGE"
           [[ "$(git diff --cached --name-only | wc -l)" -eq 1 ]] || { echo 'Unexpected staged files' >&2; exit 1; }
           git commit -m 'assets: verified branded social visual (no Buffer transfer)'
-          git push origin HEAD:main
-          echo "GITHUB_ASSET=https://github.com/${GITHUB_REPOSITORY}/blob/main/${FINAL_IMAGE}" >> "$GITHUB_STEP_SUMMARY"
+          branch="automation/visual/run-${GITHUB_RUN_ID}"
+          git push origin "HEAD:refs/heads/$branch"
+          echo "GITHUB_ASSET=https://github.com/${GITHUB_REPOSITORY}/blob/$branch/${FINAL_IMAGE}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Zur Aufnahme auf main ist ein separater menschlich freigegebener PR erforderlich." >> "$GITHUB_STEP_SUMMARY"
           echo "PASS: Original-Logo SHA, Kontur, diagonale Position, exakte Pixelpruefung. Kein Buffer-Aufruf." >> "$GITHUB_STEP_SUMMARY"
