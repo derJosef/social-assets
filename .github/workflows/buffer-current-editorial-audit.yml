@@ -1,0 +1,59 @@
+name: Buffer – redaktionelle Bestandsaufnahme nur lesen
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: read-only-buffer-current-posts
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    if: >-
+      ${{
+        github.actor == 'derJosef' &&
+        github.ref == 'refs/heads/main' &&
+        github.event_name == 'issue_comment' &&
+        github.event.action == 'created' &&
+        github.event.issue.number == 19 &&
+        !github.event.issue.pull_request &&
+        github.event.issue.user.login == 'derJosef' &&
+        github.event.issue.title == 'AIAGENT_BRIEF:2026-10-13-lieferanten-pdf-prueftor-e2e-003' &&
+        github.event.comment.user.login == 'derJosef' &&
+        github.event.comment.body == 'AUDIT_AI_AGENT_BUFFER_DRAFTS_20261013'
+      }}
+    name: Review ALL current AI Agent Builder Buffer posts – READ ONLY
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout trusted protected main, no persisted credentials
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Read posts without mutations
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$BUFFER_API_KEY"
+          python3 -B scripts/buffer_current_draft_audit.py
+
+      - name: Keep ephemeral editor review JSON (one day)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buffer-editorial-review-${{ github.run_id }}
+          path: ${{ runner.temp }}/current-buffer-posts.json
+          retention-days: 1
+          if-no-files-found: error
