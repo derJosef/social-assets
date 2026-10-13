@@ -2,7 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-13-lieferanten-pdf-prueftor-e2e-003-facebook.json",
   "target": "facebook",
   "draft_sha256": "188835ea26cee49628f9537452a36966f82d68d17e4d5521c6c13f4ff5db8bc3",
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "created_requires_independent_check",
   "github_run_id": "38371440634",
   "due_at_utc": "2026-10-22T07:00:00Z",
   "channel_id": "6ac781e46a5c39ccb64fe01c",
@@ -10,5 +10,6 @@
     "campaign": "2026-10-13-lieferanten-pdf-prueftor-e2e-003",
     "quality_gate": "passed",
     "image_sha256": "a7367c120d337c65003459c729e15be67e728dbd1e492eed297feb48c63b70ea"
-  }
+  },
+  "buffer_post_id": "6acdefccd31101ca4b55169e"
 }
