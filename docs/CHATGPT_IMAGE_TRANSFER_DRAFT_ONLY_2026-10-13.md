@@ -43,3 +43,19 @@ Kein `SOCIAL_OPENAI_API_KEY`, kein OpenAI-Bild-/Text-API-Aufruf aus dem Kampagne
 - Die praktische Adobe-Link-Route war bewiesen, der **jetzige neue Issue-Pfad muss separat mit neuer eindeutiger Kampagne und mindestens einem wirklichen Rohbild geprüft werden**. Der fehlgeschlagene Lauf #38349167104 und Issue #16 dürfen nicht blind erneut verwendet werden.
 - Die wöchentlich geplante ChatGPT-Automation muss ihre neue `chatgpt_image`-Struktur **vor dem Issue** mit echter Bilddatei, temporärem Adobe-Transport und SHA füllen. Ob der Automationskontext ImageGen und Adobe-Übergabe unbeaufsichtigt unterstützt, ist **noch nicht geprüft**. Bis zu dieser Abnahme darf ein bildloses Wochen-Issue nicht erzeugt werden. Kein weiteres Konto/Modell-API-Secret anlegen.
 - Header und PR-Status dieser Datei nach dem Merge aktualisieren; historische früheren Informationen in anderen Dokumenten sind datierte Berichte und keine aktuelle Aktivierungswahrheit.
+
+## Unklare Logo- und Schriftmarkierungen: Transport ≠ Bildfreigabe
+
+Eine winzige unscharfe, logo- oder schriftähnliche Stelle ist **kein sicher nachgewiesenes Fremdlogo**. Beim ChatGPT-Draft-only-Pfad unterscheidet die Sichtprüfung deshalb **genau drei Zustände** für `no_foreign_logo` und `no_generated_text`:
+
+- `true`: nach tatsächlicher Sichtprüfung keine entsprechende problematische Kennzeichnung sichtbar
+- `null`: **uneindeutig** (etwa winzig/unscharf); muss in `review_evidence` ausdrücklich beschrieben sein (z.B. „unklar/unscharf“); Übertragung und unveröffentlichter Buffer-Draft bleiben möglich, **Josefs Nachprüfung bleibt offen**
+- `false`: tatsächlich erkennbare, problematische Fremdmarke oder generierter Text – **keine automatische Buffer-Draft-Erstellung**
+
+Alle anderen Kriterien (keine Personen/Roboter, technische Plausibilität, Themenbezug, freier Platz für das echte Logo) müssen ausdrücklich `true` bleiben; kein `null` und kein `false`. Die Ausnahmeregel gilt **nur** für die explizit als `chatgpt_review` gekennzeichnete, personenbezogen unverfängliche Draft-only-Route; manuelle Alt-Specs, Personendarstellungen und der separate Anbieter-Bild-API-Pfad bleiben unverändert streng.
+
+Die **Dateiübertragung zu Adobe ist kein visueller Freigabeschritt**. Sie prüft erst einmal Dateityp, Bytegröße, echten Transfer und SHA256 der tatsächlich transportierten Bildbytes. Unsicherheit bei einer unscharfen Kennzeichnung darf nicht als Begründung für einen Verzicht auf den regulären Adobe-Transfer dienen. Dies ist keine Erlaubnis, Plattform- oder Tool-Sicherheitsprüfungen zu umgehen: Fehler `This tool call was blocked by OpenAI's safety checks` bleiben unabhängig davon zu respektieren und separat zu diagnostizieren.
+
+Für `null` wird im `visual-reviews/<campaign>.json` der echte ungeklärte Befund erhalten und in `artwork-receipts/<campaign>.json` unter `visual_review_pending` sichtbar dokumentiert; Buffer-Drafts sind **keine Veröffentlichungsfreigabe**. Kein automatisches Queueing/Publizieren. Bei Josefs späterem Freigabeschritt müssen offene Einträge im tatsächlich verwendeten Bild abgearbeitet sein. Die Montage des kanonischen Original-Logos, dessen SHA-Prüfung und alle technischen Qualitäts- und Datenschutzgates werden nicht geschwächt.
+
+**Nicht ändern:** `chatgpt_image`-Transportprotokoll, Adobe-Connector-Werkzeuge, GitHub Branchschutz und tatsächliche Buffer-Draft-Einstellungen. Ein PR muss vor Integration die Offline-Checks bestehen. Die bestehende Montagsprompt-Anweisung muss nach Integration der neuen `null`-Bewertung synchronisiert werden.
