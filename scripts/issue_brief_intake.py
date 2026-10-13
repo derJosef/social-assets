@@ -65,7 +65,10 @@ def extract(event: dict) -> tuple[str, dict, int]:
             "ChatGPT image transfer required; no paid image-API fallback")
     # Reuse the proven ChatGPT -> Adobe file transfer -> pinned GitHub import.
     # This validates the public owner issue BEFORE any network/Image/Buffer call.
-    from chatgpt_image_import import inspect_brief, ChatImageBlocked
+    if __package__:
+        from .chatgpt_image_import import inspect_brief, ChatImageBlocked
+    else:
+        from chatgpt_image_import import inspect_brief, ChatImageBlocked
     try:
         inspect_brief(obj)
     except ChatImageBlocked as exc:
