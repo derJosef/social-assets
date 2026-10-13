@@ -150,7 +150,10 @@ def import_image(brief_file: str, root: Path = ROOT, *, fetch=fetch_image) -> di
     with src.open("xb") as out:
         out.write(raw)
     try:
-        from social_portfolio_scene import validate_spec
+        if __package__:
+            from .social_portfolio_scene import validate_spec
+        else:
+            from social_portfolio_scene import validate_spec
         require(validate_spec(spec, root) == src,
                 "Kanonischer Bild- und Review-Gate gescheitert")
         with review.open("x", encoding="utf-8") as out:
