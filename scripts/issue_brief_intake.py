@@ -62,17 +62,7 @@ def extract(event: dict) -> tuple[str, dict, int]:
     except (ValueError, UnicodeError):
         raise IssueBriefBlocked("Issue body must be one JSON campaign brief, not Markdown") from None
     require(isinstance(obj, dict) and set(obj) == EXPECTED_KEYS | {"chatgpt_image"},
-            "ChatGPT image transfer required; no paid image-API fallback")
-    # Reuse the proven ChatGPT -> Adobe file transfer -> pinned GitHub import.
-    # This validates the public owner issue BEFORE any network/Image/Buffer call.
-    if __package__:
-        from .chatgpt_image_import import inspect_brief, ChatImageBlocked
-    else:
-        from chatgpt_image_import import inspect_brief, ChatImageBlocked
-    try:
-        inspect_brief(obj)
-    except ChatImageBlocked as exc:
-        raise IssueBriefBlocked(str(exc)) from None
+            "Unexpected brief fields; ChatGPT image transfer required, no paid API")
     require(obj.get("format_version") == 1
             and obj.get("brand") == "ai-agent-builder"
             and obj.get("campaign_id") == campaign
@@ -106,6 +96,16 @@ def extract(event: dict) -> tuple[str, dict, int]:
             and isinstance(obj.get("posting_sources"), list)
             and len(obj["posting_sources"]) >= 6,
             "Independent article and posting-time sources required")
+    # Reuse the proven ChatGPT -> Adobe file transfer -> pinned GitHub import.
+    # This validates the public owner issue BEFORE any network/Image/Buffer call.
+    if __package__:
+        from .chatgpt_image_import import inspect_brief, ChatImageBlocked
+    else:
+        from chatgpt_image_import import inspect_brief, ChatImageBlocked
+    try:
+        inspect_brief(obj)
+    except ChatImageBlocked as exc:
+        raise IssueBriefBlocked(str(exc)) from None
     return campaign, obj, number
 
 
