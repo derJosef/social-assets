@@ -100,13 +100,21 @@ def inspect_brief(brief: dict) -> tuple[str, dict]:
             and SHA_RE.fullmatch(img["sha256"]) is not None,
             "SHA256-Pinning des ChatGPT-PNG fehlt")
     checks = img["visual_review"]
+    # A fuzzy possible mark is not proof of a foreign logo or generated text.
+    # None means "unresolved": preserve it for review in Buffer, never pretend
+    # it passed. Explicit False still blocks the entire draft campaign.
+    uncertain_keys = {"no_foreign_logo", "no_generated_text"}
     require(isinstance(checks, dict) and set(checks) == set(CHECKS)
-            and all(checks[k] is True for k in CHECKS),
-            "Sieben echte ChatGPT-Bildsichtprüfungen erforderlich; keine Person/Logo/Text")
+            and all(checks[k] is True or (k in uncertain_keys and checks[k] is None)
+                    for k in CHECKS),
+            "Klare Maengel/Personen blockieren; nur uneindeutige Logos/Texte duerfen ungeprueft bleiben")
     evidence = img["review_evidence"]
     require(isinstance(evidence, str) and 45 <= len(evidence) <= 800
             and "ChatGPT" in evidence and "NOT a human" in evidence,
-            "Nur tatsächlich durchgeführte ChatGPT-Sichtprüfung angeben; keine menschliche Freigabe erfinden")
+            "Nur tatsaechliche ChatGPT-Sichtpruefung; keine menschliche Freigabe erfinden")
+    pending = [k for k in CHECKS if checks[k] is None]
+    require(not pending or re.search(r"unscharf|unklar|uneindeutig|unleserlich|ambig|uncertain|unreadable", evidence, re.I),
+            "Unklare Logo-/Textmarkierung muss explizit als Sichtpruefung offen dokumentiert sein")
     return cid, img
 
 
@@ -171,6 +179,7 @@ def import_image(brief_file: str, root: Path = ROOT, *, fetch=fetch_image) -> di
             "review": review.relative_to(root).as_posix(),
             "transport": "adobe_transfer_hash_verified",
             "human_review": "pending_after_buffer_draft",
+            "visual_review_pending": [k for k in CHECKS if img["visual_review"][k] is None],
             "model_requests": 0, "buffer_requests": 0}
 
 

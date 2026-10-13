@@ -78,9 +78,18 @@ def validate_spec(spec: dict, root: Path) -> Path:
         raise InvalidScene("Every review field must be explicitly provided")
     # Legacy approved scenes are compatible only when no person is present.
     person_review = set(review) == set(REVIEW_KEYS) | set(PERSON_REVIEW_KEYS)
+    # ChatGPT draft-only scenes may carry an INDETERMINATE tiny mark (None)
+    # into Buffer for Josef to review. Legacy/manual/automated scenes remain
+    # strict, as do people, robots, composition, topic and actual defects.
+    mark_keys = {"no_foreign_logo", "no_generated_text"}
+    pending_marks = [
+        key for key in mark_keys if review[key] is None
+    ] if "chatgpt_review" in spec else []
     for key in REVIEW_KEYS:
         if key != "no_people" and review[key] is not True:
-            raise InvalidScene("Visual review incomplete; do not use this artwork")
+            if key in pending_marks:
+                continue
+            raise InvalidScene("Visual review incomplete or clear defect; do not use this artwork")
     if not person_review:
         if review["no_people"] is not True or "person_approval_evidence" in spec:
             raise InvalidScene("Any person requires the new classified review and approval evidence")
@@ -103,6 +112,10 @@ def validate_spec(spec: dict, root: Path) -> Path:
     evidence = spec["review_evidence"]
     if not isinstance(evidence, str) or len(evidence.strip()) < 15:
         raise InvalidScene("Traceable visual review evidence is required")
+    if pending_marks and not re.search(
+        r"unscharf|unklar|uneindeutig|unleserlich|ambig|uncertain|unreadable", evidence, re.I
+    ):
+        raise InvalidScene("Uncertain mark must be recorded for human Buffer review")
     # ChatGPT-native visual inspection is not a human sign-off. Provenance
     # remains explicit until Josef checks the finished Buffer draft.
     chatgpt = spec.get("chatgpt_review")

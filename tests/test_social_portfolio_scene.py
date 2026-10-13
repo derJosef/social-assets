@@ -41,6 +41,61 @@ class SceneTests(unittest.TestCase):
         with self.assertRaises(m.InvalidScene):
             m.validate_spec(self.spec, self.root)
 
+    def test_ambiguous_logo_or_text_only_chatgpt_draft_and_explicit_record(self):
+        self.spec["layout"] = "logo_only"
+        self.spec["heading"] = None
+        self.spec["chatgpt_review"] = {
+            "kind": "chatgpt_visual_inspection_draft_only",
+            "source_sha256": self.spec["source_sha256"],
+        }
+        self.spec["review_evidence"] = (
+            "ChatGPT actual source check: unscharf, logo-/textartige "
+            "Minimarkierung nicht eindeutig. NOT a human approval."
+        )
+        self.spec["visual_review"]["no_foreign_logo"] = None
+        self.spec["visual_review"]["no_generated_text"] = None
+        self.assertEqual(m.validate_spec(self.spec, self.root), self.source)
+        # No equivalently relaxed legacy/automatic/personal review.
+        self.spec.pop("chatgpt_review")
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec, self.root)
+
+    def test_clear_logo_rejected_even_with_chatgpt_review(self):
+        self.spec["chatgpt_review"] = {
+            "kind": "chatgpt_visual_inspection_draft_only",
+            "source_sha256": self.spec["source_sha256"],
+        }
+        self.spec["review_evidence"] = (
+            "ChatGPT saw a clearly recognizable foreign brand at the margin. "
+            "NOT a human approval."
+        )
+        self.spec["visual_review"]["no_foreign_logo"] = False
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec, self.root)
+
+    def test_uncertain_generated_text_requires_documented_evidence(self):
+        self.spec["chatgpt_review"] = {
+            "kind": "chatgpt_visual_inspection_draft_only",
+            "source_sha256": self.spec["source_sha256"],
+        }
+        self.spec["review_evidence"] = "ChatGPT checked. NOT a human sign-off."
+        self.spec["visual_review"]["no_generated_text"] = None
+        with self.assertRaisesRegex(m.InvalidScene, "Uncertain mark"):
+            m.validate_spec(self.spec, self.root)
+
+    def test_people_still_block_chatgpt_ambiguity(self):
+        self.spec["chatgpt_review"] = {
+            "kind": "chatgpt_visual_inspection_draft_only",
+            "source_sha256": self.spec["source_sha256"],
+        }
+        self.spec["review_evidence"] = (
+            "ChatGPT: unscharf nur die mögliche Marke, NOT a human approval."
+        )
+        self.spec["visual_review"]["no_people"] = False
+        self.spec["visual_review"]["no_foreign_logo"] = None
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec, self.root)
+
     def test_no_human_evidence_fails_closed(self):
         self.spec["review_evidence"] = ""
         with self.assertRaises(m.InvalidScene):
