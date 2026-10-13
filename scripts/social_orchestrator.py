@@ -48,7 +48,9 @@ def load_brief(path):
     j = json.loads(file.read_text(encoding="utf-8"))
     fields={"format_version","brand","campaign_id","topic","sources","posting_sources","execution_mode"}
     allowed = fields | {"image_review"}
-    require(isinstance(j,dict) and set(j) in (allowed,allowed | {"prepared_content"}),
+    require(isinstance(j,dict) and set(j) in (
+                allowed, allowed | {"prepared_content"},
+                allowed | {"prepared_content", "chatgpt_image"}),
             "Brief-Schema ungültig")
     cid = Path(path).stem
     require(j["format_version"] == 1 and j["brand"] == "ai-agent-builder"
@@ -220,7 +222,8 @@ def create_packages(brief, evidences, g):
         "logo_original_sha256":SHA_LOGO,
         "review_method":verified["logo_qa"].get("source_visual_review","separate-review"),
         "human_visual_review":("pending_in_buffer"
-              if "automated_review" in source_spec else "recorded_in_original_review")
+              if "automated_review" in source_spec or "chatgpt_review" in source_spec
+              else "recorded_in_original_review")
     })
     today=datetime.now(timezone.utc).date()
     times=select_times(today)

@@ -63,7 +63,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m py_compile scripts/social_orchestrator.py scripts/orchestrator_verify_buffer.py
+          python3 -m py_compile scripts/social_orchestrator.py scripts/orchestrator_verify_buffer.py scripts/chatgpt_image_import.py
           python3 -m unittest discover -s tests -v
 
       - name: Genau einen Auftrag und Ausführungsmodus bestimmen
@@ -125,28 +125,26 @@ jobs:
           python3 scripts/production_activation_guard.py
           echo "GitHub-Schutz für main und Receipt-Branch bestätigt; keine Queue-/Publish-Freigabe." >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Kampagnen-Duplikat VOR kostenpflichtiger Bildgenerierung ausschließen
+      - name: Kampagnen-Duplikat VOR ChatGPT-Bildimport ausschließen
         if: steps.request.outputs.mode == 'drafts'
         shell: bash
         run: |
           set -euo pipefail
           branch="automation/campaign/$CAMPAIGN"
           existing="$(git ls-remote --heads origin "refs/heads/$branch")"
-          [[ -z "$existing" ]] || { echo "Kampagnen-Branch bereits vorhanden; Bild-API nicht aufrufen." >&2; exit 1; }
+          [[ -z "$existing" ]] || { echo "Kampagnen-Branch bereits vorhanden; Bild nicht erneut importieren." >&2; exit 1; }
 
-      - name: Fehlende personenfreie Bildquelle automatisch erstellen und zweimal maschinell prüfen
+      - name: Vorhandenes ChatGPT-PNG über Adobe-Link sicher importieren und SHA prüfen
         if: steps.request.outputs.mode == 'drafts'
         shell: bash
-        env:
-          SOCIAL_OPENAI_API_KEY: ${{ secrets.SOCIAL_OPENAI_API_KEY }}
         run: |
           set -euo pipefail
           if [[ -f "visual-reviews/$CAMPAIGN.json" ]]; then
-            echo "Bereits vorhandene Quellbild-Prüfung wird im Preflight unabhängig geprüft."
+            echo "Vorhandener 4:5-Quellreview: kanonischer Preflight prüft SHA, Bild und Rechte."
           else
-            python3 scripts/automatic_image_source.py --brief "$BRIEF"
-            echo "Neues 4:5-Rohmotiv: ZWEI Maschinenprüfungen, KEINE menschliche Freigabe." >> "$GITHUB_STEP_SUMMARY"
-            echo "Josefs Sichtprüfung findet später am fertigen Buffer-Draft statt." >> "$GITHUB_STEP_SUMMARY"
+            python3 scripts/chatgpt_image_import.py --brief "$BRIEF"
+            echo "ChatGPT-Bild mit Adobe-Kurzlink und SHA256 geprüft. Kein Bild-API-Aufruf." >> "$GITHUB_STEP_SUMMARY"
+            echo "Josef prüft das fertige Motiv später im Buffer-Draft." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Vorbereitete ChatGPT-Texte und vorhandenes 4:5-Motiv verifizieren
@@ -178,7 +176,7 @@ jobs:
         id: build
         shell: bash
         env:
-          OPENAI_API_KEY: ${{ secrets.SOCIAL_OPENAI_API_KEY }}
+          # Keine kostenpflichtige Modell-API: Texte kommen aus ChatGPT prepared_content.
           GITHUB_TOKEN: ${{ github.token }}
           REPORT_PATH: ${{ runner.temp }}/social-orchestrator-report.json
         run: |
