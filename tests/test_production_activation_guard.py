@@ -91,7 +91,7 @@ class ActivationGateTests(unittest.TestCase):
         workflow = file.read_text(encoding="utf-8")
         self.assertIn("python3 scripts/production_activation_guard.py", workflow)
         self.assertLess(workflow.index("scripts/production_activation_guard.py"),
-                        workflow.index("scripts/chatgpt_image_import.py"))
+                        workflow.index("python3 scripts/chatgpt_image_import.py --brief"))
         self.assertLess(workflow.index("scripts/production_activation_guard.py"),
                         workflow.index("scripts/buffer_draft.py --draft"))
         self.assertNotIn("saveToDraft: false", workflow)
