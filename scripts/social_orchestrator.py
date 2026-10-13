@@ -221,6 +221,10 @@ def create_packages(brief, evidences, g):
         "ai_disclosure":verified["ai_disclosure"],
         "logo_original_sha256":SHA_LOGO,
         "review_method":verified["logo_qa"].get("source_visual_review","separate-review"),
+        "visual_review_pending": [
+            k for k in ("no_foreign_logo", "no_generated_text")
+            if source_spec["visual_review"].get(k) is None
+        ],
         "human_visual_review":("pending_in_buffer"
               if "automated_review" in source_spec or "chatgpt_review" in source_spec
               else "recorded_in_original_review")
