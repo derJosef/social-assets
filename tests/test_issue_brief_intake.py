@@ -27,6 +27,17 @@ def event():
             "https://buffer.com/resources/when-is-the-best-time-to-post-on-instagram/",
             "https://sproutsocial.com/insights/best-times-to-post-on-instagram/",
         ],
+        "chatgpt_image": {
+            "transport": "adobe_transfer",
+            "url": "https://at.adobe.com/AbC01234xYz",
+            "sha256": "a" * 64,
+            "visual_review": {k: True for k in (
+                "no_people", "no_robot", "no_foreign_logo",
+                "no_generated_text", "plausible_details", "matches_topic",
+                "heading_and_logo_space"
+            )},
+            "review_evidence": "ChatGPT visual inspection of the actual image; NOT a human review. Synthetic fixture only."
+        },
         "prepared_content": {
             "posts": {
                 "linkedin": "Synthetischer LinkedIn-Beitrag mit vielen technischen Details. " * 6,
