@@ -140,7 +140,9 @@ def main() -> int:
         json.dump(result, out, ensure_ascii=False, indent=2)
         out.write("\n")
     print("CLEANROOM_PROBE", result["state"], result["hard_failures"])
-    return 0 if result["state"] == "PROVISIONAL_ONLY_UNVERIFIED_CONTEXT" else 2
+    # No current state authorizes a model-context claim or downstream transfer.
+    # Fail closed for shell callers even if format and visual checks look good.
+    return 2
 
 
 if __name__ == "__main__":
