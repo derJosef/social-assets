@@ -19,11 +19,11 @@ Das reale ChatGPT-Bild ist in dieser Projektunterhaltung am 14.10.2026 entstande
 
 `scripts/cleanroom_image_probe.py` vergleicht die exakte Positivlisten-Kompilierung aus `scripts/cleanroom_image_brief.py` erneut mit dem angeblichen Job. Er prüft die vorliegende Bilddatei objektiv auf gültiges PNG, Höchstgröße und genau 1080 × 1350 px. Er bewertet ein **explizit bereitgestelltes, wahrheitsgemäßes ChatGPT-Sichtprüfergebnis**, ohne darin eine menschliche Freigabe zu behaupten. Klare Motivelementverletzungen sperren, uneindeutige winzige Logo-/Textspuren können ausschließlich offen dokumentiert werden. Sein Prüfbericht enthält den Bild-SHA256, den Prompt-SHA256, Prüfergebnis und getrennte Wahrheitswerte für Kontextnachweis.
 
-**Er stellt keine Bild-KI, keinen isolierten Host und keine visuelle Erkennung bereit.** Ein als visuell positiv beschriebener, fehlerfreier Roh-PNG-Test bekommt deshalb nur `PROVISIONAL_ONLY_UNVERIFIED_CONTEXT`, niemals automatisch `transfer_permitted=true`. Diese Vorstufe ist nicht in den produktiven Orchestrator eingebaut.
+**Er stellt keine Bild-KI, keinen isolierten Host und keine visuelle Erkennung bereit.** Ein als visuell positiv beschriebener, fehlerfreier Roh-PNG-Test bekommt deshalb nur `PROVISIONAL_ONLY_UNVERIFIED_CONTEXT`, niemals automatisch `transfer_permitted=true`. Die CLI liefert **immer einen Nicht-Null-Exitcode (2)**, auch bei ausschließlich vorläufig positiv bewerteten Rohbildern, um keine unbewiesene Kontextisolierung als Erfolgssignal an Shell-Caller durchzureichen. Diese Vorstufe ist nicht in den produktiven Orchestrator eingebaut.
 
 ## Nachweise und Abnahmegrenzen
 
-- Elf lokale synthetische Offline-Unit-Tests: **11/11 PASS**, kein Netzwerk; explizit getestet sind dimensionsfalsche PNGs, sichtbare Personen, Bildformat, manipulierte Prompts trotz selbstkonsistentem Hash, Referenz-Injektion, unklare Marken ohne Behauptung eines sicheren Fehlers und nicht vorhandenene Sichtprüfbelege.
+- Zwölf lokale synthetische Offline-Unit-Tests: **12/12 PASS**, kein Netzwerk; explizit getestet sind dimensionsfalsche PNGs, sichtbare Personen, Bildformat, manipulierte Prompts trotz selbstkonsistentem Hash, Referenz-Injektion, unklare Marken ohne Behauptung eines sicheren Fehlers und nicht vorhandenene Sichtprüfbelege.
 - Ein echter, lokal geprüfter, ungeeigneter Bildlauf: **bewusster Negativfall** mit zwei belegten Sperrgründen.
 - Nicht nachgewiesen: isolierte Modellkontextübergabe, deterministisch exaktes Ausgabeformat ohne technische Normierung, Live-Adobe-Transfer des neuen Motivs oder Buffer-E2E.
 - Die von Josef gewünschte holografische Person ist weiterhin **ein eigener genehmigungspflichtiger Personensonderfall**, nicht ein stilles `no_people=true`.
