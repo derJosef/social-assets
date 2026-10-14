@@ -30,6 +30,17 @@ class AuditTests(unittest.TestCase):
         self.assertTrue(got["no_buffer_mutations"])
         self.assertEqual(len(calls),2)
 
+    def test_postsresults_query_uses_only_documented_fields(self):
+        # Buffer GraphQL schema: PostsResults exposes edges and pageInfo ONLY.
+        # The original audit failed with a GraphQL error because totalCount
+        # exists on other connections but not on PostsResults.
+        q = mod.POSTS_QUERY
+        self.assertIn("edges {", q)
+        self.assertIn("pageInfo {", q)
+        self.assertNotIn("totalCount", q)
+        self.assertIn("createdAt", q)
+        self.assertIn("assets { type source }", q)
+
     def test_rejects_unknown_channel_and_pagination_failure(self):
         def get(key, query, variables):
             if "organizations" in query:
