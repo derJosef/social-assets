@@ -1,6 +1,8 @@
 """All checks offline and synthetic; no image generation or services involved."""
 import json
 import tempfile
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 from PIL import Image
@@ -77,6 +79,23 @@ class ProbeTests(unittest.TestCase):
     def test_corrupted_image_rejected(self):
         self.p.write_bytes(b'not png')
         with self.assertRaises(probe.InvalidProbe):probe.assess(SPEC,self.job,self.p)
+
+    def test_cli_provisional_image_never_exits_success(self):
+        self.create_png()
+        with tempfile.TemporaryDirectory() as directory:
+            d=Path(directory)
+            spec=d/'spec.json'; spec.write_text(json.dumps(SPEC))
+            job=d/'job.json'; job.write_text(json.dumps(self.job))
+            review=d/'review.json'; review.write_text(json.dumps(REVIEW))
+            report=d/'report.json'
+            script=Path(probe.__file__)
+            run=subprocess.run([sys.executable,str(script),'--spec',str(spec),
+                '--job',str(job),'--image',str(self.p), '--review',str(review),
+                '--report',str(report)],capture_output=True,text=True)
+            self.assertEqual(run.returncode,2)
+            self.assertEqual(json.loads(report.read_text())['state'],
+                             'PROVISIONAL_ONLY_UNVERIFIED_CONTEXT')
+            self.assertFalse(json.loads(report.read_text())['transfer_permitted'])
 
     def test_jpeg_rejected(self):
         Image.new('RGB',(1080,1350),'#07111f').save(self.p,format='JPEG')
