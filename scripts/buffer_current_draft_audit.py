@@ -34,7 +34,6 @@ query AuditCurrentPosts($organizationId: OrganizationId!, $channelIds: [ChannelI
              assets { type source } }
     }
     pageInfo { hasNextPage endCursor }
-    totalCount
   }
 }
 """
