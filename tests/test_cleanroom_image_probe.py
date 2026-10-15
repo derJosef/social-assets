@@ -42,6 +42,42 @@ class ProbeTests(unittest.TestCase):
         result=probe.assess(SPEC,self.job,self.p,review)
         self.assertIn('visual_no_people',result['hard_failures'])
 
+    def test_approved_hologram_is_not_a_people_defect(self):
+        self.create_png()
+        hologram_spec={**SPEC, "figure": "hologram"}
+        hologram_job=brief.compiled_job(hologram_spec)
+        review=json.loads(json.dumps(REVIEW))
+        review["visual_review"]["no_people"]=False
+        review["figure_review"]={"kind":"stylized_hologram",
+            "photorealistic_ai_face":False, "ai_altered_real_person":False}
+        review["review_evidence"] += " Clearly synthetic blue holographic wireframe figure."
+        out=probe.assess(hologram_spec,hologram_job,self.p,review)
+        self.assertEqual(out["reviewed_figure_kind"],"hologram")
+        self.assertEqual(out["state"],"PROVISIONAL_ONLY_UNVERIFIED_CONTEXT")
+        self.assertFalse(out["transfer_permitted"])
+
+    def test_hologram_cannot_hide_photorealistic_face(self):
+        self.create_png()
+        hologram_spec={**SPEC, "figure": "hologram"}
+        review=json.loads(json.dumps(REVIEW))
+        review["visual_review"]["no_people"]=False
+        review["figure_review"]={"kind":"stylized_hologram",
+            "photorealistic_ai_face":True, "ai_altered_real_person":False}
+        review["review_evidence"] += " A blue holographic figure."
+        out=probe.assess(hologram_spec,brief.compiled_job(hologram_spec),self.p,review)
+        self.assertEqual(out["state"],"BLOCKED")
+        self.assertIn("visual_no_people",out["hard_failures"])
+
+    def test_hologram_claim_must_match_cleanroom_job(self):
+        self.create_png()
+        review=json.loads(json.dumps(REVIEW))
+        review["visual_review"]["no_people"]=False
+        review["figure_review"]={"kind":"stylized_hologram",
+            "photorealistic_ai_face":False, "ai_altered_real_person":False}
+        review["review_evidence"] += " Obvious hologram."
+        out=probe.assess(SPEC,self.job,self.p,review)
+        self.assertIn("figure_mismatch",out["hard_failures"])
+
     def test_unclear_mark_not_translated_into_hard_failure(self):
         self.create_png()
         review=json.loads(json.dumps(REVIEW));review['visual_review']['no_foreign_logo']=None
