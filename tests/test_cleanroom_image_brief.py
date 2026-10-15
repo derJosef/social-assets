@@ -39,9 +39,19 @@ class CleanRoomBriefTests(unittest.TestCase):
                 with self.assertRaises(cleanroom.InvalidCleanRoomSpec):
                     cleanroom.compile_prompt({**VALID, field: value})
 
-    def test_refuses_hologram_without_separate_person_gate(self):
-        with self.assertRaisesRegex(cleanroom.InvalidCleanRoomSpec, "separate"):
-            cleanroom.compile_prompt({**VALID, "figure": "hologram"})
+    def test_approved_hologram_uses_synthetic_not_real_person_prompt(self):
+        prompt = cleanroom.compile_prompt({**VALID, "figure": "hologram"})
+        self.assertIn("wireframe hologram", prompt)
+        self.assertIn("No realistic faces", prompt)
+        self.assertIn("No letters", prompt)
+        self.assertNotIn("No people, silhouettes, hands or robots.", prompt)
+        self.assertEqual(cleanroom.compiled_job({**VALID, "figure": "hologram"})["reference_images"], [])
+
+    def test_photorealistic_figure_is_not_a_hologram(self):
+        for candidate in ("photorealistic", "real-person", "robot", "digital-human-photo", ""):
+            with self.subTest(figure=candidate):
+                with self.assertRaises(cleanroom.InvalidCleanRoomSpec):
+                    cleanroom.compile_prompt({**VALID, "figure": candidate})
 
     def test_rejects_unknown_steps_and_duplicate_stages(self):
         for steps in (["receive", "inspect", "untrusted"],
