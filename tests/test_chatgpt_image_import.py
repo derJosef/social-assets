@@ -178,6 +178,64 @@ class ChatGPTImageImportTest(unittest.TestCase):
             tr.import_image(BRIEF, self.root,
                             fetch=lambda url: self.fail("must not fetch"))
 
+    def add_realistic_person_review(self, *, edited=False):
+        self.brief["chatgpt_image"]["visual_review"]["no_people"] = False
+        self.brief["chatgpt_image"]["visual_review"].update({
+            "photorealistic_ai_face": not edited,
+            "ai_altered_real_person": edited,
+            "rights_checked": True,
+            "no_misrepresentation_checked": True,
+            "platform_checked": True,
+        })
+        self.brief["chatgpt_image"]["person_checks_evidence"] = {
+            "rights_basis": "SYNTHETIC TEST ONLY: verified fictional rights assessment for protocol test; not a real license.",
+            "misrepresentation_assessment": "SYNTHETIC TEST ONLY: no claim of a real employee, real customer or real project.",
+            "platform_assessment": "SYNTHETIC TEST ONLY: fictitious channel compliance review, never a real audit.",
+        }
+        self.brief["chatgpt_image"]["review_evidence"] = (
+            "ChatGPT checked the fictional photorealistic face in synthetic test. "
+            "NOT a human review, no publication rights implied."
+        )
+
+    def test_photorealistic_face_imports_with_all_three_checks_without_single_approval(self):
+        self.add_realistic_person_review()
+        self.update()
+        result = tr.import_image(BRIEF, self.root, fetch=lambda url: self.raw)
+        self.assertEqual(result["model_requests"], 0)
+        self.assertEqual(result["buffer_requests"], 0)
+        stored = json.loads((self.root / REVIEW).read_text())
+        self.assertTrue(stored["visual_review"]["photorealistic_ai_face"])
+        self.assertEqual(len(stored["person_checks_evidence"]), 3)
+        self.assertNotIn("person_approval_evidence", stored)
+
+    def test_ai_altered_real_person_imports_only_after_checks(self):
+        self.add_realistic_person_review(edited=True)
+        self.update()
+        tr.import_image(BRIEF, self.root, fetch=lambda url: self.raw)
+        stored = json.loads((self.root / REVIEW).read_text())
+        self.assertTrue(stored["visual_review"]["ai_altered_real_person"])
+
+    def test_realistic_person_without_rights_or_platform_check_blocked_before_fetch(self):
+        for field in ("rights_checked", "no_misrepresentation_checked", "platform_checked"):
+            with self.subTest(field=field):
+                self.add_realistic_person_review()
+                self.brief["chatgpt_image"]["visual_review"][field] = False
+                self.update()
+                with self.assertRaises(tr.ChatImageBlocked):
+                    tr.import_image(BRIEF, self.root, fetch=lambda url: self.fail("must not fetch"))
+
+    def test_realistic_person_with_missing_or_fake_old_approval_blocked(self):
+        self.add_realistic_person_review()
+        del self.brief["chatgpt_image"]["person_checks_evidence"]
+        self.update()
+        with self.assertRaises(tr.ChatImageBlocked):
+            tr.import_image(BRIEF, self.root, fetch=lambda url: self.fail("must not fetch"))
+        self.add_realistic_person_review()
+        self.brief["chatgpt_image"]["person_approval_evidence"] = "old invalid permission"
+        self.update()
+        with self.assertRaises(tr.ChatImageBlocked):
+            tr.import_image(BRIEF, self.root, fetch=lambda url: self.fail("must not fetch"))
+
     def test_no_unchecked_people_or_made_up_human_review(self):
         self.brief["chatgpt_image"]["visual_review"]["no_people"] = False
         self.update()
