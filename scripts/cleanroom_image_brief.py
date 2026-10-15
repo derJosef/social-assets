@@ -52,22 +52,31 @@ def compile_prompt(spec: object) -> str:
         raise InvalidCleanRoomSpec("Unknown scene identifier")
     if type(composition) is not str or composition not in COMPOSITIONS:
         raise InvalidCleanRoomSpec("Unknown composition identifier")
-    if figure != "none" or type(figure) is not str:
-        raise InvalidCleanRoomSpec("Persons, including holograms, need a separate approved review route")
+    if type(figure) is not str or figure not in ("none", "hologram"):
+        raise InvalidCleanRoomSpec("Only no figure or an unambiguously stylized hologram is supported")
     if not isinstance(steps, list) or len(steps) != 3 or any(
         type(step) is not str or step not in STEPS for step in steps
     ) or len(set(steps)) != 3:
         raise InvalidCleanRoomSpec("Exactly three different allowlisted stages are required")
     descriptions = "; ".join(STEPS[step] for step in steps)
+    figure_instruction = (
+        "No people, silhouettes, hands or robots. "
+        if figure == "none" else
+        "Include exactly one clearly artificial blue/cyan glowing human-shaped "
+        "wireframe hologram pointing at the inspection process. Its face, skin "
+        "and clothing must not look like a real photograph of a person. "
+        "No realistic faces or bodies and no robots. "
+    )
     return (
         "Create a single standalone raw image, not a poster or advertisement. "
         f"Depict {SCENES[scene]}: {COMPOSITIONS[composition]}, "
         f"in this order: {descriptions}. "
-        "Photorealistic 3D rendering, physically plausible mechanisms, dimensional depth, "
+        "Realistically rendered 3D technical environment, physically plausible mechanisms, "
+        "dimensional depth, "
         "dark navy and graphite with subtle cyan illumination, restrained cinematic lighting. "
         "Portrait composition, 4:5 aspect ratio; preserve the entire scene. "
-        "Show only unprinted, neutral surfaces. No people, silhouettes, hands, robots, "
-        "letters, numbers, signage, markings, emblems, typography or watermarks. "
+        "Show only unprinted, neutral surfaces. " + figure_instruction +
+        "No letters, numbers, signage, markings, emblems, typography or watermarks. "
         "Use no reference images and invent no identifying marks."
     )
 

@@ -134,6 +134,50 @@ class ChatGPTImageImportTest(unittest.TestCase):
                 with self.assertRaises(tr.ChatImageBlocked):
                     tr.safe_location(url)
 
+    def test_approved_stylized_hologram_imports_to_draft_with_independent_review(self):
+        self.brief["chatgpt_image"]["visual_review"]["no_people"] = False
+        self.brief["chatgpt_image"]["figure_review"] = {
+            "kind": "stylized_hologram",
+            "photorealistic_ai_face": False,
+            "ai_altered_real_person": False,
+        }
+        self.brief["chatgpt_image"]["review_evidence"] = (
+            "ChatGPT inspected original PNG: an unmistakably blue wireframe "
+            "hologram points at a technical inspection station. NOT a human approval."
+        )
+        self.update()
+        result = tr.import_image(BRIEF, self.root, fetch=lambda url: self.raw)
+        self.assertEqual(result["model_requests"], 0)
+        self.assertEqual(result["buffer_requests"], 0)
+        stored = json.loads((self.root / REVIEW).read_text())
+        self.assertEqual(stored["figure_review"]["kind"], "stylized_hologram")
+        self.assertFalse(stored["visual_review"]["no_people"])
+
+    def test_realistic_face_masquerading_as_hologram_blocks_before_fetch(self):
+        self.brief["chatgpt_image"]["visual_review"]["no_people"] = False
+        self.brief["chatgpt_image"]["figure_review"] = {
+            "kind": "stylized_hologram",
+            "photorealistic_ai_face": True,
+            "ai_altered_real_person": False,
+        }
+        self.brief["chatgpt_image"]["review_evidence"] += " Blue wireframe hologram."
+        self.update()
+        with self.assertRaisesRegex(tr.ChatImageBlocked, "Figurklassifikation"):
+            tr.import_image(BRIEF, self.root,
+                            fetch=lambda url: self.fail("must not fetch"))
+
+    def test_hologram_without_explicit_visual_description_blocks(self):
+        self.brief["chatgpt_image"]["visual_review"]["no_people"] = False
+        self.brief["chatgpt_image"]["figure_review"] = {
+            "kind": "stylized_hologram",
+            "photorealistic_ai_face": False,
+            "ai_altered_real_person": False,
+        }
+        self.update()
+        with self.assertRaises(tr.ChatImageBlocked):
+            tr.import_image(BRIEF, self.root,
+                            fetch=lambda url: self.fail("must not fetch"))
+
     def test_no_unchecked_people_or_made_up_human_review(self):
         self.brief["chatgpt_image"]["visual_review"]["no_people"] = False
         self.update()

@@ -96,6 +96,54 @@ class SceneTests(unittest.TestCase):
         with self.assertRaises(m.InvalidScene):
             m.validate_spec(self.spec, self.root)
 
+    def test_classified_stylized_hologram_uses_chatgpt_draft_review(self):
+        self.spec["chatgpt_review"] = {
+            "kind": "chatgpt_visual_inspection_draft_only",
+            "source_sha256": self.spec["source_sha256"],
+        }
+        self.spec["figure_review"] = {
+            "kind": "stylized_hologram",
+            "photorealistic_ai_face": False,
+            "ai_altered_real_person": False,
+        }
+        self.spec["review_evidence"] = (
+            "ChatGPT checked original technical scene with a clearly artificial "
+            "blue holographic wireframe. NOT a human approval."
+        )
+        self.spec["visual_review"]["no_people"] = False
+        self.assertEqual(m.validate_spec(self.spec, self.root), self.source)
+        self.assertFalse(m.needs_disclosure(self.spec))
+
+    def test_hologram_cannot_bypass_real_person_review(self):
+        self.spec["chatgpt_review"] = {
+            "kind": "chatgpt_visual_inspection_draft_only",
+            "source_sha256": self.spec["source_sha256"],
+        }
+        self.spec["figure_review"] = {
+            "kind": "stylized_hologram",
+            "photorealistic_ai_face": True,
+            "ai_altered_real_person": False,
+        }
+        self.spec["review_evidence"] = (
+            "ChatGPT original image with a hologram-like realistic person. "
+            "NOT a human approval."
+        )
+        self.spec["visual_review"]["no_people"] = False
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec, self.root)
+
+    def test_no_hologram_classification_does_not_bypass_people_gate(self):
+        self.spec["chatgpt_review"] = {
+            "kind": "chatgpt_visual_inspection_draft_only",
+            "source_sha256": self.spec["source_sha256"],
+        }
+        self.spec["review_evidence"] = (
+            "ChatGPT saw an unspecified human-like figure. NOT a human approval."
+        )
+        self.spec["visual_review"]["no_people"] = False
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec, self.root)
+
     def test_no_human_evidence_fails_closed(self):
         self.spec["review_evidence"] = ""
         with self.assertRaises(m.InvalidScene):
