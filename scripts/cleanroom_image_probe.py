@@ -16,8 +16,10 @@ from PIL import Image, UnidentifiedImageError
 
 try:
     from scripts.cleanroom_image_brief import compiled_job
+    from scripts.image_figure_policy import classify_figure, FigureClassificationError
 except ModuleNotFoundError:
     from cleanroom_image_brief import compiled_job
+    from image_figure_policy import classify_figure, FigureClassificationError
 
 EXPECTED_SIZE = (1080, 1350)
 MAX_IMAGE_BYTES = 16_000_000
@@ -63,9 +65,13 @@ def assess(spec: object, job: object, image_path: Path, review: object | None = 
         failures.append("wrong_pixel_dimensions")
 
     checked = "not_provided"
+    figure_kind = "unverified"
     pending: list[str] = []
     if review is not None:
-        if not isinstance(review, dict) or set(review) != {"visual_review", "review_evidence"}:
+        if not isinstance(review, dict) or set(review) not in (
+            {"visual_review", "review_evidence"},
+            {"visual_review", "review_evidence", "figure_review"},
+        ):
             raise InvalidProbe("Visual review must have exact known fields")
         flags = review["visual_review"]
         if not isinstance(flags, dict) or set(flags) != set(REVIEW_KEYS):
@@ -75,7 +81,16 @@ def assess(spec: object, job: object, image_path: Path, review: object | None = 
             "ChatGPT" not in evidence or "NOT a human" not in evidence
         ):
             raise InvalidProbe("Actual ChatGPT inspection evidence missing")
+        try:
+            figure_kind = classify_figure(flags, review.get("figure_review"), evidence)
+        except FigureClassificationError:
+            failures.append("visual_no_people")
+            figure_kind = "unverified"
+        if figure_kind != spec["figure"]:
+            failures.append("figure_mismatch")
         for key in REVIEW_KEYS:
+            if key == "no_people":
+                continue  # Classified above: a hologram is a person-shaped figure, not a fault.
             flag = flags[key]
             if flag is True:
                 continue
@@ -115,6 +130,7 @@ def assess(spec: object, job: object, image_path: Path, review: object | None = 
         "actual_generator_context_verified": False,
         "actual_model_prompt_verified": False,
         "visual_review_kind": checked,
+        "reviewed_figure_kind": figure_kind,
         "transfer_permitted": False,
         "buffer_action_permitted": False,
         "publication_permitted": False,
