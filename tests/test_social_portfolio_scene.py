@@ -359,12 +359,19 @@ class SceneTests(unittest.TestCase):
     def test_end_to_end_person_capability_uses_two_independent_image_gates(self):
         import shutil
         from PIL import ImageFont
-        font = ImageFont.load_default(size=42)
-        source = getattr(font, "path", None)
-        if not hasattr(source, "getvalue"):
-            self.skipTest("Pillow wheel cannot export synthetic test TTF")
         font_path = self.root/"Inter-for-fixtures.ttf"
-        font_path.write_bytes(source.getvalue())
+        # Prefer the system TTF on GitHub's Ubuntu runner; the synthetic
+        # Pillow fallback keeps tests portable without sharing font assets.
+        try:
+            test_ttf = ImageFont.truetype("DejaVuSans.ttf", 42)
+            import shutil as _shutil
+            _shutil.copyfile(test_ttf.path, font_path)
+        except OSError:
+            fallback = ImageFont.load_default(size=42)
+            source = getattr(fallback, "path", None)
+            if not hasattr(source, "getvalue"):
+                self.skipTest("No test TTF available on this runner")
+            font_path.write_bytes(source.getvalue())
         self.use_person_review(face=True)
         self.spec["layout"]="logo_only"
         self.spec["heading"]=None
