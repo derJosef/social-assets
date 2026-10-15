@@ -1,0 +1,49 @@
+{
+  "started_at": "2026-10-15T14:03:56.863991+00:00",
+  "mode": "drafts",
+  "state": "ready_for_draft_commit",
+  "steps": {
+    "brief": {
+      "status": "PASS",
+      "detail": ""
+    },
+    "primary_source_fetch": {
+      "status": "PASS",
+      "detail": "2 Quellen"
+    },
+    "time_studies": {
+      "status": "PASS",
+      "detail": "6 Studien"
+    },
+    "editorial_input_and_structure": {
+      "status": "PASS",
+      "detail": "Bereits redaktionell erstellte Textvorlage"
+    },
+    "autonomous_model_generation": {
+      "status": "NOT_RUN",
+      "detail": "Kein Modellaufruf – alternative Eingabe"
+    },
+    "brand_image_and_campaign_gate": {
+      "status": "PASS",
+      "detail": ""
+    }
+  },
+  "campaign": "2026-10-15-drei-kontrollpunkte-e2e",
+  "files": {
+    "base": "media/source-images/2026-10-15-drei-kontrollpunkte-e2e-base.png",
+    "final": "media/images/2026-10-15-drei-kontrollpunkte-e2e-branded.png",
+    "receipt": "artwork-receipts/2026-10-15-drei-kontrollpunkte-e2e.json",
+    "manifest": "campaign-manifests/2026-10-15-drei-kontrollpunkte-e2e.json",
+    "plan": "drafts/2026-10-15-drei-kontrollpunkte-e2e-plan.md",
+    "posts": [
+      "ready-for-buffer/auto-2026-10-15-drei-kontrollpunkte-e2e-linkedin.json",
+      "ready-for-buffer/auto-2026-10-15-drei-kontrollpunkte-e2e-facebook.json",
+      "ready-for-buffer/auto-2026-10-15-drei-kontrollpunkte-e2e-instagram.json"
+    ]
+  },
+  "finished_at": "2026-10-15T14:04:00.939262+00:00",
+  "github_run_id": "38748011264",
+  "github_run_url": "https://github.com/derJosef/social-assets/actions/runs/38748011264",
+  "job_status": "failure",
+  "receipt_at": "2026-10-15T14:04:17.158690+00:00"
+}
