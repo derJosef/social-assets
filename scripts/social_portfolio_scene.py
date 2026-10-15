@@ -17,6 +17,11 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
+try:
+    from .image_figure_policy import classify_figure, FigureClassificationError
+except ImportError:
+    from image_figure_policy import classify_figure, FigureClassificationError
+
 SIZE = (1080, 1350)
 SOURCE_RE = re.compile(r"media/source-images/[a-z0-9][a-z0-9_.-]*\.png\Z")
 REVIEW_KEYS = (
@@ -54,6 +59,7 @@ def validate_spec(spec: dict, root: Path) -> Path:
         legacy_fields, legacy_fields | {"person_approval_evidence"},
         legacy_fields | {"automated_review"},
         legacy_fields | {"chatgpt_review"},
+        legacy_fields | {"chatgpt_review", "figure_review"},
     ):
         raise InvalidScene("Exact version-1 scene specification required")
     if spec["format_version"] != 1 or spec["brand"] != "ai-agent-builder":
@@ -90,10 +96,22 @@ def validate_spec(spec: dict, root: Path) -> Path:
             if key in pending_marks:
                 continue
             raise InvalidScene("Visual review incomplete or clear defect; do not use this artwork")
-    if not person_review:
+    figure_kind = "none"
+    if "figure_review" in spec:
+        # Only the ChatGPT draft route supports an explicitly reviewed
+        # non-photorealistic hologram. Do not loosen any other person path.
+        if "chatgpt_review" not in spec or person_review:
+            raise InvalidScene("Hologram review is limited to ChatGPT draft-only images")
+        try:
+            figure_kind = classify_figure(review, spec["figure_review"], spec["review_evidence"])
+        except FigureClassificationError as exc:
+            raise InvalidScene(str(exc)) from None
+        if figure_kind != "hologram":
+            raise InvalidScene("Hologram classification is required for hologram route")
+    if not person_review and figure_kind != "hologram":
         if review["no_people"] is not True or "person_approval_evidence" in spec:
-            raise InvalidScene("Any person requires the new classified review and approval evidence")
-    else:
+            raise InvalidScene("Any depicted figure needs an explicit valid classified review")
+    elif person_review:
         if any(type(review[k]) is not bool for k in PERSON_REVIEW_KEYS):
             raise InvalidScene("Person review fields must be actual booleans")
         if type(review["no_people"]) is not bool:
@@ -124,7 +142,7 @@ def validate_spec(spec: dict, root: Path) -> Path:
                 or set(chatgpt) != {"kind", "source_sha256"}
                 or chatgpt["kind"] != "chatgpt_visual_inspection_draft_only"
                 or chatgpt["source_sha256"] != spec["source_sha256"]
-                or person_review or review["no_people"] is not True
+                or person_review or (review["no_people"] is not True and figure_kind != "hologram")
                 or "ChatGPT" not in evidence or "NOT a human" not in evidence):
             raise InvalidScene("ChatGPT draft-only visual provenance missing or falsely labeled")
 
