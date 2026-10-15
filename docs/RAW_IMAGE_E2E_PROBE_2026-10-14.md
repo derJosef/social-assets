@@ -34,3 +34,9 @@ Das reale ChatGPT-Bild ist in dieser Projektunterhaltung am 14.10.2026 entstande
 Für eine nachweisliche Clean-Room-Erzeugung wird **eine von der Bild-KI getrennte, kontrolliert ansprechbare Host-Schnittstelle** benötigt, die nur den exakten kompilierten Prompt und keine Referenzbilder übergibt und den tatsächlich gesendeten Payload protokolliert. Ein frischer Chat allein oder eine deklarierte Positivliste beweist diese Eigenschaft nicht. Ein zusätzlicher kostenpflichtiger Bild-API-Dienst soll nicht ohne erneute ausdrückliche Entscheidung eingeführt werden. Solange diese Schnittstelle nicht vorhanden ist, den isolierten E2E **nicht** als bestanden ausgeben.
 
 *Owner der dauerhaften Bild- und Kennzeichnungsregeln bleibt PersonalOS; diese Datei ist lediglich ein technischer Testbericht in `social-assets`.*
+
+## Korrektureinordnung vom 15.10.2026 (noch nicht gemergter PR #26)
+
+Die damals als `visual_no_people` gewertete **eindeutig künstliche holografische Figur** ist **nach Josefs mittlerweile im PersonalOS korrigierter Personenregel zulässig**. Dieser damalige Sperrgrund basierte auf einer überholten technischen Hürde und darf nicht als fachlicher Designverstoß verstanden werden. Der bisherige Echtbild-Test bleibt trotzdem `BLOCKED`: Die Native-PNG-Dimensionen 1122 × 1402 entsprechen nicht dem für den Import verlangten 1080 × 1350, und es gibt keinen geprüften Nachweis der Prompt-/Kontextisolation.
+
+Der Folge-Patch unterscheidet nun im Testpfad `figure: hologram` von Fotopersonen, indem er eine explizite, dokumentierte `figure_review` verlangt. `no_people: false` wird **nur** für eine als nicht fotorealistisch belegte Hologrammfigur akzeptiert. Eine fotorealistische Figur wird auf dieser Route weiterhin blockiert. Eine Bildprüfung ist keine nachgewiesene Personenerkennung und keine Freigabe von Veröffentlichung/Buffer.
