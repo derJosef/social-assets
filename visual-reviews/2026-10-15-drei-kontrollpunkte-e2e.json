@@ -1,0 +1,27 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "source": "media/source-images/2026-10-15-drei-kontrollpunkte-e2e-source.png",
+  "source_sha256": "ddf69cce1a4a781321dad84809e7f4e7896c6ed40f115c12b8548cdf7d2c8d5c",
+  "layout": "logo_only",
+  "heading": null,
+  "visual_review": {
+    "heading_and_logo_space": true,
+    "matches_topic": true,
+    "no_foreign_logo": true,
+    "no_generated_text": true,
+    "no_people": false,
+    "no_robot": true,
+    "plausible_details": true
+  },
+  "review_evidence": "ChatGPT visually inspected the real normalized 1080x1350 PNG: three connected document-control stations and a bright blue wireframe hologram, explicitly artificial rather than a realistic person. No recognizable company logo, readable generated text, or robot was visible. Lower-right background offers room for the original logo. NOT a human inspection, approval or authorization for publication.",
+  "chatgpt_review": {
+    "kind": "chatgpt_visual_inspection_draft_only",
+    "source_sha256": "ddf69cce1a4a781321dad84809e7f4e7896c6ed40f115c12b8548cdf7d2c8d5c"
+  },
+  "figure_review": {
+    "ai_altered_real_person": false,
+    "kind": "stylized_hologram",
+    "photorealistic_ai_face": false
+  }
+}

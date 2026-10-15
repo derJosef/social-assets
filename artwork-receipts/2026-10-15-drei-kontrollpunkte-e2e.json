@@ -1,0 +1,20 @@
+{
+  "campaign_id": "2026-10-15-drei-kontrollpunkte-e2e",
+  "brand": "ai-agent-builder",
+  "status": "verified_image_only",
+  "base": "media/source-images/2026-10-15-drei-kontrollpunkte-e2e-base.png",
+  "final": "media/images/2026-10-15-drei-kontrollpunkte-e2e-branded.png",
+  "sha256": "31da8e5364587b58d011c83f17ae8caab437c9af490995808db742de95feb496",
+  "layout": "logo_only",
+  "image_review": "visual-reviews/2026-10-15-drei-kontrollpunkte-e2e.json",
+  "source_sha256": "ddf69cce1a4a781321dad84809e7f4e7896c6ed40f115c12b8548cdf7d2c8d5c",
+  "ai_disclosure": {
+    "required": false,
+    "text": null,
+    "pixel_verified": false
+  },
+  "logo_original_sha256": "15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0",
+  "review_method": "chatgpt_visual_inspection_draft_only",
+  "visual_review_pending": [],
+  "human_visual_review": "pending_in_buffer"
+}
