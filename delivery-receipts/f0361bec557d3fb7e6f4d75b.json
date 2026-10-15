@@ -1,0 +1,14 @@
+{
+  "draft_file": "ready-for-buffer/auto-2026-10-15-drei-kontrollpunkte-e2e-linkedin.json",
+  "target": "linkedin",
+  "draft_sha256": "b180ff4a74d3959af7fc96473145898957a126aa0f54d6a8275c9b35713f24d1",
+  "state": "pending_manual_reconciliation_on_failure",
+  "github_run_id": "38748011264",
+  "due_at_utc": "2026-11-11T15:00:00Z",
+  "channel_id": "6aac167eea19ca0bde6ada5b",
+  "campaign_quality": {
+    "campaign": "2026-10-15-drei-kontrollpunkte-e2e",
+    "quality_gate": "passed",
+    "image_sha256": "31da8e5364587b58d011c83f17ae8caab437c9af490995808db742de95feb496"
+  }
+}
