@@ -81,6 +81,8 @@ def assess(spec: object, job: object, image_path: Path, review: object | None = 
             "ChatGPT" not in evidence or "NOT a human" not in evidence
         ):
             raise InvalidProbe("Actual ChatGPT inspection evidence missing")
+        if type(flags["no_people"]) is not bool:
+            raise InvalidProbe("no_people must be a real boolean, not a string or null")
         try:
             figure_kind = classify_figure(flags, review.get("figure_review"), evidence)
         except FigureClassificationError:
