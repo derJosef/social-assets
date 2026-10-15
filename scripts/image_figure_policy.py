@@ -41,3 +41,48 @@ def classify_figure(flags: dict, figure_review: object, evidence: str) -> str:
     if not isinstance(evidence, str) or not EVIDENCE_MARKER.search(evidence):
         raise FigureClassificationError("An explicit holographic figure description is required")
     return "hologram"
+
+# This is an auditable *requirements check*, not evidence of Josef granting
+# special one-off permission. Never claim the model can verify persons' rights.
+PERSON_REVIEW_KEYS = (
+    "photorealistic_ai_face", "ai_altered_real_person",
+    "rights_checked", "no_misrepresentation_checked", "platform_checked",
+)
+PERSON_EVIDENCE_KEYS = (
+    "rights_basis", "misrepresentation_assessment", "platform_assessment",
+)
+
+
+class PersonReviewError(ValueError):
+    """Unverified person rights, identity presentation, or platform obligations."""
+
+
+def validate_person_review(flags: object, evidence: object) -> str:
+    """Classify and gate any non-holographic person.
+
+    A record says checks were documented and passed, not that legal rights were
+    independently established or that publication was authorized.
+    """
+    if not isinstance(flags, dict) or set(flags) != (
+            {"no_people"} | set(PERSON_REVIEW_KEYS)):
+        raise PersonReviewError("Complete person review fields required")
+    if any(type(flags[k]) is not bool for k in (("no_people",) + PERSON_REVIEW_KEYS)):
+        raise PersonReviewError("Person review checks require actual booleans")
+    if flags["no_people"]:
+        if flags["photorealistic_ai_face"] or flags["ai_altered_real_person"] or any(
+            flags[k] for k in ("rights_checked", "no_misrepresentation_checked", "platform_checked")
+        ) or evidence is not None:
+            raise PersonReviewError("Person-free scene must not claim completed person checks")
+        return "none"
+    if not all(flags[k] is True for k in (
+        "rights_checked", "no_misrepresentation_checked", "platform_checked"
+    )):
+        raise PersonReviewError("Rights, misrepresentation and platform checks must all pass")
+    if not isinstance(evidence, dict) or set(evidence) != set(PERSON_EVIDENCE_KEYS):
+        raise PersonReviewError("Three distinct person-check evidence fields are required")
+    for key in PERSON_EVIDENCE_KEYS:
+        note = evidence[key]
+        if (not isinstance(note, str) or not 40 <= len(note.strip()) <= 600
+                or any(ord(c) < 32 and c not in "\t" for c in note)):
+            raise PersonReviewError("Person-check evidence incomplete or malformed: " + key)
+    return "person_checks_documented"

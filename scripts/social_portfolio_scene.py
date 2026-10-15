@@ -18,9 +18,15 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 try:
-    from .image_figure_policy import classify_figure, FigureClassificationError
+    from .image_figure_policy import (
+        classify_figure, FigureClassificationError, PERSON_REVIEW_KEYS,
+        validate_person_review, PersonReviewError,
+    )
 except ImportError:
-    from image_figure_policy import classify_figure, FigureClassificationError
+    from image_figure_policy import (
+        classify_figure, FigureClassificationError, PERSON_REVIEW_KEYS,
+        validate_person_review, PersonReviewError,
+    )
 
 SIZE = (1080, 1350)
 SOURCE_RE = re.compile(r"media/source-images/[a-z0-9][a-z0-9_.-]*\.png\Z")
@@ -29,7 +35,6 @@ REVIEW_KEYS = (
     "plausible_details", "matches_topic", "heading_and_logo_space",
 )
 LOGO_SHA = "15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0"
-PERSON_REVIEW_KEYS = ("photorealistic_ai_face", "ai_altered_real_person", "person_use_approved")
 
 def needs_disclosure(spec: dict) -> bool:
     """Only these two PersonalOS-locked cases require Powered by AI."""
@@ -56,7 +61,8 @@ def validate_spec(spec: dict, root: Path) -> Path:
         "heading", "visual_review", "review_evidence"
     }
     if not isinstance(spec, dict) or set(spec) not in (
-        legacy_fields, legacy_fields | {"person_approval_evidence"},
+        legacy_fields, legacy_fields | {"person_checks_evidence"},
+        legacy_fields | {"chatgpt_review", "person_checks_evidence"},
         legacy_fields | {"automated_review"},
         legacy_fields | {"chatgpt_review"},
         legacy_fields | {"chatgpt_review", "figure_review"},
@@ -109,24 +115,16 @@ def validate_spec(spec: dict, root: Path) -> Path:
         if figure_kind != "hologram":
             raise InvalidScene("Hologram classification is required for hologram route")
     if not person_review and figure_kind != "hologram":
-        if review["no_people"] is not True or "person_approval_evidence" in spec:
+        if review["no_people"] is not True or "person_checks_evidence" in spec:
             raise InvalidScene("Any depicted figure needs an explicit valid classified review")
     elif person_review:
-        if any(type(review[k]) is not bool for k in PERSON_REVIEW_KEYS):
-            raise InvalidScene("Person review fields must be actual booleans")
-        if type(review["no_people"]) is not bool:
-            raise InvalidScene("no_people must be an actual boolean")
-        has_person = not review["no_people"]
-        if (review["photorealistic_ai_face"] or review["ai_altered_real_person"]) and not has_person:
-            raise InvalidScene("AI person classification contradicts no_people")
-        if has_person:
-            if review["person_use_approved"] is not True:
-                raise InvalidScene("Person depicted without explicit individual approval")
-            approval = spec.get("person_approval_evidence")
-            if not isinstance(approval, str) or len(approval.strip()) < 25:
-                raise InvalidScene("Documented Josef-specific person approval evidence required")
-        elif review["person_use_approved"] or "person_approval_evidence" in spec:
-            raise InvalidScene("Person approval may not be invented for a person-free scene")
+        try:
+            validate_person_review(
+                {k: review[k] for k in ("no_people",) + PERSON_REVIEW_KEYS},
+                spec.get("person_checks_evidence"),
+            )
+        except PersonReviewError as exc:
+            raise InvalidScene(str(exc)) from None
     evidence = spec["review_evidence"]
     if not isinstance(evidence, str) or len(evidence.strip()) < 15:
         raise InvalidScene("Traceable visual review evidence is required")
@@ -134,6 +132,9 @@ def validate_spec(spec: dict, root: Path) -> Path:
         r"unscharf|unklar|uneindeutig|unleserlich|ambig|uncertain|unreadable", evidence, re.I
     ):
         raise InvalidScene("Uncertain mark must be recorded for human Buffer review")
+    # A documented rights/platform check does not replace the separate
+    # mandatory 'Powered by AI' pixel gate when a realistic AI face or altered
+    # real person is present; build() enforces that overlay before original logo.
     # ChatGPT-native visual inspection is not a human sign-off. Provenance
     # remains explicit until Josef checks the finished Buffer draft.
     chatgpt = spec.get("chatgpt_review")
@@ -142,7 +143,8 @@ def validate_spec(spec: dict, root: Path) -> Path:
                 or set(chatgpt) != {"kind", "source_sha256"}
                 or chatgpt["kind"] != "chatgpt_visual_inspection_draft_only"
                 or chatgpt["source_sha256"] != spec["source_sha256"]
-                or person_review or (review["no_people"] is not True and figure_kind != "hologram")
+                or (review["no_people"] is not True and figure_kind != "hologram"
+                    and not person_review)
                 or "ChatGPT" not in evidence or "NOT a human" not in evidence):
             raise InvalidScene("ChatGPT draft-only visual provenance missing or falsely labeled")
 
