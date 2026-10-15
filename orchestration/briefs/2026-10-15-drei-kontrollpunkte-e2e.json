@@ -1,0 +1,68 @@
+{
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-15-drei-kontrollpunkte-e2e",
+  "chatgpt_image": {
+    "figure_review": {
+      "ai_altered_real_person": false,
+      "kind": "stylized_hologram",
+      "photorealistic_ai_face": false
+    },
+    "review_evidence": "ChatGPT visually inspected the real normalized 1080x1350 PNG: three connected document-control stations and a bright blue wireframe hologram, explicitly artificial rather than a realistic person. No recognizable company logo, readable generated text, or robot was visible. Lower-right background offers room for the original logo. NOT a human inspection, approval or authorization for publication.",
+    "sha256": "ddf69cce1a4a781321dad84809e7f4e7896c6ed40f115c12b8548cdf7d2c8d5c",
+    "transport": "adobe_transfer",
+    "url": "https://at.adobe.com/5pnv27RxE28EVU3C",
+    "visual_review": {
+      "heading_and_logo_space": true,
+      "matches_topic": true,
+      "no_foreign_logo": true,
+      "no_generated_text": true,
+      "no_people": false,
+      "no_robot": true,
+      "plausible_details": true
+    }
+  },
+  "execution_mode": "drafts",
+  "format_version": 1,
+  "image_review": "visual-reviews/2026-10-15-drei-kontrollpunkte-e2e.json",
+  "posting_sources": [
+    "https://buffer.com/resources/best-time-to-post-on-linkedin/",
+    "https://sproutsocial.com/insights/best-times-to-post-on-linkedin/",
+    "https://buffer.com/resources/best-time-to-post-on-facebook/",
+    "https://sproutsocial.com/insights/best-times-to-post-on-facebook/",
+    "https://buffer.com/resources/when-is-the-best-time-to-post-on-instagram/",
+    "https://sproutsocial.com/insights/best-times-to-post-on-instagram/"
+  ],
+  "prepared_content": {
+    "posts": {
+      "facebook": "TESTENTWURF – NICHT VERÖFFENTLICHEN\n\nEine KI kann Dokumente schnell auswerten. Aber woher weiß man, dass sie die richtige Datei hatte, etwas Wichtiges übersehen hat oder ein Ergebnis überhaupt freigegeben werden darf?\n\nDafür helfen drei verständliche Kontrollpunkte: Zuerst kontrollieren wir die Eingabe. Danach prüfen wir die Ergebnisse. Zum Schluss folgt die bewusste Freigabe durch einen Menschen.\n\nSo bleibt ein KI-Agent ein nützliches Werkzeug mit klaren Grenzen. Das Bild zeigt den Ablauf mit drei verbundenen technischen Prüfstationen und einer bewusst künstlichen holografischen Figur.\n\nDies ist ein technischer Testentwurf für die Bildübergabe und keine zur Veröffentlichung freigegebene Nachricht.",
+      "instagram": "TESTENTWURF – NICHT VERÖFFENTLICHEN\n\nDrei Kontrollen, bevor ein KI-Agent etwas weitergibt:\n\n1. Stimmt die Eingabe? Richtige Datei, richtige Version, richtige Quelle.\n2. Stimmt das Ergebnis? Sind Fehler oder Lücken erkennbar?\n3. Wer gibt frei? Die Entscheidung bleibt nachvollziehbar bei einem Menschen.\n\nKI darf Abläufe beschleunigen. Verantwortung braucht trotzdem klare Regeln.\n\nDas Visual zeigt diese drei Stationen als zusammenhängenden Prüfprozess – mit einer erkennbar digitalen, nicht realen Figur.\n\nNur E2E-Test des Entwurfsworkflows. Keine Veröffentlichungsfreigabe.\n\n#KIAgenten #Qualitätskontrolle #Automatisierung #KünstlicheIntelligenz",
+      "linkedin": "TESTENTWURF – NICHT VERÖFFENTLICHEN\n\nDarf ein KI-Agent ein Dokument prüfen und danach selbst entscheiden? Für eine kontrollierte Einführung trenne ich drei Schritte: Eingang prüfen, Ergebnis prüfen und Freigabe entscheiden.\n\nBeim Eingang geht es um die richtige Datei, die aktuelle Version und die zulässige Datenquelle. Beim Ergebnis prüfen wir Vollständigkeit, Auffälligkeiten und nachvollziehbare Belege. Erst danach entscheidet eine zuständige Person, ob der Vorgang weitergehen darf.\n\nDie Technik soll Arbeit abnehmen, nicht Verantwortung unsichtbar verschieben. Genau diese drei Kontrollpunkte zeigt die Visualisierung.\n\nDieser Beitrag dient ausschließlich dazu, den technischen Bild- und Buffer-Entwurfsworkflow zu prüfen. Eine Veröffentlichung ist nicht freigegeben."
+    },
+    "risks": [
+      "Technischer E2E-Test: Beiträge ausdrücklich nicht zur Veröffentlichung; weder Queue noch Publish freigegeben.",
+      "Hologramm ist deutlich nicht fotorealistisch und nicht als reale Person/Referenz dargestellt.",
+      "Bildgenerator-Kontextisolation ist nicht nachgewiesen; keine automatische saubere Kontexttrennung behaupten.",
+      "Der tatsächliche Adobe-Download-Hash muss dem Hash der normierten PNG entsprechen."
+    ],
+    "six_hats": {
+      "black": "Ein Testentwurf könnte versehentlich veröffentlicht werden; deshalb enthält jeder Plattformtext einen ausdrücklichen Testhinweis und er bleibt im Buffer-Status draft.",
+      "blue": "Vor weiterer Nutzung zuerst echte Adobe-Bytes gegen den Ausgabe-SHA prüfen, Original-Logo montieren, Buffer draft und dueAt zurücklesen; keine Veröffentlichung.",
+      "green": "Aus diesem Prüfmotiv lässt sich später ein verständlicher Beitrag mit konkretem Beispiel für Eingangs-, Ergebnis- und Freigabekontrolle entwickeln.",
+      "red": "Der visuelle Ablauf wirkt klar und der blaue Hologramm-Mensch bleibt erkennbar künstlich; die Benutzer könnten den Nutzen intuitiv verstehen.",
+      "white": "Die Quellen NIST und OWASP stützen die allgemeine Notwendigkeit kontrollierter Risiken, Prüfungen und verantwortlicher Freigaben; keine erfundenen Kennzahlen.",
+      "yellow": "Die drei Kontrollpunkte übersetzen komplexe Governance-Themen in eine verständliche, praktische Frage aus dem betrieblichen Alltag."
+    },
+    "visual": null
+  },
+  "sources": [
+    {
+      "published_at": "2023-01-26",
+      "url": "https://www.nist.gov/news-events/news/2023/01/nist-risk-management-framework-aims-improve-trustworthiness-artificial"
+    },
+    {
+      "published_at": "2024-11-17",
+      "url": "https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/"
+    }
+  ],
+  "topic": "Einmaliger technischer E2E-Prüflauf zur dreistufigen Dokumenten- und KI-Agenten-Kontrolle: Eingang, Ergebnis und menschliche Freigabe. Alle Beiträge klar als nicht veröffentlichbare Testentwürfe markiert."
+}

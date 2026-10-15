@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "linkedin",
+  "text": "TESTENTWURF – NICHT VERÖFFENTLICHEN\n\nDarf ein KI-Agent ein Dokument prüfen und danach selbst entscheiden? Für eine kontrollierte Einführung trenne ich drei Schritte: Eingang prüfen, Ergebnis prüfen und Freigabe entscheiden.\n\nBeim Eingang geht es um die richtige Datei, die aktuelle Version und die zulässige Datenquelle. Beim Ergebnis prüfen wir Vollständigkeit, Auffälligkeiten und nachvollziehbare Belege. Erst danach entscheidet eine zuständige Person, ob der Vorgang weitergehen darf.\n\nDie Technik soll Arbeit abnehmen, nicht Verantwortung unsichtbar verschieben. Genau diese drei Kontrollpunkte zeigt die Visualisierung.\n\nDieser Beitrag dient ausschließlich dazu, den technischen Bild- und Buffer-Entwurfsworkflow zu prüfen. Eine Veröffentlichung ist nicht freigegeben.",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/b535972ce7f788b7150edfede56093f0371c349a/media/images/2026-10-15-drei-kontrollpunkte-e2e-branded.png",
+        "alt_text": "Technische Darstellung zum Thema Einmaliger technischer E2E-Prüflauf zur dreistufigen Dokumenten- und KI-Agenten-Kontrolle: Eingang, Ergebnis und menschliche Freigabe. Alle Beiträge klar als nicht v; Original-Pauderer-Logo unten rechts."
+      }
+    ]
+  }
+}

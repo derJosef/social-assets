@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "facebook",
+  "text": "TESTENTWURF – NICHT VERÖFFENTLICHEN\n\nEine KI kann Dokumente schnell auswerten. Aber woher weiß man, dass sie die richtige Datei hatte, etwas Wichtiges übersehen hat oder ein Ergebnis überhaupt freigegeben werden darf?\n\nDafür helfen drei verständliche Kontrollpunkte: Zuerst kontrollieren wir die Eingabe. Danach prüfen wir die Ergebnisse. Zum Schluss folgt die bewusste Freigabe durch einen Menschen.\n\nSo bleibt ein KI-Agent ein nützliches Werkzeug mit klaren Grenzen. Das Bild zeigt den Ablauf mit drei verbundenen technischen Prüfstationen und einer bewusst künstlichen holografischen Figur.\n\nDies ist ein technischer Testentwurf für die Bildübergabe und keine zur Veröffentlichung freigegebene Nachricht.",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/b535972ce7f788b7150edfede56093f0371c349a/media/images/2026-10-15-drei-kontrollpunkte-e2e-branded.png",
+        "alt_text": "Technische Darstellung zum Thema Einmaliger technischer E2E-Prüflauf zur dreistufigen Dokumenten- und KI-Agenten-Kontrolle: Eingang, Ergebnis und menschliche Freigabe. Alle Beiträge klar als nicht v; Original-Pauderer-Logo unten rechts."
+      }
+    ]
+  }
+}

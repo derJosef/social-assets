@@ -1,0 +1,61 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-15-drei-kontrollpunkte-e2e",
+  "checked_at": "2026-10-15",
+  "sources": [
+    {
+      "url": "https://www.nist.gov/news-events/news/2023/01/nist-risk-management-framework-aims-improve-trustworthiness-artificial",
+      "published_at": "2023-01-26",
+      "checked_at": "2026-10-15"
+    },
+    {
+      "url": "https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/",
+      "published_at": "2024-11-17",
+      "checked_at": "2026-10-15"
+    }
+  ],
+  "checks": {
+    "novelty": true,
+    "claims_with_sources": true,
+    "language_and_cta": true,
+    "six_hats": true,
+    "privacy_and_rights": true,
+    "brand_image": true,
+    "posting_time_research": true
+  },
+  "image": {
+    "final": "media/images/2026-10-15-drei-kontrollpunkte-e2e-branded.png",
+    "base": "media/source-images/2026-10-15-drei-kontrollpunkte-e2e-base.png",
+    "sha256": "31da8e5364587b58d011c83f17ae8caab437c9af490995808db742de95feb496",
+    "layout": "logo_only",
+    "review_spec": "visual-reviews/2026-10-15-drei-kontrollpunkte-e2e.json",
+    "source_sha256": "ddf69cce1a4a781321dad84809e7f4e7896c6ed40f115c12b8548cdf7d2c8d5c",
+    "ai_disclosure": {
+      "required": false,
+      "text": null,
+      "pixel_verified": false
+    },
+    "heading_corner": null,
+    "heading_box": null
+  },
+  "posts": {
+    "linkedin": "ready-for-buffer/auto-2026-10-15-drei-kontrollpunkte-e2e-linkedin.json",
+    "facebook": "ready-for-buffer/auto-2026-10-15-drei-kontrollpunkte-e2e-facebook.json",
+    "instagram": "ready-for-buffer/auto-2026-10-15-drei-kontrollpunkte-e2e-instagram.json"
+  },
+  "posting_times": {
+    "linkedin": {
+      "local": "2026-11-11T16:00:00+01:00",
+      "utc": "2026-11-11T15:00:00Z"
+    },
+    "facebook": {
+      "local": "2026-11-05T09:00:00+01:00",
+      "utc": "2026-11-05T08:00:00Z"
+    },
+    "instagram": {
+      "local": "2026-11-04T18:00:00+01:00",
+      "utc": "2026-11-04T17:00:00Z"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "instagram",
+  "text": "TESTENTWURF – NICHT VERÖFFENTLICHEN\n\nDrei Kontrollen, bevor ein KI-Agent etwas weitergibt:\n\n1. Stimmt die Eingabe? Richtige Datei, richtige Version, richtige Quelle.\n2. Stimmt das Ergebnis? Sind Fehler oder Lücken erkennbar?\n3. Wer gibt frei? Die Entscheidung bleibt nachvollziehbar bei einem Menschen.\n\nKI darf Abläufe beschleunigen. Verantwortung braucht trotzdem klare Regeln.\n\nDas Visual zeigt diese drei Stationen als zusammenhängenden Prüfprozess – mit einer erkennbar digitalen, nicht realen Figur.\n\nNur E2E-Test des Entwurfsworkflows. Keine Veröffentlichungsfreigabe.\n\n#KIAgenten #Qualitätskontrolle #Automatisierung #KünstlicheIntelligenz",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/b535972ce7f788b7150edfede56093f0371c349a/media/images/2026-10-15-drei-kontrollpunkte-e2e-branded.png",
+        "alt_text": "Technische Darstellung zum Thema Einmaliger technischer E2E-Prüflauf zur dreistufigen Dokumenten- und KI-Agenten-Kontrolle: Eingang, Ergebnis und menschliche Freigabe. Alle Beiträge klar als nicht v; Original-Pauderer-Logo unten rechts."
+      }
+    ]
+  }
+}
