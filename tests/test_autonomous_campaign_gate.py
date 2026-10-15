@@ -230,11 +230,14 @@ class AutonomousCampaignGateTests(unittest.TestCase):
         review["visual_review"]["no_people"]=False
         review["visual_review"].update({
             "photorealistic_ai_face":True,"ai_altered_real_person":False,
-            "person_use_approved":True,
+            "rights_checked":True,"no_misrepresentation_checked":True,
+            "platform_checked":True,
         })
-        review["person_approval_evidence"]=(
-            "SYNTHETIC TEST ONLY - hypothetical personal approval, NOT live evidence"
-        )
+        review["person_checks_evidence"]={
+            "rights_basis": "SYNTHETIC FIXTURE: fictional assessment of rights, no real person involved.",
+            "misrepresentation_assessment": "SYNTHETIC FIXTURE: not presented as a real employee or real business event.",
+            "platform_assessment": "SYNTHETIC FIXTURE: dummy platform disclosure assessment, never live approval.",
+        }
         review_path.write_text(json.dumps(review))
         if qa_present:
             manifest["image"]["ai_disclosure"]={
