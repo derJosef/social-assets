@@ -20,6 +20,11 @@ from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
 
+try:
+    from .image_figure_policy import classify_figure, FigureClassificationError
+except ImportError:
+    from image_figure_policy import classify_figure, FigureClassificationError
+
 ROOT = Path(__file__).resolve().parents[1]
 SIZE = (1080, 1350)
 MAX_PNG = 16_000_000
@@ -89,8 +94,9 @@ def inspect_brief(brief: dict) -> tuple[str, dict]:
             and brief.get("image_review") == f"visual-reviews/{cid}.json",
             "Marke, Modus oder Bildreview passen nicht")
     img = brief.get("chatgpt_image")
-    require(isinstance(img, dict) and set(img) ==
-            {"transport", "url", "sha256", "visual_review", "review_evidence"},
+    required_image_fields = {"transport", "url", "sha256", "visual_review", "review_evidence"}
+    require(isinstance(img, dict) and set(img) in (
+            required_image_fields, required_image_fields | {"figure_review"}),
             "ChatGPT-Bildtransport fehlt – keine automatische kostenpflichtige Bild-API")
     require(img["transport"] == "adobe_transfer"
             and isinstance(img["url"], str)
@@ -106,12 +112,16 @@ def inspect_brief(brief: dict) -> tuple[str, dict]:
     uncertain_keys = {"no_foreign_logo", "no_generated_text"}
     require(isinstance(checks, dict) and set(checks) == set(CHECKS)
             and all(checks[k] is True or (k in uncertain_keys and checks[k] is None)
-                    for k in CHECKS),
+                    for k in CHECKS if k != "no_people"),
             "Klare Maengel/Personen blockieren; nur uneindeutige Logos/Texte duerfen ungeprueft bleiben")
     evidence = img["review_evidence"]
     require(isinstance(evidence, str) and 45 <= len(evidence) <= 800
             and "ChatGPT" in evidence and "NOT a human" in evidence,
             "Nur tatsaechliche ChatGPT-Sichtpruefung; keine menschliche Freigabe erfinden")
+    try:
+        classify_figure(checks, img.get("figure_review"), evidence)
+    except FigureClassificationError as exc:
+        raise ChatImageBlocked("Klare Maengel/Personen oder unzulässige Figurklassifikation: " + str(exc)) from None
     pending = [k for k in CHECKS if checks[k] is None]
     require(not pending or re.search(r"unscharf|unklar|uneindeutig|unleserlich|ambig|uncertain|unreadable", evidence, re.I),
             "Unklare Logo-/Textmarkierung muss explizit als Sichtpruefung offen dokumentiert sein")
@@ -157,6 +167,8 @@ def import_image(brief_file: str, root: Path = ROOT, *, fetch=fetch_image) -> di
             "source_sha256": img["sha256"],
         },
     }
+    if "figure_review" in img:
+        spec["figure_review"] = img["figure_review"]
     src.parent.mkdir(parents=True, exist_ok=True)
     review.parent.mkdir(parents=True, exist_ok=True)
     with src.open("xb") as out:
