@@ -256,79 +256,104 @@ class SceneTests(unittest.TestCase):
         self.assertNotIn("saveToDraft: false", source)
 
 
-    def use_person_review(self, *, face=False, edited=False, approved=True):
+    def use_person_review(self, *, face=False, edited=False):
+        # Synthetic evidence exercises schema only; it cannot authorize a real image.
         self.spec["visual_review"]["no_people"] = False
         self.spec["visual_review"].update({
             "photorealistic_ai_face": face,
             "ai_altered_real_person": edited,
-            "person_use_approved": approved,
+            "rights_checked": True,
+            "no_misrepresentation_checked": True,
+            "platform_checked": True,
         })
-        self.spec["person_approval_evidence"] = (
-            "SYNTHETIC TEST ONLY - simulated Josef-specific approval evidence, "
-            "NEVER VALID FOR A LIVE PICTURE"
-        )
+        self.spec["person_checks_evidence"] = {
+            "rights_basis": (
+                "SYNTHETIC FIXTURE: rights assessment of a fictional test image; "
+                "this statement does not verify any real-world identity or rights."
+            ),
+            "misrepresentation_assessment": (
+                "SYNTHETIC FIXTURE: the visual is not presented as actual "
+                "company staff, customers, customer projects or a real event."
+            ),
+            "platform_assessment": (
+                "SYNTHETIC FIXTURE: review of channel disclosure obligations "
+                "was simulated, never an actual platform assessment."
+            ),
+        }
 
-    def test_ai_generated_photorealistic_face_must_be_classified_and_approved(self):
+    def test_ai_generated_photorealistic_face_requires_checks_not_individual_approval(self):
         self.use_person_review(face=True)
-        self.assertEqual(m.validate_spec(self.spec,self.root),self.source)
+        self.assertEqual(m.validate_spec(self.spec, self.root), self.source)
         self.assertTrue(m.needs_disclosure(self.spec))
+        self.assertNotIn("person_use_approved", self.spec["visual_review"])
+        self.assertNotIn("person_approval_evidence", self.spec)
 
     def test_ai_modified_real_photo_requires_same_caption(self):
         self.use_person_review(edited=True)
-        m.validate_spec(self.spec,self.root)
+        self.assertEqual(m.validate_spec(self.spec, self.root), self.source)
         self.assertTrue(m.needs_disclosure(self.spec))
 
-    def test_stylized_person_does_not_trigger_caption_but_needs_approval(self):
+    def test_unchanged_real_photo_does_not_trigger_ai_caption(self):
         self.use_person_review()
-        m.validate_spec(self.spec,self.root)
+        self.assertEqual(m.validate_spec(self.spec, self.root), self.source)
         self.assertFalse(m.needs_disclosure(self.spec))
 
-    def test_person_without_individual_approval_blocked(self):
-        self.use_person_review(face=True,approved=False)
-        with self.assertRaises(m.InvalidScene):
-            m.validate_spec(self.spec,self.root)
+    def test_each_person_check_is_a_hard_gate(self):
+        for check in ("rights_checked", "no_misrepresentation_checked", "platform_checked"):
+            with self.subTest(check=check):
+                self.use_person_review(face=True)
+                self.spec["visual_review"][check] = False
+                with self.assertRaises(m.InvalidScene):
+                    m.validate_spec(self.spec, self.root)
 
-    def test_person_without_approval_proof_blocked(self):
+    def test_missing_or_short_check_evidence_rejected(self):
+        for field in ("rights_basis", "misrepresentation_assessment", "platform_assessment"):
+            with self.subTest(field=field):
+                self.use_person_review(face=True)
+                self.spec["person_checks_evidence"][field] = "ok"
+                with self.assertRaises(m.InvalidScene):
+                    m.validate_spec(self.spec, self.root)
         self.use_person_review(edited=True)
-        self.spec.pop("person_approval_evidence")
+        self.spec.pop("person_checks_evidence")
         with self.assertRaises(m.InvalidScene):
-            m.validate_spec(self.spec,self.root)
+            m.validate_spec(self.spec, self.root)
 
-    def test_person_with_short_approval_proof_blocked(self):
+    def test_old_person_approval_fields_do_not_bypass_rights_checks(self):
         self.use_person_review(face=True)
-        self.spec["person_approval_evidence"]="yes"
+        self.spec["person_approval_evidence"] = "Old Josef individual permission"
         with self.assertRaises(m.InvalidScene):
-            m.validate_spec(self.spec,self.root)
+            m.validate_spec(self.spec, self.root)
+        self.spec.pop("person_approval_evidence")
+        self.spec["visual_review"]["person_use_approved"] = True
+        with self.assertRaises(m.InvalidScene):
+            m.validate_spec(self.spec, self.root)
 
     def test_ai_face_and_no_people_inconsistent(self):
         self.use_person_review(face=True)
-        self.spec["visual_review"]["no_people"]=True
+        self.spec["visual_review"]["no_people"] = True
         with self.assertRaises(m.InvalidScene):
-            m.validate_spec(self.spec,self.root)
+            m.validate_spec(self.spec, self.root)
 
-    def test_legacy_falsely_declared_person_without_new_fields_rejected(self):
-        self.spec["visual_review"]["no_people"]=False
+    def test_legacy_unclassified_person_rejected(self):
+        self.spec["visual_review"]["no_people"] = False
         with self.assertRaises(m.InvalidScene):
-            m.validate_spec(self.spec,self.root)
+            m.validate_spec(self.spec, self.root)
 
-    def test_unapproved_stylized_person_still_blocked(self):
-        self.use_person_review(approved=False)
-        with self.assertRaises(m.InvalidScene):
-            m.validate_spec(self.spec,self.root)
-
-    def test_person_review_cannot_use_string_true(self):
+    def test_person_check_cannot_use_string_true(self):
         self.use_person_review(face=True)
-        self.spec["visual_review"]["person_use_approved"]="true"
+        self.spec["visual_review"]["rights_checked"] = "true"
         with self.assertRaises(m.InvalidScene):
-            m.validate_spec(self.spec,self.root)
+            m.validate_spec(self.spec, self.root)
 
     def test_clean_scene_with_explicit_negative_classification_accepted(self):
         self.spec["visual_review"].update({
             "photorealistic_ai_face": False,
             "ai_altered_real_person": False,
-            "person_use_approved": False,
+            "rights_checked": False,
+            "no_misrepresentation_checked": False,
+            "platform_checked": False,
         })
-        m.validate_spec(self.spec,self.root)
+        m.validate_spec(self.spec, self.root)
         self.assertFalse(m.needs_disclosure(self.spec))
 
     def test_end_to_end_person_capability_uses_two_independent_image_gates(self):
