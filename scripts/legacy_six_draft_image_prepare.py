@@ -98,8 +98,8 @@ def stage(root: Path = ROOT, *, fetch=fetch_image, builder=build,
             # Safe diagnostic values only: no URL, redirect target, raw
             # response body, token, personal data, or image content is logged.
             signature = (
-                "png" if raw.startswith(b"\\x89PNG\\r\\n\\x1a\\n")
-                else "jpeg" if raw.startswith(b"\\xff\\xd8\\xff")
+                "png" if raw.startswith(b"\x89PNG\r\n\x1a\n")
+                else "jpeg" if raw.startswith(b"\xff\xd8\xff")
                 else "html" if raw.lstrip().lower().startswith((b"<!doctype html", b"<html"))
                 else "unknown"
             )
