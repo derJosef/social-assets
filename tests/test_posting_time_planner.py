@@ -81,12 +81,54 @@ class PostingTimePlannerTests(unittest.TestCase):
                                        research_checked_at=date(2027, 3, 22))
         self.assertTrue(all("+02:00" in item["local"] for item in result.values()))
 
-    def test_every_slot_has_five_day_review_lead_and_max_35_days(self):
+    def test_every_slot_has_five_day_review_lead_and_max_56_days(self):
         result = self.propose()
         for item in result.values():
             local = datetime.fromisoformat(item["local"])
             self.assertGreaterEqual(local.date(), self.today + timedelta(days=5))
-            self.assertLessEqual(local.date(), self.today + timedelta(days=35))
+            self.assertLessEqual(local.date(), self.today + timedelta(days=56))
+
+    def test_full_35_day_linkedin_calendar_extends_horizon_without_relaxing_spacing(self):
+        # Real reservation pattern as of 16 Oct, anonymized and immutable:
+        # automated campaign proposals count as reservations even when
+        # the matching Buffer mutation failed or a post remains a draft.
+        busy = (
+            "2026-10-21T14:00:00Z",
+            "2026-10-28T15:00:00Z",
+            "2026-11-04T15:00:00Z",
+            "2026-11-11T15:00:00Z",
+            "2026-11-18T15:00:00Z",
+            "2026-12-02T15:00:00Z",
+        )
+        for i, utc in enumerate(busy):
+            self.reserve_manifest("linkedin", utc, filename=f"existing-{i}.json")
+        today = date(2026, 10, 16)
+        chosen = planner.propose_times(today, self.root)
+        self.assertEqual(chosen["linkedin"]["local"], "2026-11-25T16:00:00+01:00")
+        self.assertEqual(chosen["linkedin"]["utc"], "2026-11-25T15:00:00Z")
+        expected = datetime(2026, 11, 25, 15, tzinfo=timezone.utc)
+        for utc in busy:
+            occupied = datetime.fromisoformat(utc.replace("Z", "+00:00"))
+            self.assertGreaterEqual(abs(expected - occupied), timedelta(days=3))
+        # No cross-channel delay: use normal, close-in Facebook/Instagram slots.
+        self.assertLessEqual(datetime.fromisoformat(chosen["facebook"]["local"]).date(),
+                             today + timedelta(days=21))
+        self.assertLessEqual(datetime.fromisoformat(chosen["instagram"]["local"]).date(),
+                             today + timedelta(days=21))
+
+    def test_all_56_day_linkedin_candidates_reserved_still_block(self):
+        today = date(2026, 10, 16)
+        earliest = today + timedelta(days=planner.MIN_REVIEW_DAYS)
+        cutoff = today + timedelta(days=planner.MAX_LOOKAHEAD_DAYS)
+        for day_offset in range((cutoff - earliest).days + 1):
+            day = earliest + timedelta(days=day_offset)
+            if day.weekday() in {x[0] for x in planner.SLOTS["linkedin"]}:
+                when = datetime.combine(day, datetime.min.time().replace(hour=16),
+                                        tzinfo=ZoneInfo("Europe/Berlin"))
+                utc = when.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                self.reserve_manifest("linkedin", utc, filename=f"reserve-{day_offset}.json")
+        with self.assertRaisesRegex(planner.TimePlanningBlocked, "56 Tagen"):
+            planner.propose_times(today, self.root)
 
     def test_three_days_channel_spacing(self):
         self.reserve_manifest("instagram", "2026-10-23T16:00:00Z")

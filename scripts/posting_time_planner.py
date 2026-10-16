@@ -18,7 +18,7 @@ from zoneinfo import ZoneInfo
 BERLIN = ZoneInfo("Europe/Berlin")
 TARGETS = ("linkedin", "facebook", "instagram")
 MIN_REVIEW_DAYS = 5
-MAX_LOOKAHEAD_DAYS = 35
+MAX_LOOKAHEAD_DAYS = 56  # Extend when the 35-day window is filled by immutable reservations
 MIN_CHANNEL_GAP = timedelta(days=3)
 UTC_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
@@ -149,7 +149,7 @@ def propose_times(
                 penalty = 8 * rank + day_offset
                 ranked.append((penalty, day, rank, proposed_utc, local))
 
-        require(bool(ranked), f"Kein konfliktfreies Zeitfenster für {target} in 35 Tagen")
+        require(bool(ranked), f"Kein konfliktfreies Zeitfenster für {target} in {MAX_LOOKAHEAD_DAYS} Tagen")
         _, _, _, proposed_utc, local = min(ranked)
         result[target] = {
             "local": local.isoformat(timespec="seconds"),
