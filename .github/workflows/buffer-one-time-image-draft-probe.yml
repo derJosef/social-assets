@@ -1,0 +1,64 @@
+name: Buffer – einmaliger LinkedIn-Bild-Draft-Test (NICHT VERÖFFENTLICHEN)
+
+# Owner-only manual action. Creating/merging this file DOES NOT run this.
+# NEVER add issues, push, schedule or pull_request triggers.
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Nur mit gesonderter Freigabe: BILD_DATIERTER_DRAFT_EINMALTEST_NUR_BUFFER'
+        type: string
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: buffer-one-time-image-draft-20261016
+  cancel-in-progress: false
+
+jobs:
+  image-draft-one-time:
+    name: Ein Bild-Draft mit Datum, ohne Queue, ohne automatischen Retry
+    if: >-
+      ${{
+        github.actor == 'derJosef' &&
+        github.ref == 'refs/heads/main' &&
+        github.event_name == 'workflow_dispatch' &&
+        github.run_attempt == 1 &&
+        inputs.confirmation == 'BILD_DATIERTER_DRAFT_EINMALTEST_NUR_BUFFER'
+      }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Protected main auschecken
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Einmaltest und Original-Bild-SHA vor jeder Buffer-Schreibmutation prüfen
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
+          PROBE_CONFIRMATION: ${{ inputs.confirmation }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$BUFFER_API_KEY"
+          python3 -B scripts/production_activation_guard.py
+          python3 -B scripts/buffer_image_prescheduled_draft_probe.py --live
+
+      - name: Sicherer Abschlussstatus
+        if: always()
+        shell: bash
+        run: |
+          echo "Eindeutiger Test: 2026-10-16-buffer-image-draft-probe-001." >> "$GITHUB_STEP_SUMMARY"
+          echo "Kein automatischer Retry. Kein Queue-/Publish-Aufruf." >> "$GITHUB_STEP_SUMMARY"
+          echo "Bei MutationError bleibt das Receipt pending_manual_reconciliation_on_failure." >> "$GITHUB_STEP_SUMMARY"
