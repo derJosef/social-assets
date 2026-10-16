@@ -1,5 +1,8 @@
 name: AI Agent Builder – alte sechs Draft-Bilder vorbereiten (kein Buffer)
 
+# Two authorized entry points: manual GitHub UI or an owner-authored issue
+# comment. The latter is essential for the connected GitHub app, which cannot
+# invoke workflow_dispatch directly. Both use the same QA and no-Buffer code.
 on:
   workflow_dispatch:
     inputs:
@@ -7,6 +10,8 @@ on:
         description: 'Vorbereitung: ZWEI_LEGACY_BILDER_NUR_GITHUB'
         required: true
         type: string
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: write
@@ -21,9 +26,18 @@ jobs:
       ${{
         github.actor == 'derJosef' &&
         github.ref == 'refs/heads/main' &&
-        github.event_name == 'workflow_dispatch' &&
         github.run_attempt == 1 &&
-        inputs.confirmation == 'ZWEI_LEGACY_BILDER_NUR_GITHUB'
+        (
+          (github.event_name == 'workflow_dispatch' &&
+           inputs.confirmation == 'ZWEI_LEGACY_BILDER_NUR_GITHUB') ||
+          (github.event_name == 'issue_comment' &&
+           github.event.action == 'created' &&
+           github.event.issue.number == 19 &&
+           !github.event.issue.pull_request &&
+           github.event.issue.user.login == 'derJosef' &&
+           github.event.comment.user.login == 'derJosef' &&
+           github.event.comment.body == 'LEGACY_IMAGE_BUILD_ONCE_20261016')
+        )
       }}
     name: Nur zwei Original-Logo-Grafiken vorbereiten; kein Buffer-Zugriff
     runs-on: ubuntu-24.04
