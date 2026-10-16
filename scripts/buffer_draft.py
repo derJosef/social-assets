@@ -21,6 +21,11 @@ import re
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
+try:
+    from .buffer_error_diagnostics import safe_mutation_diagnosis
+except ImportError:
+    from buffer_error_diagnostics import safe_mutation_diagnosis
+
 ROOT = Path(__file__).resolve().parents[1]
 BUFFER_ENDPOINT = "https://api.buffer.com"
 REPOSITORY = "derJosef/social-assets"
@@ -584,10 +589,13 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
     post_result = result.get("createPost") or {}
     post = post_result.get("post") if isinstance(post_result, dict) else None
     if not isinstance(post, dict) or not post.get("id"):
-        typename = post_result.get("__typename", "MutationError") if isinstance(post_result, dict) else "Unknown"
-        # Only publish GraphQL type, never raw errors that could contain private data.
+        # Buffer's MutationError.message may include tokens, URLs, personal
+        # data, or post text. Never print it or persist it to public receipts.
+        # A closed-vocabulary topic is a *hint*, not a verified root cause.
+        error_type, category = safe_mutation_diagnosis(post_result)
         raise RuntimeError(
-            f"Buffer-Draft nicht bestätigt ({typename}). Pending-Beleg bleibt; manuell prüfen."
+            f"Buffer-Draft nicht bestätigt ({error_type}; Diagnosekategorie={category}). "
+            "Pending-Beleg bleibt; manuell prüfen. Kein automatischer Wiederholungsversuch."
         )
     post_id = str(post["id"])
     if due_at is not None:

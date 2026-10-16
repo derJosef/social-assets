@@ -158,12 +158,15 @@ class DatedDraftTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "Qualitätsnachweis"):
                 sender.authorize_auto_dated_draft(POST)
 
-    def run_send(self, *, response_post=None, read_post=None, exists=None, quality_error=None):
+    def run_send(self, *, response_post=None, read_post=None, exists=None, quality_error=None, mutation_error=None):
         _, text, raw = sender.read_draft(POST)
         default = {"id": POST_ID, "channelId": "li-channel", "status": "draft", "dueAt": self.due}
         created = response_post if response_post is not None else default
         confirmed = read_post if read_post is not None else default
-        graph = mock.Mock(side_effect=[{"createPost": {"post": created}}, {"post": confirmed}])
+        first_response = {"createPost": mutation_error} if mutation_error is not None else {
+            "createPost": {"post": created}
+        }
+        graph = mock.Mock(side_effect=[first_response, {"post": confirmed}])
         saved_records = []
         def save_receipt(token, path, record, message, **kwargs):
             saved_records.append(json.loads(json.dumps(record)))
@@ -219,6 +222,44 @@ class DatedDraftTest(unittest.TestCase):
         self.assertIn("ALARM", error)
         self.assertEqual(graph.call_count, 2)
         self.assertEqual(receipts.call_count, 2)
+
+    def test_buffer_invalid_input_error_shows_safe_topic_and_keeps_pending_receipt(self):
+        token = "PRIVATE_ACCOUNT_SECRET_20261016"
+        error = {
+            "__typename": "InvalidInputError",
+            "message": (
+                "Unable to determine image dimensions for "
+                f"https://internal.invalid/media?access_token={token}. "
+                f"Customer email: someone@example.invalid\n::warning::{token}"
+            ),
+        }
+        graph, receipts, _, response = self.run_send(mutation_error=error)
+        self.assertIn("InvalidInputError", response)
+        self.assertIn("Diagnosekategorie=media_dimensions", response)
+        self.assertNotIn(token, response)
+        self.assertNotIn("someone@example.invalid", response)
+        self.assertNotIn("internal.invalid", response)
+        self.assertNotIn("::warning::", response)
+        self.assertEqual(graph.call_count, 1)  # no second Buffer mutation or readback
+        self.assertEqual(receipts.call_count, 1)  # only existing pending reservation
+        self.assertEqual(
+            receipts.saved_records[0]["state"], "pending_manual_reconciliation_on_failure"
+        )
+        self.assertNotIn("error_message", receipts.saved_records[0])
+        self.assertNotIn("diagnostic", receipts.saved_records[0])
+
+    def test_unknown_buffer_error_never_prints_raw_type_or_message(self):
+        typ = "SECRET_BEARER\n::error::fake"
+        graph, receipts, _, response = self.run_send(mutation_error={
+            "__typename": typ,
+            "message": "Customer private note: PRIVATE_PERSONAL_INFO",
+        })
+        self.assertIn("OtherMutationError", response)
+        self.assertIn("Diagnosekategorie=unknown", response)
+        self.assertNotIn(typ, response)
+        self.assertNotIn("PRIVATE_PERSONAL_INFO", response)
+        self.assertEqual(graph.call_count, 1)
+        self.assertEqual(receipts.call_count, 1)
 
     def test_existing_receipt_blocks_create(self):
         graph, receipts, _, error = self.run_send(exists={"state": "pending"})
