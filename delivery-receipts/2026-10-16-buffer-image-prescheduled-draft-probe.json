@@ -1,0 +1,8 @@
+{
+  "probe": "2026-10-16-buffer-image-draft-probe-001",
+  "target": "linkedin",
+  "state": "pending_manual_reconciliation_on_failure",
+  "github_run_id": "38874006513",
+  "image_sha256": "31da8e5364587b58d011c83f17ae8caab437c9af490995808db742de95feb496",
+  "due_at_utc": "2027-02-13T12:00:00Z"
+}
