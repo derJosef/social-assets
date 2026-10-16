@@ -69,6 +69,39 @@ class LegacyImagePrepareTests(unittest.TestCase):
             self.run_stage(fetch=lambda _: self.raw + b"replaced")
         self.assertEqual(self.built, [])
 
+    def test_sha_mismatch_includes_safe_digest_length_and_type(self):
+        altered = b"\x89PNG\r\n\x1a\n" + b"private_data_not_for_logs"
+        with self.assertRaises(ValueError) as ctx:
+            self.run_stage(fetch=lambda _: altered)
+        message = str(ctx.exception)
+        self.assertIn("received_sha256=" + m.sha256(altered), message)
+        self.assertIn("bytes=" + str(len(altered)), message)
+        self.assertIn("signature=png", message)
+        self.assertIn("topic=" + self.legacy[0]["key"], message)
+        self.assertNotIn("private_data_not_for_logs", message)
+        self.assertNotIn("AbC123xyz", message)
+        self.assertEqual(self.built, [])
+
+    def test_jpeg_shortlink_rendition_is_rejected_with_safe_type(self):
+        altered = b"\xff\xd8\xff" + b"do_not_log_me"
+        with self.assertRaisesRegex(ValueError, "signature=jpeg"):
+            self.run_stage(fetch=lambda _: altered)
+        self.assertEqual(self.built, [])
+
+    def test_owner_issue_comment_gate_is_strict(self):
+        # This is not a permission to process arbitrary issue comments.
+        workflow = (Path(__file__).resolve().parents[1] /
+                    ".github/workflows/legacy-six-draft-images-only.yml").read_text()
+        self.assertIn("issue_comment:", workflow)
+        self.assertIn("github.event.issue.number == 19", workflow)
+        self.assertIn("github.event.comment.user.login == 'derJosef'", workflow)
+        self.assertIn("github.actor == 'derJosef'", workflow)
+        self.assertIn("github.run_attempt == 1", workflow)
+        self.assertIn("LEGACY_IMAGE_BUILD_ONCE_20261016", workflow)
+        self.assertIn("git ls-remote --heads", workflow)
+        self.assertNotIn("BUFFER_API_KEY", workflow)
+        self.assertNotIn("  push:", workflow)
+
     def test_cannot_overwrite_any_existing_artwork(self):
         p = m.paths(self.root, self.legacy[0]["key"])["source"]
         p.parent.mkdir(parents=True)
