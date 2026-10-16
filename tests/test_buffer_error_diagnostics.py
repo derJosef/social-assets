@@ -24,7 +24,7 @@ class BufferErrorDiagnosticsTests(unittest.TestCase):
             "Invalid metadata for LinkedIn": "post_metadata",
             "Not authorized for this channel": "channel",  # category precedence
             "Rate limit exceeded": "limits",
-            "An asset is invalid": "media_format",
+            "Invalid image format": "media_format",
             "Some unexpected failure": "unknown",
         }
         for message, expected in cases.items():
