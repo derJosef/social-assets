@@ -2,7 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-16-dokumentversionen-nachweis-002-facebook.json",
   "target": "facebook",
   "draft_sha256": "39e3f21993a1d408c869894403e2289e58c7b7c4a7ff0c4469f2cf187253ce5d",
-  "state": "created_requires_independent_check",
+  "state": "verified_prescheduled_draft_not_queued",
   "github_run_id": "38879279299",
   "due_at_utc": "2026-11-19T08:00:00Z",
   "channel_id": "6ac781e46a5c39ccb64fe01c",
