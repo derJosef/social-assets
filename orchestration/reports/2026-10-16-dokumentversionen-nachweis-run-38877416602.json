@@ -1,0 +1,37 @@
+{
+  "started_at": "2026-10-16T09:00:21.567670+00:00",
+  "mode": "drafts",
+  "state": "blocked",
+  "steps": {
+    "brief": {
+      "status": "PASS",
+      "detail": ""
+    },
+    "primary_source_fetch": {
+      "status": "PASS",
+      "detail": "2 Quellen"
+    },
+    "time_studies": {
+      "status": "PASS",
+      "detail": "6 Studien"
+    },
+    "editorial_input_and_structure": {
+      "status": "PASS",
+      "detail": "Bereits redaktionell erstellte Textvorlage"
+    },
+    "autonomous_model_generation": {
+      "status": "NOT_RUN",
+      "detail": "Kein Modellaufruf – alternative Eingabe"
+    },
+    "blocker": {
+      "status": "BLOCKED",
+      "detail": "TimePlanningBlocked: Kein konfliktfreies Zeitfenster für linkedin in 35 Tagen"
+    }
+  },
+  "campaign": "2026-10-16-dokumentversionen-nachweis",
+  "finished_at": "2026-10-16T09:00:27.465851+00:00",
+  "github_run_id": "38877416602",
+  "github_run_url": "https://github.com/derJosef/social-assets/actions/runs/38877416602",
+  "job_status": "failure",
+  "receipt_at": "2026-10-16T09:00:27.603957+00:00"
+}
