@@ -1,0 +1,90 @@
+name: AI Agent Builder – alte sechs Draft-Bilder vorbereiten (kein Buffer)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Vorbereitung: ZWEI_LEGACY_BILDER_NUR_GITHUB'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: legacy-six-draft-artwork-only-20261016
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: >-
+      ${{
+        github.actor == 'derJosef' &&
+        github.ref == 'refs/heads/main' &&
+        github.event_name == 'workflow_dispatch' &&
+        github.run_attempt == 1 &&
+        inputs.confirmation == 'ZWEI_LEGACY_BILDER_NUR_GITHUB'
+      }}
+    name: Nur zwei Original-Logo-Grafiken vorbereiten; kein Buffer-Zugriff
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Geschütztes main auschecken
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Python 3.12 einrichten
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Nur mechanische Bildwerkzeuge
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0' 'numpy==2.5.4'
+
+      - name: Sicherheitsgates und exakten Bild-Output-Branch prüfen
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/production_activation_guard.py
+          branch='automation/legacy-artwork-repair-20261016'
+          [[ -z "$(git ls-remote --heads origin "refs/heads/$branch")" ]] || {
+            echo 'Der Output-Branch ist bereits angelegt. Keine Wiederholung.' >&2
+            exit 1
+          }
+
+      - name: SHA-gepinnte Adobe-Quelle und Original-Logo prüfen, Bilder bauen
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B scripts/legacy_six_draft_image_prepare.py --prepare-only
+
+      - name: Exakt zwei originale Markenbilder auf EIGENEM Branch sichern
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch='automation/legacy-artwork-repair-20261016'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for name in 2026-10-16-legacy-wer-liest-mit-4x5 2026-10-16-legacy-ein-agent-drei-tests-4x5; do
+            git add -- \
+              "media/source-images/$name-source.png" \
+              "media/source-images/$name-base.png" \
+              "media/images/$name-branded.png" \
+              "visual-reviews/$name.json" \
+              "artwork-receipts/$name.json"
+          done
+          [[ "$(git diff --cached --name-only | wc -l)" -eq 10 ]] || {
+            echo 'Exakt zehn neue Asset-/QA-Dateien erforderlich.' >&2; exit 1
+          }
+          if git diff --cached --name-status | grep -v '^A[[:space:]]'; then
+            echo 'Keine vorhandene Datei ändern.' >&2; exit 1
+          fi
+          git commit -m 'assets: brand two repaired legacy draft images without Buffer edits'
+          git push origin "HEAD:refs/heads/$branch"
+          echo "Zwei neue unveränderliche 4:5-Markenbilder auf $branch." >> "$GITHUB_STEP_SUMMARY"
+          echo "Kein Buffer-Edit, kein Draft-Create, keine Terminierung oder Veröffentlichung." >> "$GITHUB_STEP_SUMMARY"
