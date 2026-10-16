@@ -112,10 +112,8 @@ def verify_image_draft(record: object, *, post_id: str, channel_id: str,
     return (
         isinstance(assets, list) and len(assets) == 1
         and isinstance(assets[0], dict)
-        and isinstance(assets[0].get("source"), str)
-        and bool(assets[0]["source"])
-        and isinstance(assets[0].get("mimeType"), str)
-        and assets[0]["mimeType"].lower().startswith("image/")
+        and assets[0].get("source") == IMAGE_URL
+        and assets[0].get("mimeType") == "image/png"
     )
 
 
