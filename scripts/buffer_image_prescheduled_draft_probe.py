@@ -13,21 +13,19 @@ import os
 import sys
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 try:
     from scripts.buffer_draft import (
         REPOSITORY, CREATE_DATED_DRAFT, resolve_channel, buffer_graphql,
         fetch_receipt, put_receipt, verified_dated_post, validate_media_url,
     )
-    from scripts.buffer_prescheduled_draft_probe import future_time
     from scripts.buffer_error_diagnostics import safe_mutation_diagnosis
 except ImportError:
     from buffer_draft import (
         REPOSITORY, CREATE_DATED_DRAFT, resolve_channel, buffer_graphql,
         fetch_receipt, put_receipt, verified_dated_post, validate_media_url,
     )
-    from buffer_prescheduled_draft_probe import future_time
     from buffer_error_diagnostics import safe_mutation_diagnosis
 
 TARGET = "linkedin"
@@ -53,6 +51,15 @@ query VerifyOneImageDraft($id: PostId!) {
   }
 }
 """
+
+
+def future_time(now: datetime) -> str:
+    if now.tzinfo is None or now.utcoffset() is None:
+        raise ValueError("Einmaltest benötigt gültige Zeitzone")
+    future = (now.astimezone(timezone.utc) + timedelta(days=120)).replace(
+        hour=12, minute=0, second=0, microsecond=0
+    )
+    return future.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def guarded_environment(env: dict[str, str]) -> None:
