@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "linkedin",
+  "text": "Eine PDF wurde bereits verarbeitet. Dann kommt eine korrigierte Fassung. Erkennt dein KI-Agent, was sich geändert hat?\n\nIn vielen automatisierten Abläufen wird nur gespeichert: „Datei schon bearbeitet.“ Für einen verlässlichen Prozess reicht das nicht. Denn ein Dokumentname kann gleich bleiben, obwohl sich Inhalt, Preis oder Liefertermin geändert haben.\n\nMein Vorschlag für einen kontrollierbaren Ablauf:\n\n• Originaldatei und Eingangszeit sichern.\n• Jede Version über eine digitale Prüfsumme wiedererkennen.\n• Bei neuer Prüfsumme die relevanten Felder mit der letzten Fassung vergleichen.\n• Änderungen dokumentieren und kritische Abweichungen vor der Übernahme freigeben lassen.\n\nWichtig: Eine Prüfsumme zeigt, DASS sich Daten geändert haben. Sie erklärt nicht, WAS die Änderung fachlich bedeutet. Dafür braucht es den tatsächlichen Vergleich und klare Entscheidungsregeln.\n\nKI kann diese Vorarbeit beschleunigen. Nachvollziehbarkeit entsteht aber erst, wenn Quelle, Version, Ergebnis und Freigabe zusammengehören.\n\nWie löst ihr Änderungen an bereits eingelesenen Dokumenten?\n\n#KIAgenten #Dokumentenmanagement #Automatisierung",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/45ccf2eca2a69f8f19cb50c8ade1f333fb213814/media/images/2026-10-16-dokumentversionen-nachweis-002-branded.png",
+        "alt_text": "Technische Darstellung zum Thema Korrigierte Dokumente nach Erstimport: Warum ein KI-Agent Originalversion, digitale Prüfsumme, Feldänderungen und die fachliche Freigabe getrennt nachvollziehbar beh; Original-Pauderer-Logo unten rechts."
+      }
+    ]
+  }
+}

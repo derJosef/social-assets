@@ -1,0 +1,66 @@
+{
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-16-dokumentversionen-nachweis-002",
+  "chatgpt_image": {
+    "review_evidence": "ChatGPT visually reviewed the actual new PNG: layered holographic documents are connected to a luminous archive, entirely artificial and without human faces or robots. Bars on panels are graphic shapes, not readable text; no recognizable third-party brand or logo. There is darker room at lower right for original logo. Proportional 4:5 fit with narrow navy borders, no crop or text added. NOT a human inspection or publication approval.",
+    "sha256": "b828053d924e97bf123e6989d48569bb0b175ef3a90a828d8c4d1eb9484849f5",
+    "transport": "adobe_transfer",
+    "url": "https://at.adobe.com/lpnc1F0JbLbMGQlS",
+    "visual_review": {
+      "heading_and_logo_space": true,
+      "matches_topic": true,
+      "no_foreign_logo": true,
+      "no_generated_text": true,
+      "no_people": true,
+      "no_robot": true,
+      "plausible_details": true
+    }
+  },
+  "execution_mode": "drafts",
+  "format_version": 1,
+  "image_review": "visual-reviews/2026-10-16-dokumentversionen-nachweis-002.json",
+  "posting_sources": [
+    "https://buffer.com/resources/best-time-to-post-on-linkedin/",
+    "https://sproutsocial.com/insights/best-times-to-post-on-linkedin/",
+    "https://buffer.com/resources/best-time-to-post-on-facebook/",
+    "https://sproutsocial.com/insights/best-times-to-post-on-facebook/",
+    "https://buffer.com/resources/when-is-the-best-time-to-post-on-instagram/",
+    "https://sproutsocial.com/insights/best-times-to-post-on-instagram/"
+  ],
+  "prepared_content": {
+    "posts": {
+      "facebook": "Ein KI-Agent verarbeitet eine Rechnung. Am nächsten Tag kommt dieselbe Rechnung noch einmal – diesmal mit einem korrigierten Betrag.\n\nWas passiert jetzt? Wird sie als „schon verarbeitet“ ignoriert? Oder erkennt der Ablauf, dass eine wichtige Änderung vorliegt?\n\nIch würde zwei Dinge klar trennen: Erstens, ob eine Datei bereits bekannt ist. Zweitens, ob ihr Inhalt seitdem verändert wurde.\n\nDafür lässt sich die Originalversion mit Eingangszeit und digitaler Prüfsumme speichern. Kommt eine neue Fassung, werden die relevanten Angaben verglichen. Auffällige Änderungen gehen zur Prüfung, bevor Werte in andere Systeme übernommen werden.\n\nDie KI kann beim Vergleichen helfen. Sie sollte aber nicht eigenmächtig entscheiden, dass ein geänderter Betrag automatisch übernommen werden darf.\n\nSo wird aus „Die Datei wurde bearbeitet“ die bessere Frage: „Welche Version wurde verarbeitet – und was wurde danach geändert?“\n\n#KIAgent #Dokumente #Prozessautomatisierung",
+      "instagram": "GLEICHER DATEINAME. ANDERER INHALT.\n\nEine Rechnung wurde vom KI-Agenten schon gelesen. Dann schickt der Lieferant eine überarbeitete Version.\n\nEin schwacher Workflow sagt: „Kenne ich bereits.“\nEin kontrollierter Workflow fragt: „Was hat sich verändert?“\n\nSo würde ich es lösen:\n\n1. Original und Eingangsdatum aufbewahren.\n2. Jede Version über eine digitale Prüfsumme unterscheiden.\n3. Geänderte Beträge, Termine oder Angaben vergleichen.\n4. Wichtige Änderungen erst nach Prüfung übernehmen.\n\nDie Prüfsumme erkennt die Veränderung. Sie sagt nicht, ob die neue Angabe richtig ist. Diese fachliche Entscheidung braucht einen eigenen Prüfschritt.\n\nKI spart Zeit beim Vergleich. Die Verantwortung für die Übernahme bleibt sichtbar.\n\n#KIAgenten #Dokumentenprüfung #Digitalisierung #Automatisierung",
+      "linkedin": "Eine PDF wurde bereits verarbeitet. Dann kommt eine korrigierte Fassung. Erkennt dein KI-Agent, was sich geändert hat?\n\nIn vielen automatisierten Abläufen wird nur gespeichert: „Datei schon bearbeitet.“ Für einen verlässlichen Prozess reicht das nicht. Denn ein Dokumentname kann gleich bleiben, obwohl sich Inhalt, Preis oder Liefertermin geändert haben.\n\nMein Vorschlag für einen kontrollierbaren Ablauf:\n\n• Originaldatei und Eingangszeit sichern.\n• Jede Version über eine digitale Prüfsumme wiedererkennen.\n• Bei neuer Prüfsumme die relevanten Felder mit der letzten Fassung vergleichen.\n• Änderungen dokumentieren und kritische Abweichungen vor der Übernahme freigeben lassen.\n\nWichtig: Eine Prüfsumme zeigt, DASS sich Daten geändert haben. Sie erklärt nicht, WAS die Änderung fachlich bedeutet. Dafür braucht es den tatsächlichen Vergleich und klare Entscheidungsregeln.\n\nKI kann diese Vorarbeit beschleunigen. Nachvollziehbarkeit entsteht aber erst, wenn Quelle, Version, Ergebnis und Freigabe zusammengehören.\n\nWie löst ihr Änderungen an bereits eingelesenen Dokumenten?\n\n#KIAgenten #Dokumentenmanagement #Automatisierung"
+    },
+    "risks": [
+      "Die neue Kampagne erstellt automatisch nur Buffer-Drafts mit Terminvorschlägen. Keine Veröffentlichung und kein Wechsel auf scheduled ohne ausdrückliche Freigabe.",
+      "Alle Rechnungsangaben sind fiktiv; es werden keine realen Personen, Lieferanten oder Kunden genannt.",
+      "SHA zeigt Dateiunterschiede, aber keine fachliche Richtigkeit; zusätzlich Feldvergleich und passende Freigabe erforderlich.",
+      "NIST und OWASP dienen der allgemeinen technischen Orientierung, nicht als Beleg für eine gesetzliche Pflicht.",
+      "ImageGen-Kontexttrennung technisch nicht vollständig attestiert. Rohbild ohne Menschen, Fremdmarken, Logos, generierten Text.",
+      "Neues PNG proportional in 1080x1350 mit schmalen Navy-Seitenrändern angepasst; Ausgabe-SHA gepinnt, kein Crop.",
+      "Bei unklarer Buffer-API-Antwort bleibt Pending-Receipt; keine automatischen Wiederholungen."
+    ],
+    "six_hats": {
+      "black": "Die digitale Prüfsumme erkennt lediglich abweichende Bytes; sie beweist nicht, dass die Inhalte fachlich korrekt sind oder welche Änderung relevant ist. Rechte und Freigabe getrennt prüfen.",
+      "blue": "Originalbild vor Adobe proportional ohne Zuschnitt in 4:5 konvertieren, Output-SHA pinnen, GitHub-QA mit Original-Logo, dann nur drei datierte Buffer-Drafts mit Readback. Kein scheduled und kein Publish.",
+      "green": "Abstrakte holografische Dokumentlagen mit Verbindungswegen und Archivkapsel sind ein eigenständiges Rohmotiv ohne fiktive Gesichter, Roboter oder generierten Text.",
+      "red": "Ein geänderter Betrag in einer bereits eingelesenen Datei ist ein sofort nachvollziehbares Beispiel, ohne Übertreibung oder alarmistische Aussagen.",
+      "white": "NIST empfiehlt systematisches Risikomanagement; OWASP betont Schutz bei KI-Agenten mit wirksamen Aktionen. Der Beitrag ist eine technische Umsetzungsempfehlung und keine behauptete Pflicht.",
+      "yellow": "Die praktische Trennung zwischen bekannten Dateien, neuer Version und Übernahmeentscheidung zeigt einen konkreten Mehrwert für kleine Betriebe."
+    },
+    "visual": null
+  },
+  "sources": [
+    {
+      "published_at": "2023-01-26",
+      "url": "https://www.nist.gov/news-events/news/2023/01/nist-risk-management-framework-aims-improve-trustworthiness-artificial"
+    },
+    {
+      "published_at": "2024-11-17",
+      "url": "https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/"
+    }
+  ],
+  "topic": "Korrigierte Dokumente nach Erstimport: Warum ein KI-Agent Originalversion, digitale Prüfsumme, Feldänderungen und die fachliche Freigabe getrennt nachvollziehbar behandeln sollte. Ausschließlich fiktives Rechnungsbeispiel ohne Kunden- oder Lieferantendaten."
+}

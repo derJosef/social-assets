@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "instagram",
+  "text": "GLEICHER DATEINAME. ANDERER INHALT.\n\nEine Rechnung wurde vom KI-Agenten schon gelesen. Dann schickt der Lieferant eine überarbeitete Version.\n\nEin schwacher Workflow sagt: „Kenne ich bereits.“\nEin kontrollierter Workflow fragt: „Was hat sich verändert?“\n\nSo würde ich es lösen:\n\n1. Original und Eingangsdatum aufbewahren.\n2. Jede Version über eine digitale Prüfsumme unterscheiden.\n3. Geänderte Beträge, Termine oder Angaben vergleichen.\n4. Wichtige Änderungen erst nach Prüfung übernehmen.\n\nDie Prüfsumme erkennt die Veränderung. Sie sagt nicht, ob die neue Angabe richtig ist. Diese fachliche Entscheidung braucht einen eigenen Prüfschritt.\n\nKI spart Zeit beim Vergleich. Die Verantwortung für die Übernahme bleibt sichtbar.\n\n#KIAgenten #Dokumentenprüfung #Digitalisierung #Automatisierung",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/45ccf2eca2a69f8f19cb50c8ade1f333fb213814/media/images/2026-10-16-dokumentversionen-nachweis-002-branded.png",
+        "alt_text": "Technische Darstellung zum Thema Korrigierte Dokumente nach Erstimport: Warum ein KI-Agent Originalversion, digitale Prüfsumme, Feldänderungen und die fachliche Freigabe getrennt nachvollziehbar beh; Original-Pauderer-Logo unten rechts."
+      }
+    ]
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-16-dokumentversionen-nachweis-002",
+  "checked_at": "2026-10-16",
+  "sources": [
+    {
+      "url": "https://www.nist.gov/news-events/news/2023/01/nist-risk-management-framework-aims-improve-trustworthiness-artificial",
+      "published_at": "2023-01-26",
+      "checked_at": "2026-10-16"
+    },
+    {
+      "url": "https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/",
+      "published_at": "2024-11-17",
+      "checked_at": "2026-10-16"
+    }
+  ],
+  "checks": {
+    "novelty": true,
+    "claims_with_sources": true,
+    "language_and_cta": true,
+    "six_hats": true,
+    "privacy_and_rights": true,
+    "brand_image": true,
+    "posting_time_research": true
+  },
+  "image": {
+    "final": "media/images/2026-10-16-dokumentversionen-nachweis-002-branded.png",
+    "base": "media/source-images/2026-10-16-dokumentversionen-nachweis-002-base.png",
+    "sha256": "26be3374f46dd6b102e4eb49631c22d64a0e90bbeae97249c5a5cd77a3c2c113",
+    "layout": "logo_only",
+    "review_spec": "visual-reviews/2026-10-16-dokumentversionen-nachweis-002.json",
+    "source_sha256": "b828053d924e97bf123e6989d48569bb0b175ef3a90a828d8c4d1eb9484849f5",
+    "ai_disclosure": {
+      "required": false,
+      "text": null,
+      "pixel_verified": false
+    },
+    "heading_corner": null,
+    "heading_box": null
+  },
+  "posts": {
+    "linkedin": "ready-for-buffer/auto-2026-10-16-dokumentversionen-nachweis-002-linkedin.json",
+    "facebook": "ready-for-buffer/auto-2026-10-16-dokumentversionen-nachweis-002-facebook.json",
+    "instagram": "ready-for-buffer/auto-2026-10-16-dokumentversionen-nachweis-002-instagram.json"
+  },
+  "posting_times": {
+    "linkedin": {
+      "local": "2026-11-25T16:00:00+01:00",
+      "utc": "2026-11-25T15:00:00Z"
+    },
+    "facebook": {
+      "local": "2026-11-19T09:00:00+01:00",
+      "utc": "2026-11-19T08:00:00Z"
+    },
+    "instagram": {
+      "local": "2026-11-18T18:00:00+01:00",
+      "utc": "2026-11-18T17:00:00Z"
+    }
+  }
+}

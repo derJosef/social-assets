@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "facebook",
+  "text": "Ein KI-Agent verarbeitet eine Rechnung. Am nächsten Tag kommt dieselbe Rechnung noch einmal – diesmal mit einem korrigierten Betrag.\n\nWas passiert jetzt? Wird sie als „schon verarbeitet“ ignoriert? Oder erkennt der Ablauf, dass eine wichtige Änderung vorliegt?\n\nIch würde zwei Dinge klar trennen: Erstens, ob eine Datei bereits bekannt ist. Zweitens, ob ihr Inhalt seitdem verändert wurde.\n\nDafür lässt sich die Originalversion mit Eingangszeit und digitaler Prüfsumme speichern. Kommt eine neue Fassung, werden die relevanten Angaben verglichen. Auffällige Änderungen gehen zur Prüfung, bevor Werte in andere Systeme übernommen werden.\n\nDie KI kann beim Vergleichen helfen. Sie sollte aber nicht eigenmächtig entscheiden, dass ein geänderter Betrag automatisch übernommen werden darf.\n\nSo wird aus „Die Datei wurde bearbeitet“ die bessere Frage: „Welche Version wurde verarbeitet – und was wurde danach geändert?“\n\n#KIAgent #Dokumente #Prozessautomatisierung",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/45ccf2eca2a69f8f19cb50c8ade1f333fb213814/media/images/2026-10-16-dokumentversionen-nachweis-002-branded.png",
+        "alt_text": "Technische Darstellung zum Thema Korrigierte Dokumente nach Erstimport: Warum ein KI-Agent Originalversion, digitale Prüfsumme, Feldänderungen und die fachliche Freigabe getrennt nachvollziehbar beh; Original-Pauderer-Logo unten rechts."
+      }
+    ]
+  }
+}
