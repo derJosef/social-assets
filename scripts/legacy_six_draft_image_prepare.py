@@ -92,8 +92,22 @@ def stage(root: Path = ROOT, *, fetch=fetch_image, builder=build,
     for info in LEGACY:
         dest = paths(root, info["key"])
         raw = fetch(info["adobe_url"])
-        if not isinstance(raw, bytes) or sha256(raw) != info["sha256"]:
-            raise ValueError("Adobe bytes do not match original ChatGPT normalized image SHA")
+        if not isinstance(raw, bytes):
+            raise ValueError("Adobe download returned non-bytes; source image never accepted")
+        if sha256(raw) != info["sha256"]:
+            # Safe diagnostic values only: no URL, redirect target, raw
+            # response body, token, personal data, or image content is logged.
+            signature = (
+                "png" if raw.startswith(b"\\x89PNG\\r\\n\\x1a\\n")
+                else "jpeg" if raw.startswith(b"\\xff\\xd8\\xff")
+                else "html" if raw.lstrip().lower().startswith((b"<!doctype html", b"<html"))
+                else "unknown"
+            )
+            raise ValueError(
+                "Adobe bytes do not match original ChatGPT normalized image SHA; "
+                f"topic={info['key']}; received_sha256={sha256(raw)}; "
+                f"bytes={len(raw)}; signature={signature}"
+            )
         with Image.open(io.BytesIO(raw)) as im:
             if im.format != "PNG" or im.size != SIZE:
                 raise ValueError("Expected full-resolution 1080x1350 PNG")
