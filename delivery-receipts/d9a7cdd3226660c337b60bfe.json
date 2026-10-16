@@ -2,7 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-16-dokumentversionen-nachweis-002-instagram.json",
   "target": "instagram",
   "draft_sha256": "6752d6d5addba67706985101f82e1736e9f0934abdf1780738ab923604f8ba95",
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "created_requires_independent_check",
   "github_run_id": "38879279299",
   "due_at_utc": "2026-11-18T17:00:00Z",
   "channel_id": "6ac79a686a5c39ccb650f94b",
@@ -10,5 +10,6 @@
     "campaign": "2026-10-16-dokumentversionen-nachweis-002",
     "quality_gate": "passed",
     "image_sha256": "26be3374f46dd6b102e4eb49631c22d64a0e90bbeae97249c5a5cd77a3c2c113"
-  }
+  },
+  "buffer_post_id": "6ad1eb87e991a49db3d78618"
 }
