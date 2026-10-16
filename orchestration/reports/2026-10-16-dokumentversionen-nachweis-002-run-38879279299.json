@@ -1,0 +1,106 @@
+{
+  "started_at": "2026-10-16T09:16:33.798893+00:00",
+  "mode": "drafts",
+  "state": "buffer_drafts_verified",
+  "steps": {
+    "brief": {
+      "status": "PASS",
+      "detail": ""
+    },
+    "primary_source_fetch": {
+      "status": "PASS",
+      "detail": "2 Quellen"
+    },
+    "time_studies": {
+      "status": "PASS",
+      "detail": "6 Studien"
+    },
+    "editorial_input_and_structure": {
+      "status": "PASS",
+      "detail": "Bereits redaktionell erstellte Textvorlage"
+    },
+    "autonomous_model_generation": {
+      "status": "NOT_RUN",
+      "detail": "Kein Modellaufruf – alternative Eingabe"
+    },
+    "brand_image_and_campaign_gate": {
+      "status": "PASS",
+      "detail": ""
+    }
+  },
+  "campaign": "2026-10-16-dokumentversionen-nachweis-002",
+  "files": {
+    "base": "media/source-images/2026-10-16-dokumentversionen-nachweis-002-base.png",
+    "final": "media/images/2026-10-16-dokumentversionen-nachweis-002-branded.png",
+    "receipt": "artwork-receipts/2026-10-16-dokumentversionen-nachweis-002.json",
+    "manifest": "campaign-manifests/2026-10-16-dokumentversionen-nachweis-002.json",
+    "plan": "drafts/2026-10-16-dokumentversionen-nachweis-002-plan.md",
+    "posts": [
+      "ready-for-buffer/auto-2026-10-16-dokumentversionen-nachweis-002-linkedin.json",
+      "ready-for-buffer/auto-2026-10-16-dokumentversionen-nachweis-002-facebook.json",
+      "ready-for-buffer/auto-2026-10-16-dokumentversionen-nachweis-002-instagram.json"
+    ]
+  },
+  "finished_at": "2026-10-16T09:16:37.771151+00:00",
+  "buffer_verification": {
+    "status": "PASS",
+    "checked_at": "2026-10-16T09:17:00.531123+00:00",
+    "posts": {
+      "linkedin": {
+        "post_id": "6ad1eb7c4ed7d375a452ca74",
+        "channel_id": "6aac167eea19ca0bde6ada5b",
+        "service": "linkedin",
+        "status": "draft",
+        "dueAt": "2026-11-25T15:00:00Z",
+        "scheduled_local": "2026-11-25T16:00:00+01:00",
+        "text": "Eine PDF wurde bereits verarbeitet. Dann kommt eine korrigierte Fassung. Erkennt dein KI-Agent, was sich geändert hat?\n\nIn vielen automatisierten Abläufen wird nur gespeichert: „Datei schon bearbeitet.“ Für einen verlässlichen Prozess reicht das nicht. Denn ein Dokumentname kann gleich bleiben, obwohl sich Inhalt, Preis oder Liefertermin geändert haben.\n\nMein Vorschlag für einen kontrollierbaren Ablauf:\n\n• Originaldatei und Eingangszeit sichern.\n• Jede Version über eine digitale Prüfsumme wiedererkennen.\n• Bei neuer Prüfsumme die relevanten Felder mit der letzten Fassung vergleichen.\n• Änderungen dokumentieren und kritische Abweichungen vor der Übernahme freigeben lassen.\n\nWichtig: Eine Prüfsumme zeigt, DASS sich Daten geändert haben. Sie erklärt nicht, WAS die Änderung fachlich bedeutet. Dafür braucht es den tatsächlichen Vergleich und klare Entscheidungsregeln.\n\nKI kann diese Vorarbeit beschleunigen. Nachvollziehbarkeit entsteht aber erst, wenn Quelle, Version, Ergebnis und Freigabe zusammengehören.\n\nWie löst ihr Änderungen an bereits eingelesenen Dokumenten?\n\n#KIAgenten #Dokumentenmanagement #Automatisierung",
+        "review_image_url": "https://raw.githubusercontent.com/derJosef/social-assets/45ccf2eca2a69f8f19cb50c8ade1f333fb213814/media/images/2026-10-16-dokumentversionen-nachweis-002-branded.png",
+        "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/45ccf2eca2a69f8f19cb50c8ade1f333fb213814/media/images/2026-10-16-dokumentversionen-nachweis-002-branded.png",
+        "image_attached_in_buffer": true,
+        "buffer_dashboard_url": "https://publish.buffer.com",
+        "buffer_link_kind": "official_dashboard_not_direct_post",
+        "buffer_direct_post_url": null,
+        "editorial_approval": "pending_after_draft",
+        "published": false
+      },
+      "facebook": {
+        "post_id": "6ad1eb82fb64fffcf1c2658e",
+        "channel_id": "6ac781e46a5c39ccb64fe01c",
+        "service": "facebook",
+        "status": "draft",
+        "dueAt": "2026-11-19T08:00:00Z",
+        "scheduled_local": "2026-11-19T09:00:00+01:00",
+        "text": "Ein KI-Agent verarbeitet eine Rechnung. Am nächsten Tag kommt dieselbe Rechnung noch einmal – diesmal mit einem korrigierten Betrag.\n\nWas passiert jetzt? Wird sie als „schon verarbeitet“ ignoriert? Oder erkennt der Ablauf, dass eine wichtige Änderung vorliegt?\n\nIch würde zwei Dinge klar trennen: Erstens, ob eine Datei bereits bekannt ist. Zweitens, ob ihr Inhalt seitdem verändert wurde.\n\nDafür lässt sich die Originalversion mit Eingangszeit und digitaler Prüfsumme speichern. Kommt eine neue Fassung, werden die relevanten Angaben verglichen. Auffällige Änderungen gehen zur Prüfung, bevor Werte in andere Systeme übernommen werden.\n\nDie KI kann beim Vergleichen helfen. Sie sollte aber nicht eigenmächtig entscheiden, dass ein geänderter Betrag automatisch übernommen werden darf.\n\nSo wird aus „Die Datei wurde bearbeitet“ die bessere Frage: „Welche Version wurde verarbeitet – und was wurde danach geändert?“\n\n#KIAgent #Dokumente #Prozessautomatisierung",
+        "review_image_url": "https://raw.githubusercontent.com/derJosef/social-assets/45ccf2eca2a69f8f19cb50c8ade1f333fb213814/media/images/2026-10-16-dokumentversionen-nachweis-002-branded.png",
+        "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/45ccf2eca2a69f8f19cb50c8ade1f333fb213814/media/images/2026-10-16-dokumentversionen-nachweis-002-branded.png",
+        "image_attached_in_buffer": true,
+        "buffer_dashboard_url": "https://publish.buffer.com",
+        "buffer_link_kind": "official_dashboard_not_direct_post",
+        "buffer_direct_post_url": null,
+        "editorial_approval": "pending_after_draft",
+        "published": false
+      },
+      "instagram": {
+        "post_id": "6ad1eb87e991a49db3d78618",
+        "channel_id": "6ac79a686a5c39ccb650f94b",
+        "service": "instagram",
+        "status": "draft",
+        "dueAt": "2026-11-18T17:00:00Z",
+        "scheduled_local": "2026-11-18T18:00:00+01:00",
+        "text": "GLEICHER DATEINAME. ANDERER INHALT.\n\nEine Rechnung wurde vom KI-Agenten schon gelesen. Dann schickt der Lieferant eine überarbeitete Version.\n\nEin schwacher Workflow sagt: „Kenne ich bereits.“\nEin kontrollierter Workflow fragt: „Was hat sich verändert?“\n\nSo würde ich es lösen:\n\n1. Original und Eingangsdatum aufbewahren.\n2. Jede Version über eine digitale Prüfsumme unterscheiden.\n3. Geänderte Beträge, Termine oder Angaben vergleichen.\n4. Wichtige Änderungen erst nach Prüfung übernehmen.\n\nDie Prüfsumme erkennt die Veränderung. Sie sagt nicht, ob die neue Angabe richtig ist. Diese fachliche Entscheidung braucht einen eigenen Prüfschritt.\n\nKI spart Zeit beim Vergleich. Die Verantwortung für die Übernahme bleibt sichtbar.\n\n#KIAgenten #Dokumentenprüfung #Digitalisierung #Automatisierung",
+        "review_image_url": "https://raw.githubusercontent.com/derJosef/social-assets/45ccf2eca2a69f8f19cb50c8ade1f333fb213814/media/images/2026-10-16-dokumentversionen-nachweis-002-branded.png",
+        "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/45ccf2eca2a69f8f19cb50c8ade1f333fb213814/media/images/2026-10-16-dokumentversionen-nachweis-002-branded.png",
+        "image_attached_in_buffer": true,
+        "buffer_dashboard_url": "https://publish.buffer.com",
+        "buffer_link_kind": "official_dashboard_not_direct_post",
+        "buffer_direct_post_url": null,
+        "editorial_approval": "pending_after_draft",
+        "published": false
+      }
+    }
+  },
+  "github_run_id": "38879279299",
+  "github_run_url": "https://github.com/derJosef/social-assets/actions/runs/38879279299",
+  "job_status": "success",
+  "receipt_at": "2026-10-16T09:17:00.587834+00:00"
+}
