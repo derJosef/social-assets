@@ -145,6 +145,16 @@ class OneImageProbeTests(unittest.TestCase):
                 self.assertEqual(row["graph"].call_count, 2)
                 self.assertEqual(len(row["saved"]), 2)
 
+    def test_wrong_image_source_even_if_png_blocks(self):
+        row = self.run_mocked(second={"post": {
+            **self.readback,
+            "assets": [{"source": "https://not-original.invalid/other.png",
+                        "mimeType": "image/png"}],
+        }})
+        self.assertIn("ALARM", row["error"])
+        self.assertEqual(row["graph"].call_count, 2)
+        self.assertEqual(len(row["saved"]), 2)
+
     def test_wrong_post_text_in_readback_blocks(self):
         row = self.run_mocked(second={"post": {**self.readback, "text": "unexpected"}})
         self.assertIn("ALARM", row["error"])
