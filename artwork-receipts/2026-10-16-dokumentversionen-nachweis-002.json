@@ -1,0 +1,20 @@
+{
+  "campaign_id": "2026-10-16-dokumentversionen-nachweis-002",
+  "brand": "ai-agent-builder",
+  "status": "verified_image_only",
+  "base": "media/source-images/2026-10-16-dokumentversionen-nachweis-002-base.png",
+  "final": "media/images/2026-10-16-dokumentversionen-nachweis-002-branded.png",
+  "sha256": "26be3374f46dd6b102e4eb49631c22d64a0e90bbeae97249c5a5cd77a3c2c113",
+  "layout": "logo_only",
+  "image_review": "visual-reviews/2026-10-16-dokumentversionen-nachweis-002.json",
+  "source_sha256": "b828053d924e97bf123e6989d48569bb0b175ef3a90a828d8c4d1eb9484849f5",
+  "ai_disclosure": {
+    "required": false,
+    "text": null,
+    "pixel_verified": false
+  },
+  "logo_original_sha256": "15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0",
+  "review_method": "chatgpt_visual_inspection_draft_only",
+  "visual_review_pending": [],
+  "human_visual_review": "pending_in_buffer"
+}

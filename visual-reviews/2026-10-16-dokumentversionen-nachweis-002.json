@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "source": "media/source-images/2026-10-16-dokumentversionen-nachweis-002-source.png",
+  "source_sha256": "b828053d924e97bf123e6989d48569bb0b175ef3a90a828d8c4d1eb9484849f5",
+  "layout": "logo_only",
+  "heading": null,
+  "visual_review": {
+    "heading_and_logo_space": true,
+    "matches_topic": true,
+    "no_foreign_logo": true,
+    "no_generated_text": true,
+    "no_people": true,
+    "no_robot": true,
+    "plausible_details": true
+  },
+  "review_evidence": "ChatGPT visually reviewed the actual new PNG: layered holographic documents are connected to a luminous archive, entirely artificial and without human faces or robots. Bars on panels are graphic shapes, not readable text; no recognizable third-party brand or logo. There is darker room at lower right for original logo. Proportional 4:5 fit with narrow navy borders, no crop or text added. NOT a human inspection or publication approval.",
+  "chatgpt_review": {
+    "kind": "chatgpt_visual_inspection_draft_only",
+    "source_sha256": "b828053d924e97bf123e6989d48569bb0b175ef3a90a828d8c4d1eb9484849f5"
+  }
+}
