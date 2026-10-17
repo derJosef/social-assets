@@ -11,6 +11,7 @@ import re
 import sys
 import urllib.request
 from datetime import datetime, timezone
+from pathlib import Path
 
 from PIL import Image
 
@@ -126,6 +127,8 @@ def fetch_exact_image(url: str) -> bytes:
 
 def safe_metadata(raw: dict, target: str):
     meta=raw.get("metadata")
+    if meta is None and target=="linkedin":
+        return None
     require(isinstance(meta,dict),"Plattformmetadaten fehlen; kein Edit")
     require(meta.get("type")=="post","Nur einzelne Feed-Posts")
     require(not meta.get("linkAttachment"),"Linkvorschau darf nicht überschrieben werden")
@@ -194,6 +197,25 @@ def receipt_path(pid: str) -> str:
     require(bool(re.fullmatch(r"[a-f0-9]{24}",pid)),"Ungültige feste Post-ID")
     return RECEIPT_PREFIX+pid+".json"
 
+def valid_owner_event(path: Path) -> bool:
+    try:
+        if not path.is_file() or path.stat().st_size > 100_000:
+            return False
+        event=json.loads(path.read_text(encoding="utf-8"))
+        issue=event.get("issue") or {}
+        comment=event.get("comment") or {}
+        return (
+            event.get("action")=="created"
+            and issue.get("number")==19
+            and not issue.get("pull_request")
+            and (issue.get("user") or {}).get("login")=="derJosef"
+            and (comment.get("user") or {}).get("login")=="derJosef"
+            and comment.get("body")=="LEGACY_SIX_DRAFTS_REPLACE_IMAGE_ONLY_ONCE_20261017"
+        )
+    except (OSError,ValueError,TypeError,AttributeError):
+        return False
+
+
 def live_edit(*, get=buffer_graphql, fetch=None):
     require(os.environ.get("GITHUB_REPOSITORY")==REPOSITORY and
             os.environ.get("GITHUB_REF")=="refs/heads/main" and
@@ -201,14 +223,26 @@ def live_edit(*, get=buffer_graphql, fetch=None):
             os.environ.get("GITHUB_RUN_ATTEMPT")=="1" and
             os.environ.get("GITHUB_ACTOR")=="derJosef",
             "Nur erster eigentümergeprüfter GitHub-Lauf auf main")
+    event_file=os.environ.get("GITHUB_EVENT_PATH","")
+    require(bool(event_file) and valid_owner_event(Path(event_file)),
+            "Expliziter eigentümergeprüfter Einmalauftrag fehlt")
     token=os.environ.get("BUFFER_API_KEY","")
     gh=os.environ.get("GITHUB_TOKEN","")
     require(bool(token and gh),"API-Zugriff fehlt")
     tasks=build_preflight(token,get=get,fetch=fetch)
-    # Inspect all six receipts before the first write; never retry or overwrite
+    # One additional immutable batch reservation: even a failure before the
+    # first individual edit cannot silently start a second campaign attempt.
+    batch="delivery-receipts/legacy-six-image-edit-batch-20261017.json"
+    require(fetch_receipt(gh,batch) is None,
+            "Einmaliger Gesamtlauf wurde bereits reserviert; kein Retry")
     for t in tasks:
         require(fetch_receipt(gh,receipt_path(t["id"])) is None,
                 "Mindestens ein Buffer-Reparaturbeleg besteht bereits; nicht wiederholen")
+    put_receipt(gh,batch,{
+        "state":"pending_manual_reconciliation_on_failure",
+        "post_ids":[t["id"] for t in tasks],
+        "github_run_id":os.environ.get("GITHUB_RUN_ID","unknown")
+    },"reserve once-only six existing draft image edits")
     for t in tasks:
         current=get(token,POST_QUERY,{"id":t["id"]}).get("post")
         check=check_post(current,id=t["id"],target=t["target"],expected_image=t["image"])
