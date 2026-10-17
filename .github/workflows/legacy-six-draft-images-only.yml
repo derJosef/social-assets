@@ -36,7 +36,7 @@ jobs:
            !github.event.issue.pull_request &&
            github.event.issue.user.login == 'derJosef' &&
            github.event.comment.user.login == 'derJosef' &&
-           github.event.comment.body == 'LEGACY_IMAGE_BUILD_ONCE_20261016')
+           startsWith(github.event.comment.body, 'LEGACY_IMAGE_FRESH_LINKS_ONCE_20261017'))
         )
       }}
     name: Nur zwei Original-Logo-Grafiken vorbereiten; kein Buffer-Zugriff
@@ -75,7 +75,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -B scripts/legacy_six_draft_image_prepare.py --prepare-only
+          if [[ "${GITHUB_EVENT_NAME}" == "issue_comment" ]]; then
+            python3 -B scripts/legacy_six_draft_image_prepare.py --prepare-only --github-event "${GITHUB_EVENT_PATH}"
+          else
+            python3 -B scripts/legacy_six_draft_image_prepare.py --prepare-only
+          fi
 
       - name: Exakt zwei originale Markenbilder auf EIGENEM Branch sichern
         shell: bash

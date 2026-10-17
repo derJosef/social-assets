@@ -12,6 +12,7 @@ import argparse
 import hashlib
 import io
 import json
+import re
 from pathlib import Path
 
 from PIL import Image
@@ -62,6 +63,44 @@ LEGACY = (
         ),
     },
 )
+# The owner comment is a short-lived transfer ticket, NOT a source of trust.
+# Exact PNG digests, 4:5 dimensions and original-logo QA remain immutable.
+FRESH_CONFIRM = "LEGACY_IMAGE_FRESH_LINKS_ONCE_20261017"
+FRESH_URL = re.compile(r"https://at\.adobe\.com/[A-Za-z0-9_-]{8,90}\Z")
+FRESH_KEYS = ("wer_liest_mit", "ein_agent_drei_tests")
+
+
+def parse_owner_image_event(path: Path) -> dict[str, str]:
+    if path.stat().st_size > 300_000:
+        raise ValueError("Event too large for image-only transfer")
+    event = json.loads(path.read_text(encoding="utf-8"))
+    issue = event.get("issue") or {}
+    comment = event.get("comment") or {}
+    if (event.get("action") != "created" or issue.get("number") != 19
+            or issue.get("user", {}).get("login") != "derJosef"
+            or comment.get("user", {}).get("login") != "derJosef"
+            or issue.get("pull_request")):
+        raise ValueError("Only authorized owner issue #19 event may supply links")
+    body = comment.get("body")
+    if not isinstance(body, str) or len(body) > 350:
+        raise ValueError("Malformed owner image transfer ticket")
+    lines = body.split("\n")
+    if len(lines) != 3 or lines[0] != FRESH_CONFIRM:
+        raise ValueError("Invalid image ticket confirmation or line count")
+    result = {}
+    for field, line in zip(FRESH_KEYS, lines[1:]):
+        label = field + "="
+        if not line.startswith(label):
+            raise ValueError("Malformed image-ticket field")
+        url = line[len(label):]
+        if not FRESH_URL.fullmatch(url):
+            raise ValueError("Image-ticket URLs must be approved Adobe HTTPS shortlinks")
+        result[field] = url
+    if len(set(result.values())) != 2:
+        raise ValueError("Both images must use distinct transfer URLs")
+    return result
+
+
 VISUAL = dict(no_people=True, no_robot=True, no_foreign_logo=True,
               no_generated_text=True, plausible_details=True,
               matches_topic=True, heading_and_logo_space=True)
@@ -82,16 +121,20 @@ def paths(root: Path, key: str) -> dict[str, Path]:
 
 
 def stage(root: Path = ROOT, *, fetch=fetch_image, builder=build,
-          font: Path = Path("/tmp/Inter.ttf")) -> list[dict]:
+          font: Path = Path("/tmp/Inter.ttf"),
+          fresh_urls: dict[str, str] | None = None) -> list[dict]:
     # NEVER overwrite even one previously prepared campaign image.
     for info in LEGACY:
         if any(p.exists() for p in paths(root, info["key"]).values()):
             raise ValueError("Image repair was already prepared; no repeat or overwrite")
 
+    if fresh_urls is not None and set(fresh_urls) != set(FRESH_KEYS):
+        raise ValueError("Exactly two fresh Adobe links required")
     result = []
-    for info in LEGACY:
+    for info, topic_key in zip(LEGACY, FRESH_KEYS):
         dest = paths(root, info["key"])
-        raw = fetch(info["adobe_url"])
+        transfer_url = fresh_urls[topic_key] if fresh_urls is not None else info["adobe_url"]
+        raw = fetch(transfer_url)
         if not isinstance(raw, bytes):
             raise ValueError("Adobe download returned non-bytes; source image never accepted")
         if sha256(raw) != info["sha256"]:
@@ -145,7 +188,7 @@ def stage(root: Path = ROOT, *, fetch=fetch_image, builder=build,
             "brand": "ai-agent-builder",
             "topic": info["topic"], "old_draft_ids": info["ids"],
             "source_sha256": info["sha256"],
-            "source_adobe_url": info["adobe_url"],
+            "source_adobe_url": transfer_url,
             "final_sha256": qa["sha256"],
             "final": dest["final"].relative_to(root).as_posix(),
             "original_logo_qa": qa["logo_qa"],
@@ -163,11 +206,13 @@ def stage(root: Path = ROOT, *, fetch=fetch_image, builder=build,
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prepare-only", action="store_true")
+    parser.add_argument("--github-event", type=Path)
     args = parser.parse_args()
     if not args.prepare_only:
         parser.error("No implicit live action; use --prepare-only")
     try:
-        result = stage()
+        urls = parse_owner_image_event(args.github_event) if args.github_event else None
+        result = stage(fresh_urls=urls)
     except (OSError, ValueError, RuntimeError) as exc:
         parser.error(str(exc)[:250])
     for item in result:
