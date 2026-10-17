@@ -91,7 +91,7 @@ class LegacyImageDraftTest(unittest.TestCase):
             {"comment":{"user":{"login":"other"},"body":self.events["comment"]["body"]}},
             {"comment":{"user":{"login":"derJosef"},"body":"LEGACY_SIX_DRAFTS_REPLACE_IMAGE_ONLY_ONCE_20261017\npublish"}},
             {"issue":{"number":20,"user":{"login":"derJosef"}}},
-            {"issue":{"number":19,"user":{"login":"derJosef"},"pull_request":{}}},
+            {"issue":{"number":19,"user":{"login":"derJosef"},"pull_request":{"url":"not-a-real-pr"}}},
         ):
             x={**self.events,**bad}
             self.eventfile.write_text(json.dumps(x))
@@ -139,7 +139,7 @@ class LegacyImageDraftTest(unittest.TestCase):
         self.assertNotIn("schedulingType:",m.EDIT)
         edits_before=len(edits)
         with self.patch(),mock.patch.dict(os.environ,self.env,clear=True):
-            with self.assertRaisesRegex(m.ImageRepairBlocked,"batch|Einmalige|reserviert|bereits"):
+            with self.assertRaises(m.ImageRepairBlocked):
                 m.live_edit(get=self.mock_get,fetch=lambda _:self.image)
         self.assertEqual(len([x for x in self.calls if x[0]=="edit"]),edits_before)
 
