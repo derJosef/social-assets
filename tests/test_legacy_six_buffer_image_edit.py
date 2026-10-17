@@ -126,6 +126,8 @@ class LegacyImageDraftTest(unittest.TestCase):
         edits=[v for name,v in self.calls if name=="edit"]
         self.assertEqual(len(edits),6)
         self.assertEqual(len(self.receipts),7) # batch plus six original-ID receipts
+        self.assertEqual(self.receipts["delivery-receipts/legacy-six-image-edit-batch-20261017.json"]["state"],
+                         "verified_six_existing_draft_images_not_queued")
         self.assertTrue(all(v["state"]=="verified_existing_draft_image_only_no_schedule"
                             for k,v in self.receipts.items() if "batch" not in k))
         for e in edits:
