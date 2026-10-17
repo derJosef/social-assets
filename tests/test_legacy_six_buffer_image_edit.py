@@ -1,5 +1,6 @@
 """Synthetic, network-free guards for six existing draft image edits."""
 import hashlib
+import base64
 import io
 import json
 import os
@@ -40,15 +41,29 @@ class LegacyImageDraftTest(unittest.TestCase):
         self.image=fixture_image()
         sha=hashlib.sha256(self.image).hexdigest()
         self.expected=tuple((topic,fn,sha,ids,alt) for topic,fn,_,ids,alt in m.EXPECTED)
-        self.posts={pid:fake_post(pid,target) for _,_,_,ids,_ in self.expected
+        self.posts={pid:fake_post(pid,target,image=m.OLD_ASSETS[topic])
+                    for topic,_,_,ids,_ in self.expected
                     for target,pid in ids.items()}
         self.events={"action":"created",
                      "issue":{"number":19,"user":{"login":"derJosef"}},
                      "comment":{"user":{"login":"derJosef"},
-                         "body":"LEGACY_SIX_DRAFTS_REPLACE_IMAGE_ONLY_ONCE_20261017"}}
+                         "body":"LEGACY_SIX_DRAFTS_RECOVERY_AFTER_INDEPENDENT_AUDIT_ONCE_20261017"}}
         self.eventfile=self.root/"event.json"
         self.eventfile.write_text(json.dumps(self.events))
-        self.receipts={}
+        self.receipts={
+            m.OLD_BATCH:{"content":base64.b64encode(json.dumps({
+                "state":"pending_manual_reconciliation_on_failure",
+                "post_ids":[self.expected[i][3][ch] for i in range(2) for ch in m.ORDER],
+                "github_run_id":m.OLD_ATTEMPT_ID,
+            }).encode()).decode()},
+            m.OLD_FIRST_RECEIPT:{"content":base64.b64encode(json.dumps({
+                "state":"pending_manual_reconciliation_on_failure",
+                "post_id":m.OLD_FIRST_POST,
+                "github_run_id":m.OLD_ATTEMPT_ID,
+                "old_text_sha256":hashlib.sha256(
+                    self.posts[m.OLD_FIRST_POST]["text"].encode()).hexdigest(),
+            }).encode()).decode()},
+        }
         self.calls=[]
         self.env={
             "GITHUB_REPOSITORY":"derJosef/social-assets",
@@ -89,7 +104,7 @@ class LegacyImageDraftTest(unittest.TestCase):
         self.assertTrue(m.valid_owner_event(self.eventfile))
         for bad in (
             {"comment":{"user":{"login":"other"},"body":self.events["comment"]["body"]}},
-            {"comment":{"user":{"login":"derJosef"},"body":"LEGACY_SIX_DRAFTS_REPLACE_IMAGE_ONLY_ONCE_20261017\npublish"}},
+            {"comment":{"user":{"login":"derJosef"},"body":"LEGACY_SIX_DRAFTS_RECOVERY_AFTER_INDEPENDENT_AUDIT_ONCE_20261017\npublish"}},
             {"issue":{"number":20,"user":{"login":"derJosef"}}},
             {"issue":{"number":19,"user":{"login":"derJosef"},"pull_request":{"url":"not-a-real-pr"}}},
         ):
@@ -97,6 +112,19 @@ class LegacyImageDraftTest(unittest.TestCase):
             self.eventfile.write_text(json.dumps(x))
             self.assertFalse(m.valid_owner_event(self.eventfile))
         self.assertFalse(m.valid_owner_event(self.root/"missing"))
+
+    def test_linkedin_buffer_input_must_not_contain_output_only_type(self):
+        # Buffer docs: LinkedInPostMetadataInput has annotations,
+        # firstComment and linkAttachment, but NO type.
+        post=fake_post("6ac8d5a926e224ee545ee6b5","linkedin")
+        self.assertIsNone(m.safe_metadata(post,"linkedin"))
+        self.assertIsNone(m.check_post(post,id=post["id"],target="linkedin",
+                                       expected_image="new")["meta"])
+        post["metadata"]["firstComment"]="Please see the source."
+        self.assertEqual(m.safe_metadata(post,"linkedin"),
+                         {"linkedin":{"firstComment":"Please see the source."}})
+        self.assertNotIn('"type":"post"',str(m.safe_metadata(post,"linkedin")))
+        self.assertIn("$metadata: PostInputMetaData",m.EDIT)
 
     def test_source_sha_and_dimensions_are_enforced(self):
         with self.patch():
@@ -125,11 +153,12 @@ class LegacyImageDraftTest(unittest.TestCase):
             m.live_edit(get=self.mock_get,fetch=lambda _:self.image)
         edits=[v for name,v in self.calls if name=="edit"]
         self.assertEqual(len(edits),6)
-        self.assertEqual(len(self.receipts),7) # batch plus six original-ID receipts
-        self.assertEqual(self.receipts["delivery-receipts/legacy-six-image-edit-batch-20261017.json"]["state"],
+        self.assertEqual(len(self.receipts),9) # immutable old two + recovery batch/six posts
+        self.assertEqual(self.receipts[m.NEW_BATCH]["state"],
                          "verified_six_existing_draft_images_not_queued")
-        self.assertTrue(all(v["state"]=="verified_existing_draft_image_only_no_schedule"
-                            for k,v in self.receipts.items() if "batch" not in k))
+        self.assertTrue(all(self.receipts[m.receipt_path(pid)]["state"]==
+                            "verified_existing_draft_image_only_no_schedule"
+                            for _,_,_,ids,_ in self.expected for pid in ids.values()))
         for e in edits:
             self.assertEqual(e["text"],"The live Buffer text / user edits are authoritative.")
             self.assertEqual(len(e["assets"]),1)
@@ -150,7 +179,22 @@ class LegacyImageDraftTest(unittest.TestCase):
         with self.patch(),mock.patch.dict(os.environ,self.env,clear=True):
             with self.assertRaises(m.ImageRepairBlocked):
                 m.live_edit(get=self.mock_get,fetch=lambda _:self.image)
-        self.assertFalse(self.receipts)
+        self.assertEqual(set(self.receipts),{m.OLD_BATCH,m.OLD_FIRST_RECEIPT})
+        self.assertFalse([x for x in self.calls if x[0]=="edit"])
+
+    def test_recovery_blocks_unknown_media_or_modified_first_text(self):
+        with self.patch(),mock.patch.dict(os.environ,self.env,clear=True):
+            self.posts[m.OLD_FIRST_POST]["assets"][0]["source"]="https://example.com/new.png"
+            with self.assertRaises(m.ImageRepairBlocked):
+                m.live_edit(get=self.mock_get,fetch=lambda _:self.image)
+        self.assertEqual(set(self.receipts),{m.OLD_BATCH,m.OLD_FIRST_RECEIPT})
+        self.assertFalse([x for x in self.calls if x[0]=="edit"])
+
+    def test_recovery_cannot_erase_old_ledger_or_recover_without_original_pending(self):
+        del self.receipts[m.OLD_FIRST_RECEIPT]
+        with self.patch(),mock.patch.dict(os.environ,self.env,clear=True):
+            with self.assertRaises(m.ImageRepairBlocked):
+                m.live_edit(get=self.mock_get,fetch=lambda _:self.image)
         self.assertFalse([x for x in self.calls if x[0]=="edit"])
 
     def test_workflow_is_owner_only_no_pr_or_push_mutation_trigger(self):
@@ -159,7 +203,7 @@ class LegacyImageDraftTest(unittest.TestCase):
            ".github/workflows/legacy-six-buffer-inplace-image-update.yml")
         source=p.read_text()
         for gate in ["github.actor == 'derJosef'","github.event.issue.number == 19",
-                     "github.run_attempt == 1","LEGACY_SIX_DRAFTS_REPLACE_IMAGE_ONLY_ONCE_20261017"]:
+                     "github.run_attempt == 1","LEGACY_SIX_DRAFTS_RECOVERY_AFTER_INDEPENDENT_AUDIT_ONCE_20261017"]:
             self.assertIn(gate,source)
         self.assertNotIn("  push:",source)
         self.assertNotIn("  pull_request:",source)

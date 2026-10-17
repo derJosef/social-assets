@@ -25,7 +25,7 @@ jobs:
         !github.event.issue.pull_request &&
         github.event.issue.user.login == 'derJosef' &&
         github.event.comment.user.login == 'derJosef' &&
-        github.event.comment.body == 'LEGACY_SIX_DRAFTS_REPLACE_IMAGE_ONLY_ONCE_20261017'
+        github.event.comment.body == 'LEGACY_SIX_DRAFTS_RECOVERY_AFTER_INDEPENDENT_AUDIT_ONCE_20261017'
       }}
     name: Bestehende Posts nur mit neuem Bild aktualisieren; niemals terminieren
     runs-on: ubuntu-24.04
