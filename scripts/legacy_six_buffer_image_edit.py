@@ -136,7 +136,13 @@ def safe_metadata(raw: dict, target: str):
     require(first is None or isinstance(first,str),"Ungültiger erster Kommentar")
     if target=="linkedin":
         require(meta.get("__typename")=="LinkedInPostMetadata","Falscher LinkedIn-Metadatentyp")
-        v={"type":"post"}
+        # LinkedInPostMetadata is an OUTPUT type and exposes type, but the
+        # INPUT LinkedInPostMetadataInput does NOT accept a type field.
+        # No first comment -> pass metadata=null, matching the proven
+        # successful LinkedIn Buffer create flow.
+        if first is None:
+            return None
+        return {"linkedin":{"firstComment":first}}
     elif target=="facebook":
         require(meta.get("__typename")=="FacebookPostMetadata","Falscher Facebook-Metadatentyp")
         v={"type":"post"}
