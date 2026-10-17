@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "source": "media/source-images/2026-10-16-legacy-ein-agent-drei-tests-4x5-source.png",
+  "source_sha256": "95f82aa8b82c749a89d73e5f1ba34bb4a2521c31f9043bf80dffaee328406c7a",
+  "layout": "logo_only",
+  "heading": null,
+  "visual_review": {
+    "no_people": true,
+    "no_robot": true,
+    "no_foreign_logo": true,
+    "no_generated_text": true,
+    "plausible_details": true,
+    "matches_topic": true,
+    "heading_and_logo_space": true
+  },
+  "review_evidence": "ChatGPT inspected the actual generated image: three connected stylized technical inspection stages of a prototype, with blue and amber scanning effects. There are no people, robots, third-party marks, or readable letters. Lower-right area is suitable for separately attached canonical logo. NOT a human inspection or publication approval.",
+  "chatgpt_review": {
+    "kind": "chatgpt_visual_inspection_draft_only",
+    "source_sha256": "95f82aa8b82c749a89d73e5f1ba34bb4a2521c31f9043bf80dffaee328406c7a"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "kind": "legacy_draft_image_repair_preparation",
+  "brand": "ai-agent-builder",
+  "topic": "Wer liest bei deinem KI-Chat mit?",
+  "old_draft_ids": {
+    "linkedin": "6ac8d5a926e224ee545ee6b5",
+    "facebook": "6ac8d5ab26e224ee545ee761",
+    "instagram": "6ac8d5ae26e224ee545ee809"
+  },
+  "source_sha256": "74a7debcc3d5598fa328fc9a5c0376c9cd2797ed2d722ed7a9c4e6ec5c3abfd7",
+  "source_adobe_url": "https://at.adobe.com/YPSA2LcSbOUIkvIm",
+  "final_sha256": "27229315d6fd2135b1c0cdc4be20eb94023e25818c7c7fe34c93fe9b715ada55",
+  "final": "media/images/2026-10-16-legacy-wer-liest-mit-4x5-branded.png",
+  "original_logo_qa": {
+    "profile": "logo_only",
+    "validator": "personalos_canonical",
+    "logo_verified": true,
+    "source_visual_review": "chatgpt_visual_inspection_draft_only",
+    "review_evidence": "ChatGPT inspected the actual rendered source: glowing central AI infrastructure with connected transparent servers, cloud, data storage and monitoring paths. No human, robot, recognizable branding or readable generated text; clear lower-right safe logo area. NOT a human visual inspection or publication approval."
+  },
+  "buffer_mutations": 0,
+  "buffer_status_changed": false,
+  "publication_authorized": false,
+  "image_model_context_isolation_verified": false
+}

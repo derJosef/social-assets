@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "source": "media/source-images/2026-10-16-legacy-wer-liest-mit-4x5-source.png",
+  "source_sha256": "74a7debcc3d5598fa328fc9a5c0376c9cd2797ed2d722ed7a9c4e6ec5c3abfd7",
+  "layout": "logo_only",
+  "heading": null,
+  "visual_review": {
+    "no_people": true,
+    "no_robot": true,
+    "no_foreign_logo": true,
+    "no_generated_text": true,
+    "plausible_details": true,
+    "matches_topic": true,
+    "heading_and_logo_space": true
+  },
+  "review_evidence": "ChatGPT inspected the actual rendered source: glowing central AI infrastructure with connected transparent servers, cloud, data storage and monitoring paths. No human, robot, recognizable branding or readable generated text; clear lower-right safe logo area. NOT a human visual inspection or publication approval.",
+  "chatgpt_review": {
+    "kind": "chatgpt_visual_inspection_draft_only",
+    "source_sha256": "74a7debcc3d5598fa328fc9a5c0376c9cd2797ed2d722ed7a9c4e6ec5c3abfd7"
+  }
+}
