@@ -66,7 +66,7 @@ LEGACY = (
 # The owner comment is a short-lived transfer ticket, NOT a source of trust.
 # Exact PNG digests, 4:5 dimensions and original-logo QA remain immutable.
 FRESH_CONFIRM = "LEGACY_IMAGE_FRESH_LINKS_ONCE_20261017"
-FRESH_URL = re.compile(r"https://at\\.adobe\\.com/[A-Za-z0-9_-]{8,90}\\Z")
+FRESH_URL = re.compile(r"https://at\.adobe\.com/[A-Za-z0-9_-]{8,90}\Z")
 FRESH_KEYS = ("wer_liest_mit", "ein_agent_drei_tests")
 
 
@@ -84,7 +84,7 @@ def parse_owner_image_event(path: Path) -> dict[str, str]:
     body = comment.get("body")
     if not isinstance(body, str) or len(body) > 350:
         raise ValueError("Malformed owner image transfer ticket")
-    lines = body.split("\\n")
+    lines = body.split("\n")
     if len(lines) != 3 or lines[0] != FRESH_CONFIRM:
         raise ValueError("Invalid image ticket confirmation or line count")
     result = {}
