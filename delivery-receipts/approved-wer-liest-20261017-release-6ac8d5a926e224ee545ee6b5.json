@@ -1,10 +1,12 @@
 {
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "linkedin_scheduled_verified",
   "post_id": "6ac8d5a926e224ee545ee6b5",
   "target": "linkedin",
   "action": "customScheduled",
   "due_at": "2026-10-19T11:00:00Z",
   "text_sha256": "769759595c3f0f535f3d234f0f4fe65ff8d1e187898ce593a8c91e9d7436182b",
   "image": "https://raw.githubusercontent.com/derJosef/social-assets/ac03f948b5ed24dd49c3363dfdef7c82de01810b/media/images/2026-10-16-legacy-wer-liest-mit-4x5-branded.png",
-  "github_run_id": "39019298703"
+  "github_run_id": "39019298703",
+  "verified_at_utc": "2026-10-17T08:58:05.959200+00:00",
+  "buffer_status": "scheduled"
 }
