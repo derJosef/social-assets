@@ -102,6 +102,57 @@ class LegacyImagePrepareTests(unittest.TestCase):
         self.assertNotIn("BUFFER_API_KEY", workflow)
         self.assertNotIn("  push:", workflow)
 
+    def test_fresh_owner_links_parse_and_reach_image_builder(self):
+        body = "\n".join((
+            m.FRESH_CONFIRM,
+            "wer_liest_mit=https://at.adobe.com/CorrectLink12345",
+            "ein_agent_drei_tests=https://at.adobe.com/CorrectLink67890",
+        ))
+        event = self.root / "github-event.json"
+        event.write_text(json.dumps({
+            "action": "created",
+            "issue": {"number": 19, "user": {"login": "derJosef"}},
+            "comment": {"user": {"login": "derJosef"}, "body": body},
+        }))
+        links = m.parse_owner_image_event(event)
+        called = []
+        def fetch(url):
+            called.append(url)
+            return self.raw
+        result = self.run_stage_with_links(links, fetch=fetch)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(called, list(links.values()))
+        self.assertTrue(all(item["source_adobe_url"] in called for item in result))
+        self.assertTrue(all(item["buffer_mutations"] == 0 for item in result))
+
+    def run_stage_with_links(self, urls, fetch):
+        with mock.patch.object(m, "LEGACY", self.legacy):
+            return m.stage(self.root, fetch=fetch, builder=self.fake_build, fresh_urls=urls)
+
+    def test_fresh_comment_rejects_other_user_bad_url_or_extra_commands(self):
+        good = "\\n".join((
+            m.FRESH_CONFIRM,
+            "wer_liest_mit=https://at.adobe.com/CorrectLink12345",
+            "ein_agent_drei_tests=https://at.adobe.com/CorrectLink67890",
+        ))
+        path = self.root / "github-event.json"
+        event = {
+            "action": "created",
+            "issue": {"number": 19, "user": {"login": "derJosef"}},
+            "comment": {"user": {"login": "derJosef"}, "body": good},
+        }
+        for bad in (
+            {"comment": {"user": {"login": "stranger"}, "body": good}},
+            {"issue": {"number": 23, "user": {"login": "derJosef"}}},
+            {"comment": {"user": {"login": "derJosef"}, "body": good + "\\nrun=publish"}},
+            {"comment": {"user": {"login": "derJosef"}, "body": good.replace("https://at.adobe.com/", "https://other.example/")}},
+            {"comment": {"user": {"login": "derJosef"}, "body": good.replace("CorrectLink67890", "CorrectLink12345")}},
+        ):
+            value = {**event, **bad}
+            path.write_text(json.dumps(value))
+            with self.assertRaises(ValueError):
+                m.parse_owner_image_event(path)
+
     def test_cannot_overwrite_any_existing_artwork(self):
         p = m.paths(self.root, self.legacy[0]["key"])["source"]
         p.parent.mkdir(parents=True)
