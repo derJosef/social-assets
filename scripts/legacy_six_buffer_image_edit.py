@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 import hashlib
 import io
 import json
@@ -28,7 +30,16 @@ except ImportError:
 
 IMAGE_COMMIT = "ac03f948b5ed24dd49c3363dfdef7c82de01810b"
 IMAGE_ROOT = "https://raw.githubusercontent.com/derJosef/social-assets/" + IMAGE_COMMIT + "/media/images/"
-RECEIPT_PREFIX = "delivery-receipts/legacy-six-image-edit-20261017-"
+RECEIPT_PREFIX = "delivery-receipts/legacy-six-image-edit-recovery-20261017-"
+OLD_BATCH = "delivery-receipts/legacy-six-image-edit-batch-20261017.json"
+NEW_BATCH = "delivery-receipts/legacy-six-image-edit-batch-recovery-20261017.json"
+OLD_FIRST_RECEIPT = "delivery-receipts/legacy-six-image-edit-20261017-6ac8d5a926e224ee545ee6b5.json"
+OLD_FIRST_POST = "6ac8d5a926e224ee545ee6b5"
+OLD_ATTEMPT_ID = "39014602383"
+OLD_ASSETS = {
+    "wer-liest-mit": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-09-ki-chatdaten-drittanbieter-branded.png",
+    "drei-tests": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-09-ein-agent-drei-tests-branded-test.png",
+}
 EXPECTED = (
     ("wer-liest-mit", "2026-10-16-legacy-wer-liest-mit-4x5-branded.png",
      "27229315d6fd2135b1c0cdc4be20eb94023e25818c7c7fe34c93fe9b715ada55",
@@ -179,7 +190,8 @@ def check_post(raw: object, *, id: str, target: str, expected_image: str) -> dic
     meta=safe_metadata(raw,target)
     return {"id":id,"target":target,"channel_id":raw.get("channelId"),
             "text":raw["text"],"meta":meta,"tag_ids":[x["id"] for x in tags],
-            "old_sig":signature(raw),"share_mode":raw.get("shareMode"),
+            "old_sig":signature(raw),"old_asset_url":assets[0].get("source"),
+            "share_mode":raw.get("shareMode"),
             "scheduling_type":raw.get("schedulingType")}
 
 def build_preflight(buffer_key: str, *, get=buffer_graphql, fetch=None):
@@ -216,10 +228,47 @@ def valid_owner_event(path: Path) -> bool:
             and not issue.get("pull_request")
             and (issue.get("user") or {}).get("login")=="derJosef"
             and (comment.get("user") or {}).get("login")=="derJosef"
-            and comment.get("body")=="LEGACY_SIX_DRAFTS_REPLACE_IMAGE_ONLY_ONCE_20261017"
+            and comment.get("body")=="LEGACY_SIX_DRAFTS_RECOVERY_AFTER_INDEPENDENT_AUDIT_ONCE_20261017"
         )
     except (OSError,ValueError,TypeError,AttributeError):
         return False
+
+
+def decode_receipt(raw: object, label: str) -> dict:
+    require(isinstance(raw,dict) and isinstance(raw.get("content"),str),
+            "Vorheriger Beleg nicht eindeutig lesbar: "+label)
+    try:
+        data=base64.b64decode(raw["content"].replace("\\n","").replace("\\r",""),
+                              validate=True)
+        record=json.loads(data.decode("utf-8"))
+    except (binascii.Error,UnicodeError,ValueError,TypeError) as e:
+        raise ImageRepairBlocked("Vorheriger Beleg ungültig: "+label) from e
+    require(isinstance(record,dict),"Vorheriger Beleg kein JSON-Objekt")
+    return record
+
+
+def reconcile_old_attempt(github_token: str, tasks: list[dict]) -> None:
+    old=decode_receipt(fetch_receipt(github_token,OLD_BATCH),"batch")
+    first=decode_receipt(fetch_receipt(github_token,OLD_FIRST_RECEIPT),"first")
+    require(old.get("state")=="pending_manual_reconciliation_on_failure"
+            and old.get("github_run_id")==OLD_ATTEMPT_ID
+            and old.get("post_ids")==[t["id"] for t in tasks],
+            "Alter Gesamtbeleg entspricht nicht dem dokumentierten Fehlerlauf")
+    require(first.get("state")=="pending_manual_reconciliation_on_failure"
+            and first.get("github_run_id")==OLD_ATTEMPT_ID
+            and first.get("post_id")==OLD_FIRST_POST,
+            "Erster alter Beleg unvereinbar")
+    for t in tasks:
+        require(t.get("old_asset_url")==OLD_ASSETS[t["topic"]],
+                "Ursprüngliches Buffer-Bild inzwischen geändert; kein Recovery")
+        if t["id"]==OLD_FIRST_POST:
+            require(hashlib.sha256(t["text"].encode()).hexdigest()
+                    ==first.get("old_text_sha256"),
+                    "Erster Buffer-Text weicht vom dokumentierten Erstversuch ab")
+        else:
+            legacy="delivery-receipts/legacy-six-image-edit-20261017-"+t["id"]+".json"
+            require(fetch_receipt(github_token,legacy) is None,
+                    "Ein weiterer alter Post könnte geändert worden sein; blockiert")
 
 
 def live_edit(*, get=buffer_graphql, fetch=None):
@@ -238,9 +287,13 @@ def live_edit(*, get=buffer_graphql, fetch=None):
     tasks=build_preflight(token,get=get,fetch=fetch)
     # One additional immutable batch reservation: even a failure before the
     # first individual edit cannot silently start a second campaign attempt.
-    batch="delivery-receipts/legacy-six-image-edit-batch-20261017.json"
+    # Prior attempt is permanently pending. Recover only after verifying
+    # that it attempted exactly the first LinkedIn post and changed NONE
+    # of the original media; never delete or reuse the old ledger entries.
+    reconcile_old_attempt(gh, tasks)
+    batch=NEW_BATCH
     require(fetch_receipt(gh,batch) is None,
-            "Einmaliger Gesamtlauf wurde bereits reserviert; kein Retry")
+            "Recovery-Run bereits reserviert; kein weiterer Schreibversuch")
     for t in tasks:
         require(fetch_receipt(gh,receipt_path(t["id"])) is None,
                 "Mindestens ein Buffer-Reparaturbeleg besteht bereits; nicht wiederholen")
