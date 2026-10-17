@@ -97,7 +97,7 @@ class LegacyImagePrepareTests(unittest.TestCase):
         self.assertIn("github.event.comment.user.login == 'derJosef'", workflow)
         self.assertIn("github.actor == 'derJosef'", workflow)
         self.assertIn("github.run_attempt == 1", workflow)
-        self.assertIn("LEGACY_IMAGE_BUILD_ONCE_20261016", workflow)
+        self.assertIn("LEGACY_IMAGE_FRESH_LINKS_ONCE_20261017", workflow)
         self.assertIn("git ls-remote --heads", workflow)
         self.assertNotIn("BUFFER_API_KEY", workflow)
         self.assertNotIn("  push:", workflow)
@@ -130,7 +130,7 @@ class LegacyImagePrepareTests(unittest.TestCase):
             return m.stage(self.root, fetch=fetch, builder=self.fake_build, fresh_urls=urls)
 
     def test_fresh_comment_rejects_other_user_bad_url_or_extra_commands(self):
-        good = "\\n".join((
+        good = "\n".join((
             m.FRESH_CONFIRM,
             "wer_liest_mit=https://at.adobe.com/CorrectLink12345",
             "ein_agent_drei_tests=https://at.adobe.com/CorrectLink67890",
@@ -144,7 +144,7 @@ class LegacyImagePrepareTests(unittest.TestCase):
         for bad in (
             {"comment": {"user": {"login": "stranger"}, "body": good}},
             {"issue": {"number": 23, "user": {"login": "derJosef"}}},
-            {"comment": {"user": {"login": "derJosef"}, "body": good + "\\nrun=publish"}},
+            {"comment": {"user": {"login": "derJosef"}, "body": good + "\nrun=publish"}},
             {"comment": {"user": {"login": "derJosef"}, "body": good.replace("https://at.adobe.com/", "https://other.example/")}},
             {"comment": {"user": {"login": "derJosef"}, "body": good.replace("CorrectLink67890", "CorrectLink12345")}},
         ):
