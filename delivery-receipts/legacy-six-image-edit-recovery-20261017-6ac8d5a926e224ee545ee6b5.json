@@ -4,6 +4,7 @@
   "topic": "wer-liest-mit",
   "image": "https://raw.githubusercontent.com/derJosef/social-assets/ac03f948b5ed24dd49c3363dfdef7c82de01810b/media/images/2026-10-16-legacy-wer-liest-mit-4x5-branded.png",
   "old_text_sha256": "769759595c3f0f535f3d234f0f4fe65ff8d1e187898ce593a8c91e9d7436182b",
-  "state": "pending_manual_reconciliation_on_failure",
-  "github_run_id": "39016068840"
+  "state": "verified_existing_draft_image_only_no_schedule",
+  "github_run_id": "39016068840",
+  "verified_at_utc": "2026-10-17T08:05:56.551100+00:00"
 }
