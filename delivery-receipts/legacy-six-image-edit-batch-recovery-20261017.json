@@ -1,5 +1,5 @@
 {
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "verified_six_existing_draft_images_not_queued",
   "post_ids": [
     "6ac8d5a926e224ee545ee6b5",
     "6ac8d5ab26e224ee545ee761",
@@ -8,5 +8,6 @@
     "6ac89617f07e682de6a98b36",
     "6ac8961b7d9f9f33012bc803"
   ],
-  "github_run_id": "39016068840"
+  "github_run_id": "39016068840",
+  "verified_at_utc": "2026-10-17T08:06:07.835572+00:00"
 }
