@@ -1,0 +1,10 @@
+{
+  "state": "pending_manual_reconciliation_on_failure",
+  "post_ids": [
+    "6ac8d5ab26e224ee545ee761",
+    "6ac8d5ae26e224ee545ee809",
+    "6ac8d5a926e224ee545ee6b5"
+  ],
+  "approved_scope": "fb_ig_shareNow_li_20261019T110000Z",
+  "github_run_id": "39019298703"
+}
