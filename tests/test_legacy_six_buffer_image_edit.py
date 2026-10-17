@@ -98,6 +98,19 @@ class LegacyImageDraftTest(unittest.TestCase):
             self.assertFalse(m.valid_owner_event(self.eventfile))
         self.assertFalse(m.valid_owner_event(self.root/"missing"))
 
+    def test_linkedin_buffer_input_must_not_contain_output_only_type(self):
+        # Buffer docs: LinkedInPostMetadataInput has annotations,
+        # firstComment and linkAttachment, but NO type.
+        post=fake_post("6ac8d5a926e224ee545ee6b5","linkedin")
+        self.assertIsNone(m.safe_metadata(post,"linkedin"))
+        self.assertIsNone(m.check_post(post,id=post["id"],target="linkedin",
+                                       expected_image="new")["meta"])
+        post["metadata"]["firstComment"]="Please see the source."
+        self.assertEqual(m.safe_metadata(post,"linkedin"),
+                         {"linkedin":{"firstComment":"Please see the source."}})
+        self.assertNotIn('"type":"post"',str(m.safe_metadata(post,"linkedin")))
+        self.assertIn("$metadata: PostInputMetaData",m.EDIT)
+
     def test_source_sha_and_dimensions_are_enforced(self):
         with self.patch():
             verified=m.verify_media(fetch=lambda _:self.image)
