@@ -1,0 +1,10 @@
+{
+  "state": "pending_manual_reconciliation_on_failure",
+  "post_id": "6ac8d5ae26e224ee545ee809",
+  "target": "instagram",
+  "action": "shareNow",
+  "due_at": null,
+  "text_sha256": "7659889feaf9f6c7ce32ffc8c87a0ca803b3cae7e3e8078e2116344df2568338",
+  "image": "https://raw.githubusercontent.com/derJosef/social-assets/ac03f948b5ed24dd49c3363dfdef7c82de01810b/media/images/2026-10-16-legacy-wer-liest-mit-4x5-branded.png",
+  "github_run_id": "39019298703"
+}
