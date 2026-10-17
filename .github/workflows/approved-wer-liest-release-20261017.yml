@@ -1,0 +1,65 @@
+name: AI Agent Builder – Freigegebene 3 vorhandene Posts einmalig publizieren
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: wer-liest-mit-20261017-owner-approved-release-once
+  cancel-in-progress: false
+
+jobs:
+  approved-release:
+    if: >-
+      ${{
+        github.actor == 'derJosef' &&
+        github.ref == 'refs/heads/main' &&
+        github.run_attempt == 1 &&
+        github.event_name == 'issue_comment' &&
+        github.event.action == 'created' &&
+        github.event.issue.number == 19 &&
+        !github.event.issue.pull_request &&
+        github.event.issue.user.login == 'derJosef' &&
+        github.event.issue.title == 'AIAGENT_BRIEF:2026-10-13-lieferanten-pdf-prueftor-e2e-003' &&
+        github.event.comment.user.login == 'derJosef' &&
+        github.event.comment.body == 'RELEASE_WER_LIEST_MIT_FB_IG_NOW_LI_20261019_1300_ONCE_20261017'
+      }}
+    name: Genau Facebook/Instagram jetzt und LinkedIn am Montag (bestehende IDs)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+      BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
+      BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_FACEBOOK_CHANNEL_ID }}
+      BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_INSTAGRAM_CHANNEL_ID }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Ausschließlich freigegebenen protected-main-Code auschecken
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Reproduzierbare Bildprüf-Abhängigkeit für bestehende Metadatenlogik
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0'
+      - name: Sicherheitsprüfungen und exakt autorisierte einmalige Buffer-Aktion
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/approved_wer_liest_release_20261017.py
+          python3 scripts/production_activation_guard.py
+          python3 -B scripts/approved_wer_liest_release_20261017.py
+      - name: Keine automatische Wiederholung bei Teilfehler
+        if: failure()
+        run: echo "STOPP – vorhandene Buffer-Posts und unveränderliche Pending-Receipts manuell abgleichen; NICHT erneut auslösen." >> "$GITHUB_STEP_SUMMARY"
+      - name: Ausgabe nur als verifiziert gelten lassen
+        if: success()
+        run: echo "Drei explizit autorisierte Buffer-Operationen ausgelöst und per aktueller API geprüft. 'shareNow angenommen' ist noch kein Beweis für öffentlich sichtbare Publikation." >> "$GITHUB_STEP_SUMMARY"
