@@ -1,0 +1,9 @@
+{
+  "post_id": "6ac89617f07e682de6a98b36",
+  "target": "facebook",
+  "topic": "drei-tests",
+  "image": "https://raw.githubusercontent.com/derJosef/social-assets/ac03f948b5ed24dd49c3363dfdef7c82de01810b/media/images/2026-10-16-legacy-ein-agent-drei-tests-4x5-branded.png",
+  "old_text_sha256": "4727ee7fe1d7fc0ad4f77715954c68914a89031f2e523e8908556bf473bb7b10",
+  "state": "pending_manual_reconciliation_on_failure",
+  "github_run_id": "39016068840"
+}
