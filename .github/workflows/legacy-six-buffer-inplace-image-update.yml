@@ -1,0 +1,61 @@
+name: AI Agent Builder – genau sechs vorhandene Buffer-Draft-Bilder ersetzen (keine Queue)
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: legacy-six-buffer-image-edit-20261017
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    if: >-
+      ${{
+        github.actor == 'derJosef' &&
+        github.ref == 'refs/heads/main' &&
+        github.run_attempt == 1 &&
+        github.event_name == 'issue_comment' &&
+        github.event.action == 'created' &&
+        github.event.issue.number == 19 &&
+        !github.event.issue.pull_request &&
+        github.event.issue.user.login == 'derJosef' &&
+        github.event.comment.user.login == 'derJosef' &&
+        github.event.comment.body == 'LEGACY_SIX_DRAFTS_REPLACE_IMAGE_ONLY_ONCE_20261017'
+      }}
+    name: Bestehende Posts nur mit neuem Bild aktualisieren; niemals terminieren
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Geschütztes main auschecken
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Ausschließlich Byte-Prüfung und bestehende Buffer-API
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0'
+
+      - name: Produktionssperren, Owner-Event und alle sechs Entwürfe prüfen; dann maximal sechs Edit-Operationen
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/production_activation_guard.py
+          python3 -B scripts/legacy_six_buffer_image_edit.py --live
+
+      - name: Abschlussmeldung
+        if: success()
+        run: echo "Sechs vorhandene Post-IDs mit neuen Bildern unabhängig verifiziert. Kein Post neu angelegt, nicht in Queue, nichts veröffentlicht." >> "$GITHUB_STEP_SUMMARY"
