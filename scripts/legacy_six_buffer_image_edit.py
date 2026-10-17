@@ -238,7 +238,7 @@ def live_edit(*, get=buffer_graphql, fetch=None):
     for t in tasks:
         require(fetch_receipt(gh,receipt_path(t["id"])) is None,
                 "Mindestens ein Buffer-Reparaturbeleg besteht bereits; nicht wiederholen")
-    put_receipt(gh,batch,{
+    batch_sha=put_receipt(gh,batch,{
         "state":"pending_manual_reconciliation_on_failure",
         "post_ids":[t["id"] for t in tasks],
         "github_run_id":os.environ.get("GITHUB_RUN_ID","unknown")
@@ -275,13 +275,20 @@ def live_edit(*, get=buffer_graphql, fetch=None):
                 len(verify["assets"])==1 and
                 verify["assets"][0].get("source")==t["image"] and
                 verify["assets"][0].get("mimeType")=="image/png" and
-                [v.get("id") for v in verify.get("tags",[])]==t["tag_ids"],
+                [v.get("id") for v in verify.get("tags",[])]==t["tag_ids"] and
+                safe_metadata(verify,t["target"])==t["meta"],
                 "Post edit did not independently verify as unchanged draft; DO NOT RETRY")
         receipt["state"]="verified_existing_draft_image_only_no_schedule"
         receipt["verified_at_utc"]=datetime.now(timezone.utc).isoformat()
         put_receipt(gh,path,receipt,"verify existing Buffer draft image edit",sha=sha)
         print("LEGACY_DRAFT_IMAGE_EDIT_PASS",t["topic"],t["target"],t["id"],
               "status=draft due_at=null, no publish or schedule")
+    put_receipt(gh,batch,{
+        "state":"verified_six_existing_draft_images_not_queued",
+        "post_ids":[t["id"] for t in tasks],
+        "github_run_id":os.environ.get("GITHUB_RUN_ID","unknown"),
+        "verified_at_utc":datetime.now(timezone.utc).isoformat()
+    },"verify all six original Buffer draft media repairs",sha=batch_sha)
 
 def main():
     parser=argparse.ArgumentParser()
