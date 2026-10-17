@@ -238,7 +238,7 @@ def decode_receipt(raw: object, label: str) -> dict:
     require(isinstance(raw,dict) and isinstance(raw.get("content"),str),
             "Vorheriger Beleg nicht eindeutig lesbar: "+label)
     try:
-        data=base64.b64decode(raw["content"].replace("\\n","").replace("\\r",""),
+        data=base64.b64decode(raw["content"].replace("\n","").replace("\r",""),
                               validate=True)
         record=json.loads(data.decode("utf-8"))
     except (binascii.Error,UnicodeError,ValueError,TypeError) as e:
