@@ -57,6 +57,17 @@ Die Jobdaten enthalten keine gemischten Marken und dürfen ihre `brand_id` währ
 
 **Unbeaufsichtigte Bildgenerierung/Adobe**: Interaktiver Erfolg beweist keine Funktion in einem Scheduled-Task. Die bestehende Bildtransfer-Blockade ist nicht als behoben nachgewiesen; keine neue kostenpflichtige API und kein Workaround eines Tool-Sicherheitsblocks. Erst echter E2E-Smoke für AI-Agent-Builder samt Buffer-Readback; zusätzliche Adapter später einzeln integrieren.
 
+## Implementierter technischer Bild-Gate (Offline)
+
+Zusätzlich prüft `scripts/multibrand_asset_gate.py` ein manifestgebundenes **reales** Bildpaket:
+- alle vom brand- und job-spezifischen Plan erwarteten Dateipfade müssen vollständig vorhanden sein;
+- jeder Pfad muss innerhalb des Arbeitsverzeichnisses liegen und genau die zu dieser Marke, Jobart und eindeutigen Laufkennung gehörende Datei bezeichnen;
+- SHA256 der tatsächlich gelesenen Bytes, internes PNG-/WebP-Format, reale Pixelabmessungen und Dateigrößen werden geprüft;
+- bei Menürotation werden **binär identische** Bilddateien abgewiesen. Visuell ähnliche, aber binär unterschiedliche Motive müssen weiterhin gesondert geprüft werden;
+- auch ein technisches PASS erteilt **keine** Veröffentlichungserlaubnis: `visual_review=still-required`, `publishing=not-authorized`.
+
+Aufruf auf vorhandenen Dateien: `python3 scripts/multibrand_asset_gate.py --manifest <reviewed-assets.json> --checkout <asset-checkout>`. Das Gate liest und prüft ausschließlich; es erstellt keine Bilddateien und überträgt nichts an GitHub, Buffer oder den Webserver. Es liegt bewusst **hinter** dem späteren Bildgenerator und **vor** jedem Release-Adapter.
+
 ## Rhythmus und Benachrichtigungen
 
 - AI-Agent-Builder-Socialproduktion **montags und donnerstags** (max. zwei Themen pro Woche).
