@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "configuration_status": "pilot-only-no-deployment",
+  "brands": {
+    "ai-agent-builder": {
+      "display_name": "AI Agent Builder",
+      "brand_rules_ref": "personalos:skills/josefs-marke/SKILL.md",
+      "logo_policy": "josef-original-sha-verified",
+      "website": {
+        "domain": "pauderer.de",
+        "repository": "derJosef/pauderer-de-website",
+        "news_formats": {
+          "desktop": [
+            1672,
+            941
+          ],
+          "mobile": [
+            1200,
+            900
+          ],
+          "thumbnail": [
+            800,
+            800
+          ]
+        },
+        "rotation_formats": {
+          "desktop": [
+            1672,
+            941
+          ],
+          "mobile": [
+            1080,
+            1920
+          ]
+        },
+        "rotation_sections": [
+          "startseite",
+          "leistungen",
+          "projekte",
+          "prozessanalyse",
+          "arbeitsweise",
+          "ueber-mich",
+          "kontakt"
+        ]
+      },
+      "social_channels": [
+        "linkedin",
+        "facebook",
+        "instagram"
+      ],
+      "permissions": {
+        "social_draft": true,
+        "social_publish": false,
+        "news_publish": false,
+        "rotation_publish": false
+      }
+    },
+    "picturefix": {
+      "display_name": "PictureFix",
+      "brand_rules_ref": null,
+      "logo_policy": "unconfigured",
+      "website": {
+        "domain": "picturefix.de",
+        "repository": null,
+        "news_formats": {},
+        "rotation_formats": {},
+        "rotation_sections": []
+      },
+      "social_channels": [],
+      "permissions": {
+        "social_draft": false,
+        "social_publish": false,
+        "news_publish": false,
+        "rotation_publish": false
+      }
+    },
+    "sticken-lasern": {
+      "display_name": "Sticken & Lasern",
+      "brand_rules_ref": null,
+      "logo_policy": "own-original-logo-not-josef",
+      "website": {
+        "domain": null,
+        "repository": null,
+        "news_formats": {},
+        "rotation_formats": {},
+        "rotation_sections": []
+      },
+      "social_channels": [],
+      "permissions": {
+        "social_draft": false,
+        "social_publish": false,
+        "news_publish": false,
+        "rotation_publish": false
+      },
+      "note": "Requested domain spelling 'stücken-lasern.de' must be verified against the existing Sticken & Lasern identity before any connector or deployment."
+    },
+    "praezisionsarmaturen": {
+      "display_name": "Präzisionsarmaturen",
+      "brand_rules_ref": null,
+      "logo_policy": "josef-original-sha-verified",
+      "website": {
+        "domain": "praezisionsarmaturen.com",
+        "repository": null,
+        "news_formats": {},
+        "rotation_formats": {},
+        "rotation_sections": []
+      },
+      "social_channels": [],
+      "permissions": {
+        "social_draft": false,
+        "social_publish": false,
+        "news_publish": false,
+        "rotation_publish": false
+      },
+      "note": "Domain and target repository must be confirmed for website delivery; do not assume website publication access."
+    }
+  }
+}
