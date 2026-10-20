@@ -6,7 +6,9 @@ It cannot publish, edit posts or create new images.
 """
 from __future__ import annotations
 import hashlib
+import io
 import re
+from PIL import Image, UnidentifiedImageError
 
 class NewsSourceBlocked(ValueError):
     pass
@@ -62,6 +64,13 @@ def verify_published_news_source(
             actual_image_bytes.startswith(b"\x89PNG\r\n\x1a\n") and
             hashlib.sha256(actual_image_bytes).hexdigest() == expected_image_sha256,
             "Current final original bytes or SHA256 do not match")
+    try:
+        with Image.open(io.BytesIO(actual_image_bytes)) as image:
+            require(image.format == "PNG" and image.size == (1080, 1350),
+                    "Final published image must be actual 1080x1350 PNG")
+            image.verify()
+    except (UnidentifiedImageError, OSError) as exc:
+        raise NewsSourceBlocked("Published PNG is corrupt") from exc
     return {
         "state": "verified_published_source_for_news_draft",
         "brand": brand, "buffer_post_id": expected_post_id,
