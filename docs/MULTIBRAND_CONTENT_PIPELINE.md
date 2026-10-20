@@ -68,6 +68,33 @@ Zusätzlich prüft `scripts/multibrand_asset_gate.py` ein manifestgebundenes **r
 
 Aufruf auf vorhandenen Dateien: `python3 scripts/multibrand_asset_gate.py --manifest <reviewed-assets.json> --checkout <asset-checkout>`. Das Gate liest und prüft ausschließlich; es erstellt keine Bilddateien und überträgt nichts an GitHub, Buffer oder den Webserver. Es liegt bewusst **hinter** dem späteren Bildgenerator und **vor** jedem Release-Adapter.
 
+## Tatsächliche responsive Bildaufbereitung (seit 20.10.2026)
+
+\`scripts/multibrand_image_stage.py\` setzt den technischen Plan inzwischen **offline** in Dateien um. Das ist mehr als der frühere read-only Vertrag, aber weiterhin **keine autonome Bildgenerierung** und **keine Veröffentlichung**. Der Bildgenerator bzw. die Designinstanz muss pro Ausgabeformat zuvor eine zur Zielkomposition passende, visuell geprüfte PNG-/WebP-Quelldatei bereitstellen; die Datei wird SHA256-fixiert und darf nicht aus einer fremden Marke oder einem anderen Lauf stammen.
+
+Auftragsdatei: genau die vier Schlüssel \`brand_id\`, \`kind\`, \`run_id\`, \`sources\`. Jeder Eintrag von \`sources\` besitzt \`output_path\` (aus dem Jobplan), \`input_path\` innerhalb von \`inputs/<brand>/<kind>/<run-id>/\` und die echte \`sha256\` der Quelldatei. Beispiel für den Aufbau eines Eintrags (die exemplarische SHA darf **niemals** als echter Nachweis verwendet werden):
+
+\`\`\`json
+{
+  "output_path": "generated/ai-agent-builder/news/2026-10-20-beispiel/desktop-1672x941.webp",
+  "input_path": "inputs/ai-agent-builder/news/2026-10-20-beispiel/desktop-source.png",
+  "sha256": "<tatsächlich ermittelte SHA256>"
+}
+\`\`\`
+
+Technische Aufrufe:
+
+\`\`\`bash
+python3 scripts/multibrand_contract.py --brand ai-agent-builder --kind news --run-id 2026-10-20-beispiel
+python3 scripts/multibrand_image_stage.py --sources /pfad/zum/quellenpaket.json --checkout /pfad/zu/inputs-und-ausgaben --output-root /pfad/zu/inputs-und-ausgaben
+\`\`\`
+
+Die Bildaufbereitung akzeptiert nur eine bereits passende Bildgeometrie (Abweichung Seitenverhältnis max. 0,008), setzt mindestens die Zielauflösung voraus und skaliert proportional mit Lanczos. **Keine Hochrechnung kleiner Quellen, kein blindes Cropping, keine nachgezeichneten Logos.** Für Desktop und Mobil müssen bei stark voneinander abweichenden Seitenverhältnissen deshalb gesonderte Quellkompositionen bereitstehen. WebP-Ausgabe mit Qualität 92; Originalquellen bleiben erhalten. Vor dem Erstellen werden alle Quellen-Hashes und Abmessungen geprüft. Das Zielverzeichnis mit eindeutiger \`run_id\` darf nicht bereits existieren. Die Bildfamilie wird zunächst isoliert vorbereitet und dann gemeinsam freigegeben; ein nachgelagerter Datei-Readback erfolgt über \`multibrand_asset_gate.py\`. Unvollständige/falsch gebundene Bildfamilien werden nicht als bestanden gemeldet.
+
+Das Ergebnis enthält \`asset-manifest.json\`, die echten WebP-Dateien, ein technisches Gate-Ergebnis mit \`visual_review=still-required\` und \`publishing=not-authorized\`. Es gibt **keinen** Website-Transfer und keine Buffer-Aktion. Spätere fachliche Sichtprüfung, markenspezifische Logo-Montage und Adapter für Vorschau/Release bleiben eigenständige Schritte.
+
+**Tatsächlich ausgeführte Prüfnachweise:** GitHub Actions Pflicht-CI [#39445787063](https://github.com/derJosef/social-assets/actions/runs/39445787063), **407 Tests erfolgreich** nach Korrektur der Fehlermeldungsbehandlung. Vier zusätzliche PR-Offline-Gates zum selben Commit ebenfalls \`success\`. Der vorausgehende rote Testlauf ist als echte Regression dokumentiert und behoben, nicht verdeckt.
+
 ## Rhythmus und Benachrichtigungen
 
 - AI-Agent-Builder-Socialproduktion **montags und donnerstags** (max. zwei Themen pro Woche).
