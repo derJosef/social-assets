@@ -12,7 +12,7 @@ from PIL import Image
 from multibrand_contract import ConfigurationBlocked, load_registry, plan_job, require
 
 MAX_ASSET_BYTES = 24 * 1024 * 1024
-SHA_RE = re.compile(r"[0-9a-f]{64}\\Z")
+SHA_RE = re.compile(r"[0-9a-f]{64}\Z")
 SUPPORTED_FORMATS = {"png": "PNG", "webp": "WEBP"}
 
 def validate_assets(manifest: dict, assets_root: Path, registry: dict | None = None) -> dict:
