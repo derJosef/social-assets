@@ -9,8 +9,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "automation/multibrand/brands.json"
-BRAND_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\\Z")
-RUN_RE = re.compile(r"20[0-9]{2}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(?:-[a-z0-9]+)*\\Z")
+BRAND_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
+RUN_RE = re.compile(r"20[0-9]{2}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 KINDS = ("social", "news", "rotation")
 PERMISSIONS = {"social_draft", "social_publish", "news_publish", "rotation_publish"}
 FORMATS = {"news_formats", "rotation_formats"}
@@ -93,6 +93,8 @@ def load_registry(path: Path = REGISTRY) -> dict:
 
 def plan_job(brand_id: str, kind: str, run_id: str, registry: dict | None = None) -> dict:
     registry = registry if registry is not None else load_registry()
+    require(registry.get("configuration_status") == "pilot-only-no-deployment",
+            "Unknown registry execution status")
     require(kind in KINDS, "Unknown job type")
     require(bool(BRAND_RE.fullmatch(brand_id)), "Invalid brand id")
     require(bool(RUN_RE.fullmatch(run_id)), "Invalid run id")
@@ -105,7 +107,8 @@ def plan_job(brand_id: str, kind: str, run_id: str, registry: dict | None = None
         for channel in profile["social_channels"]:
             outputs.append({"channel": channel, "path": prefix + channel + "-1080x1350.png",
                             "dimensions": [1080, 1350], "format": "png"})
-        allowed_draft = profile["permissions"]["social_draft"]
+        allowed_draft = (brand_id == "ai-agent-builder" and
+                         profile["permissions"]["social_draft"])
     elif kind == "news":
         for variant, dims in site["news_formats"].items():
             outputs.append({"variant": variant, "path": prefix +
