@@ -11,6 +11,7 @@ import argparse
 import hashlib
 import json
 import re
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -84,7 +85,7 @@ def preflight_sources(spec: dict, checkout: Path, registry: dict | None = None) 
                         "Refuse to upscale small responsive source")
                 require(abs(width / height - target_w / target_h) <= ASPECT_TOLERANCE,
                         "Wrong aspect ratio; generate a dedicated composition instead of crop")
-        except (UnidentifiedImageError, OSError, ValueError) as exc:
+        except (UnidentifiedImageError, OSError) as exc:
             raise ConfigurationBlocked("Damaged or invalid source image") from exc
         checked.append((target_name, source, (target_w, target_h)))
         seen_outputs.add(target_name)
@@ -135,7 +136,12 @@ def stage_images(spec: dict, checkout: Path, output_root: Path,
         require(not final.exists(), "Concurrent output already exists")
         temp_path.rename(final)
     # Complete readback with the shared technical gate; never mark visual approval.
-    return validate_assets(manifest, dest_root, registry)
+    try:
+        return validate_assets(manifest, dest_root, registry)
+    except Exception:
+        # Never leave a failed first-run batch as a candidate for deployment.
+        shutil.rmtree(final)
+        raise
 
 
 def main() -> None:
