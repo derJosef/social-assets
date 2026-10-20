@@ -72,8 +72,8 @@ class MultibrandContractTests(unittest.TestCase):
     def test_publication_permission_escalation_rejected(self):
         edited = copy.deepcopy(self.registry)
         edited["brands"]["picturefix"]["permissions"]["social_draft"] = True
-        # Schema re-validation needs a real file; fail-closed draft production remains absent.
-        plan = plan_job("picturefix", "social", RUN, self.registry)
+        # Even an injected in-memory permission may not enable another brand.
+        plan = plan_job("picturefix", "social", RUN, edited)
         self.assertFalse(plan["permission_to_create_buffer_drafts"])
         self.assertFalse(plan["permission_to_publish"])
 
