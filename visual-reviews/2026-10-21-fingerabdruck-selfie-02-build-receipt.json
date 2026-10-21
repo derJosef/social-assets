@@ -1,0 +1,20 @@
+{
+  "number": "02",
+  "subject": "KANN KI DEIN SMARTPHONE ENTSPERREN?",
+  "source_jpg_sha256": "7332808136cdce313bf573f8a21830899f2691b0eb0aed553e8f4cf81bd4b4bf",
+  "source_png_sha256": "4d3bcef3a0d05d58c25462db7d657f1801dd126f2dafe45638235073bfa06f61",
+  "base_sha256": "eb5489371c7ac300b07d502752a45d0c6b244470385e45868a33c2889eb818b9",
+  "final_sha256": "05584c90aa6c66203943cd465317778da164a38a84f941ebca19078ab7ce0e61",
+  "logo_original_sha256": "15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0",
+  "size": [
+    1080,
+    1350
+  ],
+  "logo_qa": {
+    "profile": "headline",
+    "validator": "personalos_canonical",
+    "logo_verified": true
+  },
+  "final_image": "media/images/2026-10-21-fingerabdruck-selfie-02.png",
+  "status": "asset_technical_qa_passed_only_NOT_buffer_published"
+}

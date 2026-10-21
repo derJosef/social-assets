@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "source": "media/source-images/2026-10-21-fingerabdruck-selfie-03-source.png",
+  "source_sha256": "473ed3e6e5816f72b71c3b5fdeacabcea7476bb78f0c230ca3d5e734c9e99a3b",
+  "layout": "headline",
+  "heading": "3 TIPPS ZUM SCHUTZ DEINER DATEN",
+  "visual_review": {
+    "no_people": true,
+    "no_robot": true,
+    "no_foreign_logo": true,
+    "no_generated_text": true,
+    "plausible_details": true,
+    "matches_topic": true,
+    "heading_and_logo_space": true
+  },
+  "review_evidence": "ChatGPT visually inspected raw campaign motive 03 on 2026-10-21. Only an isolated human hand or device appears, no identifiable face, no robot, foreign logo or generated text; visualized fingerprints are illustrative rather than real biometrics. NOT a human review. Josef must visually approve the complete branded image before publication.",
+  "chatgpt_review": {
+    "kind": "chatgpt_visual_inspection_draft_only",
+    "source_sha256": "473ed3e6e5816f72b71c3b5fdeacabcea7476bb78f0c230ca3d5e734c9e99a3b"
+  }
+}

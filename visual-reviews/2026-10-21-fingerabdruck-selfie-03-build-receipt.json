@@ -1,0 +1,20 @@
+{
+  "number": "03",
+  "subject": "3 TIPPS ZUM SCHUTZ DEINER DATEN",
+  "source_jpg_sha256": "83926028bca800caf14ae2fb9e5a0aed754291ebff911db61d82773f3fc996cc",
+  "source_png_sha256": "473ed3e6e5816f72b71c3b5fdeacabcea7476bb78f0c230ca3d5e734c9e99a3b",
+  "base_sha256": "22c23d58732f47e7c5e73c9e4d2d4a7c5626dcf37fd3d86ea0b6be771ed718db",
+  "final_sha256": "536fadcac3c5d01a403c34030ccc483de73249dc8a949ff4df34b463c77e3f2e",
+  "logo_original_sha256": "15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0",
+  "size": [
+    1080,
+    1350
+  ],
+  "logo_qa": {
+    "profile": "headline",
+    "validator": "personalos_canonical",
+    "logo_verified": true
+  },
+  "final_image": "media/images/2026-10-21-fingerabdruck-selfie-03.png",
+  "status": "asset_technical_qa_passed_only_NOT_buffer_published"
+}

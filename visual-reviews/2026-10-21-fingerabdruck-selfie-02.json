@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "source": "media/source-images/2026-10-21-fingerabdruck-selfie-02-source.png",
+  "source_sha256": "4d3bcef3a0d05d58c25462db7d657f1801dd126f2dafe45638235073bfa06f61",
+  "layout": "headline",
+  "heading": "KANN KI DEIN SMARTPHONE ENTSPERREN?",
+  "visual_review": {
+    "no_people": true,
+    "no_robot": true,
+    "no_foreign_logo": true,
+    "no_generated_text": true,
+    "plausible_details": true,
+    "matches_topic": true,
+    "heading_and_logo_space": true
+  },
+  "review_evidence": "ChatGPT visually inspected raw campaign motive 02 on 2026-10-21. Only an isolated human hand or device appears, no identifiable face, no robot, foreign logo or generated text; visualized fingerprints are illustrative rather than real biometrics. NOT a human review. Josef must visually approve the complete branded image before publication.",
+  "chatgpt_review": {
+    "kind": "chatgpt_visual_inspection_draft_only",
+    "source_sha256": "4d3bcef3a0d05d58c25462db7d657f1801dd126f2dafe45638235073bfa06f61"
+  }
+}
