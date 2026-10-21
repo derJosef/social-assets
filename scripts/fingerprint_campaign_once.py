@@ -98,7 +98,7 @@ def build() -> list[dict]:
             "--logo", str(logo), "--font", "/tmp/Inter.ttf",
         ]
         result = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=True)
-        receipt = json.loads(result.stdout)
+        receipt = json.loads(result.stdout.strip().splitlines()[-1])
         if receipt.get("size") != [1080, 1350] or receipt.get("logo_qa", {}).get("logo_verified") is not True:
             raise RuntimeError("Bildgroesse oder originalgetreues Logo nicht verifiziert: " + number)
         if digest(p["final"]) != receipt["sha256"]:
