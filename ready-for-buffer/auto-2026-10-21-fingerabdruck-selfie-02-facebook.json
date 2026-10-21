@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "facebook",
+  "text": "KI liest den Fingerabdruck aus einem Foto – und schon ist das Handy offen?\n\nNein, so einfach funktioniert das nicht.\n\nZwischen einem Foto mit sichtbaren Hautlinien und dem Entsperren eines Smartphones liegen mehrere Hürden: Die Linien müssten tatsächlich korrekt erfasst werden, eine geeignete Nachbildung wäre nötig, und der Sensor müsste getäuscht werden.\n\nSolche Sensorangriffe wurden in der Forschung demonstriert. Das bedeutet aber nicht, dass jedes Selfie einen funktionierenden Fingerabdruck liefert.\n\nDarum gilt: aufmerksam bleiben, aber keine Panik.\n\nMehr zu den Hintergründen in „TechniKInside“ auf pauderer.de.\n\nQuellen: Cisco Talos (2020); NIST SP 800-63B.\n#KI #Smartphone #Sicherheit",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-21-fingerabdruck-selfie-02.png",
+        "alt_text": "Illustration einer mehrstufigen Fingerabdruckanalyse vor einem gesperrten Smartphone."
+      }
+    ]
+  }
+}
