@@ -10,7 +10,7 @@ permissions:
 jobs:
   offline-only:
     name: Safety-Tests ohne Buffer-Token
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v5
