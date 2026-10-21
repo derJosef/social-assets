@@ -1,0 +1,33 @@
+name: Runner policy - Slim by default
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'scripts/check_actions_runner_policy.py'
+      - 'tests/test_actions_runner_policy.py'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+      - 'scripts/check_actions_runner_policy.py'
+      - 'tests/test_actions_runner_policy.py'
+
+permissions:
+  contents: read
+
+jobs:
+  enforce-runner-policy:
+    name: Validate runners and legacy exceptions
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Reject unapproved standard runners
+        shell: bash
+        run: python3 -B scripts/check_actions_runner_policy.py .
+      - name: Offline parser and policy regression tests
+        shell: bash
+        run: python3 -B -m unittest discover -s tests -p test_actions_runner_policy.py -v
