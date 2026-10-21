@@ -1,0 +1,66 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-21-fingerabdruck-selfie-01",
+  "checked_at": "2026-10-21",
+  "sources": [
+    {
+      "url": "https://www.scmp.com/news/people-culture/trending-china/article/3352777/china-tv-variety-show-exposes-scam-linking-peace-sign-selfies-privacy-risks",
+      "published_at": "2026-05-10",
+      "checked_at": "2026-10-21"
+    },
+    {
+      "url": "https://blog.talosintelligence.com/fingerprint-research/",
+      "published_at": "2020-04-08",
+      "checked_at": "2026-10-21"
+    },
+    {
+      "url": "https://media.ccc.de/v/31c3_-_6450_-_de_-_saal_1_-_201412272030_-_ich_sehe_also_bin_ich_du_-_starbug",
+      "published_at": "2014-12-27",
+      "checked_at": "2026-10-21"
+    }
+  ],
+  "checks": {
+    "novelty": true,
+    "claims_with_sources": true,
+    "language_and_cta": true,
+    "six_hats": true,
+    "privacy_and_rights": true,
+    "brand_image": true,
+    "posting_time_research": true
+  },
+  "image": {
+    "final": "media/images/2026-10-21-fingerabdruck-selfie-01.png",
+    "base": "media/source-images/2026-10-21-fingerabdruck-selfie-01-base.png",
+    "sha256": "696572b6f831f2d2226c78e2861265dcf954f1be6ba6da6f746f1284919ec7ea",
+    "heading_corner": "top-left",
+    "heading_box": [
+      54,
+      60,
+      970,
+      380
+    ],
+    "layout": "headline",
+    "review_spec": "visual-reviews/2026-10-21-fingerabdruck-selfie-01.json",
+    "source_sha256": "d79b4d60f4ddaaa2d110b6991f05329f5d5e42c86c59738d17675ca9eba98d19"
+  },
+  "posts": {
+    "linkedin": "ready-for-buffer/auto-2026-10-21-fingerabdruck-selfie-01-linkedin.json",
+    "facebook": "ready-for-buffer/auto-2026-10-21-fingerabdruck-selfie-01-facebook.json",
+    "instagram": "ready-for-buffer/auto-2026-10-21-fingerabdruck-selfie-01-instagram.json"
+  },
+  "posting_times": {
+    "linkedin": {
+      "local": "2026-10-27T16:00:00+01:00",
+      "utc": "2026-10-27T15:00:00Z"
+    },
+    "facebook": {
+      "local": "2026-10-27T12:00:00+01:00",
+      "utc": "2026-10-27T11:00:00Z"
+    },
+    "instagram": {
+      "local": "2026-10-27T15:00:00+01:00",
+      "utc": "2026-10-27T14:00:00Z"
+    }
+  }
+}
