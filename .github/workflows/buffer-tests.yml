@@ -19,7 +19,7 @@ permissions:
 jobs:
   test:
     name: Keine Buffer-Zugangsdaten und keine API-Aufrufe
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     timeout-minutes: 8
     steps:
       - name: Quelltext laden
