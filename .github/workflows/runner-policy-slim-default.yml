@@ -1,11 +1,8 @@
 name: Runner policy - Slim by default
 
 on:
+  # Required status checks must run on every PR, even if the workflow is unchanged.
   pull_request:
-    paths:
-      - '.github/workflows/**'
-      - 'scripts/check_actions_runner_policy.py'
-      - 'tests/test_actions_runner_policy.py'
   push:
     branches: [main]
     paths:
