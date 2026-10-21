@@ -6,6 +6,11 @@ on:
 permissions:
   contents: read
 
+# Cancel outdated runs for this same pull request, not manual executions.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   brief-approval-offline:
     name: brief-approval-offline
