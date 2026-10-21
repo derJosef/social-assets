@@ -9,7 +9,7 @@ permissions:
 jobs:
   brief-approval-offline:
     name: brief-approval-offline
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
       - name: Read-only checkout
