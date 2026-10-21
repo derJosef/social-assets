@@ -10,7 +10,7 @@ permissions:
 jobs:
   posting-time-planner:
     name: Kein Buffer, keine Terminierung
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v5
