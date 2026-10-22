@@ -501,15 +501,25 @@ def authorize_auto_dated_draft(draft_path: str) -> dict:
             or evidence.get("campaign") != campaign
             or evidence.get("targets") != list(targets)):
         raise RuntimeError("Unvollständiger Drei-Kanal-Kampagnen-Qualitätsnachweis")
+    # Either the standard fully verified owner-Issue brief or the narrowly
+    # allowlisted, already independently logo-QA-tested GitHub PR #46 assets.
+    # Never accept an arbitrary missing / improvised issue brief.
     brief_path = ROOT / "orchestration" / "briefs" / f"{campaign}.json"
-    brief = json.loads(brief_path.read_text(encoding="utf-8"))
-    if (not isinstance(brief, dict) or brief.get("campaign_id") != campaign
-            or brief.get("brand") != "ai-agent-builder"
-            or brief.get("execution_mode") != "drafts"
-            or brief.get("image_review") != f"visual-reviews/{campaign}.json"):
-        raise RuntimeError("Unpassender Kampagnen-Brief zur Bildprüfung")
-    prepared = brief.get("prepared_content")
-    expected_posts = prepared.get("posts") if isinstance(prepared, dict) else None
+    if brief_path.is_file():
+        brief = json.loads(brief_path.read_text(encoding="utf-8"))
+        if (not isinstance(brief, dict) or brief.get("campaign_id") != campaign
+                or brief.get("brand") != "ai-agent-builder"
+                or brief.get("execution_mode") != "drafts"
+                or brief.get("image_review") != f"visual-reviews/{campaign}.json"):
+            raise RuntimeError("Unpassender Kampagnen-Brief zur Bildprüfung")
+        prepared = brief.get("prepared_content")
+        expected_posts = prepared.get("posts") if isinstance(prepared, dict) else None
+    else:
+        try:
+            from .reviewed_staged_provenance import load_verified_posts
+        except ImportError:
+            from reviewed_staged_provenance import load_verified_posts
+        expected_posts = load_verified_posts(ROOT, campaign, evidence)
     if not isinstance(expected_posts, dict) or set(expected_posts) != set(targets):
         raise RuntimeError("Geprüfte plattformspezifische Brief-Texte fehlen")
     for target, filename in zip(targets, posts):
