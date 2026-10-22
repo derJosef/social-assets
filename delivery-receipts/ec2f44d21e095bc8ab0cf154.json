@@ -2,7 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-21-fingerabdruck-selfie-01-instagram.json",
   "target": "instagram",
   "draft_sha256": "5422e8ab87b056cf0617e6c3c2fedfcc1e91ac6095f64dc827363adaa20733bb",
-  "state": "created_requires_independent_check",
+  "state": "verified_prescheduled_draft_not_queued",
   "github_run_id": "39746380953",
   "due_at_utc": "2026-11-04T17:00:00Z",
   "channel_id": "6ac79a686a5c39ccb650f94b",
