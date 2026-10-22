@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "instagram",
+  "text": "Kann KI dein Handy mit einem Selfie entsperren?\n\nNicht automatisch.\n\nEin Foto kann Hautlinien zeigen. Ein brauchbarer Fingerabdruck ist etwas anderes. Und ein Fingerabdrucksensor muss erst einmal erfolgreich getäuscht werden.\n\nDas sind drei unterschiedliche technische Schritte.\n\nWas bewiesen ist und was nicht, erklären wir in „TechniKInside“ auf pauderer.de.\n\nQuellen: Cisco Talos (2020); NIST SP 800-63B.\n#KI #Biometrie #Cybersecurity",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-21-fingerabdruck-selfie-02.png",
+        "alt_text": "Illustration einer mehrstufigen Fingerabdruckanalyse vor einem gesperrten Smartphone."
+      }
+    ]
+  }
+}
