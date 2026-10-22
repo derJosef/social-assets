@@ -2,7 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-21-fingerabdruck-selfie-01-facebook.json",
   "target": "facebook",
   "draft_sha256": "fe24f58dbf84407d7a22a9ac560eb1b4c48282c865fb05a1f99a5f96fa7239d8",
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "created_requires_independent_check",
   "github_run_id": "39746380953",
   "due_at_utc": "2026-11-03T08:00:00Z",
   "channel_id": "6ac781e46a5c39ccb64fe01c",
@@ -10,5 +10,6 @@
     "campaign": "2026-10-21-fingerabdruck-selfie-01",
     "quality_gate": "passed",
     "image_sha256": "696572b6f831f2d2226c78e2861265dcf954f1be6ba6da6f746f1284919ec7ea"
-  }
+  },
+  "buffer_post_id": "6ad9c62adc56a50ca300ecb5"
 }
