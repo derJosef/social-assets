@@ -1,0 +1,18 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-21-fingerabdruck-selfie-01",
+  "execution_mode": "drafts",
+  "origin": "github_reviewed_existing_staged_artwork",
+  "source_pr": 46,
+  "source_qa_run": "https://github.com/derJosef/social-assets/actions/runs/39618529301",
+  "image_review": "visual-reviews/2026-10-21-fingerabdruck-selfie-01.json",
+  "image_sha256": "696572b6f831f2d2226c78e2861265dcf954f1be6ba6da6f746f1284919ec7ea",
+  "prepared_content": {
+    "posts": {
+      "linkedin": "Kann ein harmloses Selfie biometrische Daten preisgeben?\n\nStell dir vor, auf einem Firmenfoto zeigen alle das Victory-Zeichen in die Kamera. Die Fingerkuppen sind scharf, gut beleuchtet und direkt zur Kamera ausgerichtet.\n\nDas kann mehr sichtbar machen als nur eine nette Geste: Unter geeigneten Bedingungen lassen sich feine Fingerabdrucklinien in hochauflösenden Fotos erkennen. Bildbearbeitung und KI können vorhandene Strukturen hervorheben.\n\nIn einer chinesischen Fernsehsendung wurde 2026 gezeigt, wie solche Linien aus einem Prominentenfoto sichtbar gemacht wurden. Neu ist das Grundproblem nicht: Schon 2014 zeigte ein Vortrag beim Chaos Computer Club, dass Fotos für Angriffe auf biometrische Merkmale relevant sein können.\n\nDie wichtige Einschränkung: Sichtbare Linien sind noch kein nachweislich korrekter, vollständig rekonstruierter Fingerabdruck.\n\nWas bedeutet das für den Unternehmensalltag? Fotos von Veranstaltungen, Mitarbeitenden und Kunden sind nicht nur eine Frage des Bildrechts. Bei hochauflösenden Aufnahmen lohnt auch ein Blick auf unbeabsichtigt sichtbare Details.\n\nDie Hintergründe und die technischen Grenzen erläutern wir in „TechniKInside“ auf pauderer.de.\n\nQuellen: SCMP (10.05.2026); CCC, Vortrag von Jan Krissler (27.12.2014); NIST SP 800-63B.\n#KünstlicheIntelligenz #Datenschutz #ITSecurity",
+      "facebook": "Du machst ein Selfie und zeigst das Victory-Zeichen. Kann das wirklich ein Datenschutzrisiko sein?\n\nUnter bestimmten Bedingungen: ja. Sind Fingerkuppen auf einem Foto besonders scharf und gut beleuchtet, können winzige Hautlinien sichtbar sein. KI und Bildbearbeitung können solche bereits vorhandenen Bildinformationen verstärken.\n\nEine chinesische Fernsehdemonstration machte 2026 darauf aufmerksam. Allerdings heißt „Fingerabdrucklinien sind erkennbar“ nicht, dass damit gleich jemand dein Handy öffnen kann.\n\nMein Tipp: Schau dir hochauflösende Nahaufnahmen vor dem öffentlichen Teilen kurz genauer an.\n\nMehr dazu findest du in „TechniKInside“ auf pauderer.de.\n\nQuellen: South China Morning Post, 10.05.2026; NIST SP 800-63B.\n#KI #Selfie #Datenschutz",
+      "instagram": "Kann dein Victory-Selfie Fingerabdrucklinien verraten?\n\nWenn die Fingerkuppen sehr scharf und gut beleuchtet zu sehen sind, können feine Hautlinien im Foto erkennbar sein. KI kann vorhandene Details hervorheben.\n\nAber: Ein sichtbares Muster ist noch kein Schlüssel zu deinem Smartphone.\n\nAchte bei öffentlich geteilten Nahaufnahmen darauf, wie deutlich deine Fingerspitzen zu sehen sind.\n\nDie ausführliche Erklärung gibt es in „TechniKInside“ auf pauderer.de.\n\nQuelle: SCMP (10.05.2026); NIST SP 800-63B.\n#KI #Datenschutz #Selfie #DigitaleSicherheit"
+    }
+  }
+}
