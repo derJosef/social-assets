@@ -1,0 +1,20 @@
+{
+  "number": "01",
+  "subject": "DEIN FINGERABDRUCK IM SELFIE?",
+  "source_jpg_sha256": "97ed63d7d86f79a04fcf423da9fc5d716c252b473a0a1af4f92ba91a464d07f6",
+  "source_png_sha256": "d79b4d60f4ddaaa2d110b6991f05329f5d5e42c86c59738d17675ca9eba98d19",
+  "base_sha256": "a4f59d9137cbdb2f6d1288b1f875e37e7db6e1bbc65056559acb4f297c765706",
+  "final_sha256": "696572b6f831f2d2226c78e2861265dcf954f1be6ba6da6f746f1284919ec7ea",
+  "logo_original_sha256": "15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0",
+  "size": [
+    1080,
+    1350
+  ],
+  "logo_qa": {
+    "profile": "headline",
+    "validator": "personalos_canonical",
+    "logo_verified": true
+  },
+  "final_image": "media/images/2026-10-21-fingerabdruck-selfie-01.png",
+  "status": "asset_technical_qa_passed_only_NOT_buffer_published"
+}
