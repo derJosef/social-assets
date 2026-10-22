@@ -2,7 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-21-fingerabdruck-selfie-01-facebook.json",
   "target": "facebook",
   "draft_sha256": "fe24f58dbf84407d7a22a9ac560eb1b4c48282c865fb05a1f99a5f96fa7239d8",
-  "state": "created_requires_independent_check",
+  "state": "verified_prescheduled_draft_not_queued",
   "github_run_id": "39746380953",
   "due_at_utc": "2026-11-03T08:00:00Z",
   "channel_id": "6ac781e46a5c39ccb64fe01c",
