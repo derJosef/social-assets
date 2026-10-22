@@ -1,0 +1,14 @@
+{
+  "draft_file": "ready-for-buffer/auto-2026-10-21-fingerabdruck-selfie-01-linkedin.json",
+  "target": "linkedin",
+  "draft_sha256": "72260cb3f5202c3657559af7d89d7d18139793ad62f9a4a99892d222d0e1f30a",
+  "state": "pending_manual_reconciliation_on_failure",
+  "github_run_id": "39746380953",
+  "due_at_utc": "2026-11-04T15:00:00Z",
+  "channel_id": "6aac167eea19ca0bde6ada5b",
+  "campaign_quality": {
+    "campaign": "2026-10-21-fingerabdruck-selfie-01",
+    "quality_gate": "passed",
+    "image_sha256": "696572b6f831f2d2226c78e2861265dcf954f1be6ba6da6f746f1284919ec7ea"
+  }
+}
