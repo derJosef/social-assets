@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "facebook",
+  "text": "Du machst ein Selfie und zeigst das Victory-Zeichen. Kann das wirklich ein Datenschutzrisiko sein?\n\nUnter bestimmten Bedingungen: ja. Sind Fingerkuppen auf einem Foto besonders scharf und gut beleuchtet, können winzige Hautlinien sichtbar sein. KI und Bildbearbeitung können solche bereits vorhandenen Bildinformationen verstärken.\n\nEine chinesische Fernsehdemonstration machte 2026 darauf aufmerksam. Allerdings heißt „Fingerabdrucklinien sind erkennbar“ nicht, dass damit gleich jemand dein Handy öffnen kann.\n\nMein Tipp: Schau dir hochauflösende Nahaufnahmen vor dem öffentlichen Teilen kurz genauer an.\n\nMehr dazu findest du in „TechniKInside“ auf pauderer.de.\n\nQuellen: South China Morning Post, 10.05.2026; NIST SP 800-63B.\n#KI #Selfie #Datenschutz",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-21-fingerabdruck-selfie-01.png",
+        "alt_text": "Victory-Geste als KI-Illustration: Hervorgehobene Linien der Fingerspitzen vor dunkelblauem Hintergrund."
+      }
+    ]
+  }
+}
