@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "linkedin",
+  "text": "Kann ein harmloses Selfie biometrische Daten preisgeben?\n\nStell dir vor, auf einem Firmenfoto zeigen alle das Victory-Zeichen in die Kamera. Die Fingerkuppen sind scharf, gut beleuchtet und direkt zur Kamera ausgerichtet.\n\nDas kann mehr sichtbar machen als nur eine nette Geste: Unter geeigneten Bedingungen lassen sich feine Fingerabdrucklinien in hochauflösenden Fotos erkennen. Bildbearbeitung und KI können vorhandene Strukturen hervorheben.\n\nIn einer chinesischen Fernsehsendung wurde 2026 gezeigt, wie solche Linien aus einem Prominentenfoto sichtbar gemacht wurden. Neu ist das Grundproblem nicht: Schon 2014 zeigte ein Vortrag beim Chaos Computer Club, dass Fotos für Angriffe auf biometrische Merkmale relevant sein können.\n\nDie wichtige Einschränkung: Sichtbare Linien sind noch kein nachweislich korrekter, vollständig rekonstruierter Fingerabdruck.\n\nWas bedeutet das für den Unternehmensalltag? Fotos von Veranstaltungen, Mitarbeitenden und Kunden sind nicht nur eine Frage des Bildrechts. Bei hochauflösenden Aufnahmen lohnt auch ein Blick auf unbeabsichtigt sichtbare Details.\n\nDie Hintergründe und die technischen Grenzen erläutern wir in „TechniKInside“ auf pauderer.de.\n\nQuellen: SCMP (10.05.2026); CCC, Vortrag von Jan Krissler (27.12.2014); NIST SP 800-63B.\n#KünstlicheIntelligenz #Datenschutz #ITSecurity",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-21-fingerabdruck-selfie-01.png",
+        "alt_text": "Victory-Geste als KI-Illustration: Hervorgehobene Linien der Fingerspitzen vor dunkelblauem Hintergrund."
+      }
+    ]
+  }
+}

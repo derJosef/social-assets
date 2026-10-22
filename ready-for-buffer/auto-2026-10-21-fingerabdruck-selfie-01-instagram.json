@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "instagram",
+  "text": "Kann dein Victory-Selfie Fingerabdrucklinien verraten?\n\nWenn die Fingerkuppen sehr scharf und gut beleuchtet zu sehen sind, können feine Hautlinien im Foto erkennbar sein. KI kann vorhandene Details hervorheben.\n\nAber: Ein sichtbares Muster ist noch kein Schlüssel zu deinem Smartphone.\n\nAchte bei öffentlich geteilten Nahaufnahmen darauf, wie deutlich deine Fingerspitzen zu sehen sind.\n\nDie ausführliche Erklärung gibt es in „TechniKInside“ auf pauderer.de.\n\nQuelle: SCMP (10.05.2026); NIST SP 800-63B.\n#KI #Datenschutz #Selfie #DigitaleSicherheit",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-21-fingerabdruck-selfie-01.png",
+        "alt_text": "Victory-Geste als KI-Illustration: Hervorgehobene Linien der Fingerspitzen vor dunkelblauem Hintergrund."
+      }
+    ]
+  }
+}
