@@ -1,0 +1,74 @@
+name: PAF-TV – KI title-image disclosure fade, replace existing scheduled media only
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/paf_tv_replace_scheduled_ki_title_videos.py'
+      - 'tests/test_paf_tv_replace_scheduled_ki_title_videos.py'
+      - '.github/workflows/paf-tv-ki-title-only-video-media-update.yml'
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+concurrency:
+  group: buffer-schedule-single-flight
+  cancel-in-progress: false
+
+jobs:
+  offline:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-slim
+    timeout-minutes: 6
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Test exact three existing scheduled posts and metadata invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m py_compile scripts/paf_tv_replace_scheduled_ki_title_videos.py
+          python3 -B -m unittest discover -s tests -p 'test_paf_tv_replace_scheduled_cover_videos.py' -v
+          python3 -B scripts/paf_tv_replace_scheduled_ki_title_videos.py --self-test
+  update-three:
+    name: Replace three existing video assets without new posts or date changes
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.repository == 'derJosef/social-assets' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.issue.number == 19 &&
+      github.event.issue.pull_request == null &&
+      github.actor_id == 45994004 &&
+      github.event.comment.user.id == 45994004 &&
+      github.run_attempt == 1 &&
+      github.event.comment.body == 'PAF-TV-REPLACE-3-SCHEDULED-KI-TITELBILD-VIDEOS-20261028'
+    runs-on: ubuntu-slim
+    timeout-minutes: 14
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Offline tests prevent unintended changes before any API call
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest discover -s tests -p 'test_paf_tv_replace_scheduled_cover_videos.py' -v
+          python3 -B scripts/paf_tv_replace_scheduled_ki_title_videos.py --self-test
+      - name: Only three existing Buffer posts with new media; independent live readback
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
+          BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_FACEBOOK_CHANNEL_ID }}
+          BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_INSTAGRAM_CHANNEL_ID }}
+        run: |
+          set -euo pipefail
+          python3 -u scripts/paf_tv_replace_scheduled_ki_title_videos.py --live
