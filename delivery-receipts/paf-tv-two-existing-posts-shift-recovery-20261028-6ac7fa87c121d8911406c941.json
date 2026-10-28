@@ -1,0 +1,9 @@
+{
+  "post_id": "6ac7fa87c121d8911406c941",
+  "channel": "instagram",
+  "old": "2026-10-28T17:00:00.000Z",
+  "new": "2026-10-30T17:00:00Z",
+  "state": "pending_manual_reconciliation_on_failure",
+  "github_run_id": "40674110794",
+  "preflight_content_sha256": "5a0f3a6664be20a78e5757a415a630fe145c0c616ece9178bcd0716055cfaff9"
+}
