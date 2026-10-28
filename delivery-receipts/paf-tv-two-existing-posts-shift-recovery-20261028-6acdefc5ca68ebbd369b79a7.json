@@ -1,0 +1,9 @@
+{
+  "post_id": "6acdefc5ca68ebbd369b79a7",
+  "channel": "linkedin",
+  "old": "2026-10-28T15:00:00.000Z",
+  "new": "2026-11-12T12:00:00Z",
+  "state": "pending_manual_reconciliation_on_failure",
+  "github_run_id": "40674110794",
+  "preflight_content_sha256": "690241373fde6fed76682941813aedd1b2d722e51516758986e2b3f4590769b4"
+}
