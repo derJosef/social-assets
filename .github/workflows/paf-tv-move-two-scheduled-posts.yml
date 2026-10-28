@@ -1,0 +1,73 @@
+name: PAF-TV priority – move exactly two existing scheduled Buffer posts
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/paf-tv-move-two-scheduled-posts.yml'
+      - 'scripts/paf_tv_move_two_existing_schedules.py'
+      - 'tests/test_paf_tv_move_two_existing_schedules.py'
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+concurrency:
+  group: buffer-schedule-single-flight
+  cancel-in-progress: false
+
+jobs:
+  offline:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-slim
+    timeout-minutes: 6
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Fail-closed old/new post and Europe/Berlin time checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m py_compile scripts/paf_tv_move_two_existing_schedules.py
+          python3 -B -m unittest discover -s tests -p 'test_paf_tv_move_two_existing_schedules.py' -v
+          python3 -B scripts/paf_tv_move_two_existing_schedules.py --self-test
+          python3 -B -m unittest discover -s tests -p 'test_buffer_schedule.py' -v
+
+  move:
+    name: Reschedule existing Instagram & LinkedIn posts, leave interview drafts untouched
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.repository == 'derJosef/social-assets' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.issue.number == 19 &&
+      github.event.issue.pull_request == null &&
+      github.actor_id == 45994004 &&
+      github.event.comment.user.id == 45994004 &&
+      github.run_attempt == 1 &&
+      github.event.comment.body == 'PAF-TV-MOVE-EXISTING-LI-IG-20261028'
+    runs-on: ubuntu-slim
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+      - name: No network – only two supported old Buffer IDs and exact dates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest discover -s tests -p 'test_paf_tv_move_two_existing_schedules.py' -v
+          python3 -B scripts/paf_tv_move_two_existing_schedules.py --self-test
+      - name: Move ONLY two currently scheduled posts; independent live readbacks
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+        run: |
+          set -euo pipefail
+          python3 -u scripts/paf_tv_move_two_existing_schedules.py --live
