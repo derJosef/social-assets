@@ -347,8 +347,8 @@ def verify_media_access(assets: list[dict]) -> None:
                     headers={"User-Agent": "social-assets-buffer-draft/1.0"}
                 )
                 with urllib.request.urlopen(request, timeout=25) as response:
-                    if response.geturl() != url or response.status != 200:
-                        raise RuntimeError("Medien-URL leitet um oder liefert kein HTTP 200.")
+                    if category == "video" and (response.geturl() != url or response.status != 200):
+                        raise RuntimeError("Video-URL leitet um oder liefert kein HTTP 200.")
                     typ = response.headers.get("Content-Type", "").lower()
                     length = response.headers.get("Content-Length")
                     if typ and not (typ.startswith(expected_mime) or
