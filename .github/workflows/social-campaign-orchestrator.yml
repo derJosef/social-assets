@@ -265,8 +265,7 @@ jobs:
           test -n "$BUFFER_API_KEY" || { echo "BUFFER_API_KEY fehlt. Kampagne auf GitHub, Buffer nicht gesendet." >&2; exit 1; }
           # One Python process shares a read-only organization/channel lookup.
           # Each post still has its own reservation, independent readback and receipt.
-          python3 scripts/buffer_draft.py \
-            --draft "ready-for-buffer/auto-$CAMPAIGN-linkedin.json" \
+          python3 scripts/buffer_draft.py --draft "ready-for-buffer/auto-$CAMPAIGN-linkedin.json" \
             --draft "ready-for-buffer/auto-$CAMPAIGN-facebook.json" \
             --draft "ready-for-buffer/auto-$CAMPAIGN-instagram.json" \
             --send
