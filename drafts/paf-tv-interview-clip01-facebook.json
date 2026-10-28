@@ -1,0 +1,9 @@
+{
+  "format_version": 2,
+  "target": "facebook",
+  "text": "Was ist eigentlich der Unterschied zwischen einem Chatbot und einem KI-Agenten?\n\nEin Chatbot beschreibt zum Beispiel, wie du eine Bestellung stornieren kannst. Ein KI-Agent kann – wenn er sicher an die nötigen Systeme angebunden ist – zunächst nachsehen, ob die Bestellung schon verschickt wurde und welche Schritte noch möglich sind.\n\nDarüber habe ich mit PAF-TV gesprochen. Im Video seht ihr einen kurzen Ausschnitt, in dem ich erkläre, was ich als AI Agent Builder mache.\n\nDas ganze Interview gibt es hier, mit zuschaltbaren deutschen Untertiteln:\nhttps://pauderer.de/ueber-mich/interview-ki-und-erinnerungen/\n\nVielen Dank an PAF-TV und Rolf Berger für die Einladung und das Gespräch.",
+  "media": {
+    "type": "video",
+    "url": "https://pauderer.de/assets/videos/social/PAF-TV_01_ki-agenten_9x16.mp4"
+  }
+}

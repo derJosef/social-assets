@@ -1,0 +1,100 @@
+name: PAF-TV interview – Facebook + Instagram draft-only video delivery
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/paf-tv-facebook-instagram-drafts.yml'
+      - 'drafts/paf-tv-interview-clip01-facebook.json'
+      - 'drafts/paf-tv-interview-clip01-instagram.json'
+      - 'scripts/paf_tv_two_draft_readback.py'
+      - 'tests/test_paf_tv_two_drafts.py'
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+concurrency:
+  group: buffer-drafts-single-flight
+  cancel-in-progress: false
+
+jobs:
+  offline:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-slim
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Offline text/media/Reel/readback tests without API calls
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m py_compile scripts/paf_tv_two_draft_readback.py tests/test_paf_tv_two_drafts.py
+          python3 -B -m unittest discover -s tests -p 'test_paf_tv_two_drafts.py' -v
+          python3 -B scripts/buffer_draft.py \
+            --draft drafts/paf-tv-interview-clip01-facebook.json \
+            --draft drafts/paf-tv-interview-clip01-instagram.json \
+            --dry-run
+          python3 -B -m unittest discover -s tests -p 'test_paf_tv_buffer_video.py' -v
+
+  two-drafts:
+    name: Validate both and create two drafts; independent Buffer readback
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.repository == 'derJosef/social-assets' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.issue.number == 19 &&
+      github.actor_id == 45994004 &&
+      github.event.comment.user.id == 45994004 &&
+      github.run_attempt == 1 &&
+      github.event.comment.body == 'PAF-TV-BUFFER-CLIP01-FB-IG-DRAFTS-20261028'
+    runs-on: ubuntu-slim
+    timeout-minutes: 14
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Validate both exact draft files; no Buffer mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest discover -s tests -p 'test_paf_tv_two_drafts.py' -v
+          python3 -B scripts/buffer_draft.py \
+            --draft drafts/paf-tv-interview-clip01-facebook.json \
+            --draft drafts/paf-tv-interview-clip01-instagram.json \
+            --dry-run
+      - name: Preflight full-body public HTTPS download for approved social videos
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -u scripts/paf_tv_video_fullcheck.py
+      - name: Create two Buffer drafts ONLY, never publish or schedule
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_FACEBOOK_CHANNEL_ID }}
+          BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_INSTAGRAM_CHANNEL_ID }}
+        run: |
+          set -euo pipefail
+          python3 -u scripts/buffer_draft.py \
+            --draft drafts/paf-tv-interview-clip01-facebook.json \
+            --draft drafts/paf-tv-interview-clip01-instagram.json \
+            --send
+      - name: Independent read-only confirmation – both channels remain drafts
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_FACEBOOK_CHANNEL_ID }}
+          BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_INSTAGRAM_CHANNEL_ID }}
+        run: |
+          set -euo pipefail
+          python3 -u scripts/paf_tv_two_draft_readback.py
