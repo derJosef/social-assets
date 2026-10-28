@@ -13,7 +13,7 @@ on:
 permissions: {}
 
 concurrency:
-  group: buffer-schedule-single-flight
+  group: paf-tv-ki-generated-title-only-media-owner-once-20261028
   cancel-in-progress: false
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -B -m py_compile scripts/paf_tv_replace_scheduled_ki_title_videos.py
-          python3 -B -m unittest discover -s tests -p 'test_paf_tv_replace_scheduled_cover_videos.py' -v
+          python3 -B -m unittest discover -s tests -p 'test_paf_tv_replace_scheduled_ki_title_videos.py' -v
           python3 -B scripts/paf_tv_replace_scheduled_ki_title_videos.py --self-test
   update-three:
     name: Replace three existing video assets without new posts or date changes
@@ -59,7 +59,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -B -m unittest discover -s tests -p 'test_paf_tv_replace_scheduled_cover_videos.py' -v
+          python3 -B -m unittest discover -s tests -p 'test_paf_tv_replace_scheduled_ki_title_videos.py' -v
           python3 -B scripts/paf_tv_replace_scheduled_ki_title_videos.py --self-test
       - name: Only three existing Buffer posts with new media; independent live readback
         shell: bash
