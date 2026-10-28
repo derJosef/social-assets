@@ -23,8 +23,10 @@ from zoneinfo import ZoneInfo
 
 try:
     from .buffer_error_diagnostics import safe_mutation_diagnosis
+    from .buffer_rate_limits import report_limits, retry_after_seconds
 except ImportError:
     from buffer_error_diagnostics import safe_mutation_diagnosis
+    from buffer_rate_limits import report_limits, retry_after_seconds
 
 ROOT = Path(__file__).resolve().parents[1]
 BUFFER_ENDPOINT = "https://api.buffer.com"
@@ -113,12 +115,23 @@ def json_http(url: str, *, token: str, method: str = "GET", payload: dict | None
     )
     try:
         with urllib.request.urlopen(request, timeout=25) as response:
+            if urllib.parse.urlsplit(url).hostname == "api.buffer.com":
+                report_limits(response.headers)
             result = json.load(response)
             if not isinstance(result, dict):
                 raise RuntimeError("Unerwartetes API-Antwortformat.")
             return result
     except urllib.error.HTTPError as exc:
-        # Do not log credentials or potentially confidential API response bodies.
+        # Never retry a draft mutation: Buffer might have created the post already.
+        # Do not expose credentials, partition keys or confidential response bodies.
+        if exc.code == 429 and urllib.parse.urlsplit(url).hostname == "api.buffer.com":
+            report_limits(exc.headers)
+            delay = retry_after_seconds(exc.headers)
+            wait = f"{delay}s" if delay is not None else "unbekannt"
+            raise RuntimeError(
+                f"Buffer API-Limit erreicht (HTTP 429); Retry-After={wait}. "
+                "Kein automatischer Retry. Restkontingent/Buffer-Drafts prüfen."
+            ) from exc
         raise RuntimeError(f"HTTP {exc.code} bei {urllib.parse.urlsplit(url).hostname}") from exc
     except urllib.error.URLError as exc:
         raise RuntimeError("API-Verbindung fehlgeschlagen.") from exc
@@ -381,26 +394,35 @@ def put_receipt(token: str, receipt: str, content: dict, message: str, sha: str 
     return saved["sha"]
 
 
-def resolve_channel(token: str, target: str, preferred_id: str = "") -> str:
-    """Select exactly one matching Buffer service. Never fall back to other networks."""
+def resolve_channel(token: str, target: str, preferred_id: str = "",
+                    *, channel_cache: dict | None = None) -> str:
+    """Select one matching Buffer service; optionally reuse read-only lookup in this run."""
     if target not in ("linkedin", "facebook", "instagram"):
         raise ValueError("Unbekannter Buffer-Kanal.")
-    account = buffer_graphql(token, GET_ORGANIZATIONS, {}).get("account")
-    if not isinstance(account, dict) or not isinstance(account.get("organizations"), list):
-        raise RuntimeError("Buffer-Organisationen konnten nicht gelesen werden.")
-    candidates: set[str] = set()
-    for organization in account["organizations"]:
-        org_id = organization.get("id") if isinstance(organization, dict) else None
-        if not isinstance(org_id, str) or not org_id:
-            raise RuntimeError("Buffer hat eine ungültige Organisations-ID geliefert.")
-        channels = buffer_graphql(token, GET_CHANNELS, {"organizationId": org_id}).get("channels")
-        if not isinstance(channels, list):
-            raise RuntimeError("Buffer-Kanäle konnten nicht gelesen werden.")
-        for channel in channels:
-            if not isinstance(channel, dict):
-                raise RuntimeError("Buffer hat einen ungültigen Kanal geliefert.")
-            if str(channel.get("service", "")).lower() == target and channel.get("id"):
-                candidates.add(str(channel["id"]))
+    # A cache is passed only during one CLI batch. No cross-run / persistent cache.
+    if channel_cache is not None and "index" in channel_cache:
+        index = channel_cache["index"]
+    else:
+        account = buffer_graphql(token, GET_ORGANIZATIONS, {}).get("account")
+        if not isinstance(account, dict) or not isinstance(account.get("organizations"), list):
+            raise RuntimeError("Buffer-Organisationen konnten nicht gelesen werden.")
+        index = {"linkedin": set(), "facebook": set(), "instagram": set()}
+        for organization in account["organizations"]:
+            org_id = organization.get("id") if isinstance(organization, dict) else None
+            if not isinstance(org_id, str) or not org_id:
+                raise RuntimeError("Buffer hat eine ungültige Organisations-ID geliefert.")
+            channels = buffer_graphql(token, GET_CHANNELS, {"organizationId": org_id}).get("channels")
+            if not isinstance(channels, list):
+                raise RuntimeError("Buffer-Kanäle konnten nicht gelesen werden.")
+            for channel in channels:
+                if not isinstance(channel, dict):
+                    raise RuntimeError("Buffer hat einen ungültigen Kanal geliefert.")
+                service = str(channel.get("service", "")).lower()
+                if service in index and channel.get("id"):
+                    index[service].add(str(channel["id"]))
+        if channel_cache is not None:
+            channel_cache["index"] = index
+    candidates = index[target]
     if preferred_id:
         if preferred_id not in candidates:
             raise RuntimeError(f"Vorgegebene Kanal-ID passt nicht zu einem {target}-Kanal.")
@@ -548,13 +570,14 @@ def check_connection() -> None:
     buffer_key = os.environ.get("BUFFER_API_KEY", "")
     if not buffer_key:
         raise RuntimeError("BUFFER_API_KEY fehlt als GitHub-Secret.")
+    channel_cache = {}
     for target in ("linkedin", "facebook", "instagram"):
-        resolve_channel(buffer_key, target, channel_preference(target))
+        resolve_channel(buffer_key, target, channel_preference(target), channel_cache=channel_cache)
     print("Verbindungstest erfolgreich: LinkedIn, Facebook und Instagram eindeutig gefunden.")
     print("Nur Buffer-Daten gelesen. Kein Entwurf erstellt, nichts eingeplant oder veröffentlicht.")
 
 
-def send_draft(draft_path: str, text: str, raw: bytes) -> None:
+def send_draft(draft_path: str, text: str, raw: bytes, *, channel_cache: dict | None = None) -> None:
     if os.environ.get("GITHUB_REPOSITORY") != REPOSITORY or os.environ.get("GITHUB_REF") != "refs/heads/main":
         raise RuntimeError("Live-Übertragung nur durch GitHub Actions auf social-assets/main.")
     github_token = os.environ.get("GITHUB_TOKEN", "")
@@ -565,7 +588,8 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
     target = json.loads(raw.decode("utf-8"))["target"]
     due_at = planned_due_at(draft_path, target)
     quality = authorize_auto_dated_draft(draft_path) if due_at is not None else None
-    channel_id = resolve_channel(buffer_key, target, channel_preference(target))
+    channel_id = resolve_channel(buffer_key, target, channel_preference(target),
+                                 channel_cache=channel_cache)
     assets = parse_assets(raw)
     verify_media_access(assets)
     verify_auto_image_bytes(draft_path, assets)
@@ -644,7 +668,8 @@ def send_draft(draft_path: str, text: str, raw: bytes) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Buffer: geprüfte Entwürfe für drei Kanäle übertragen.")
-    parser.add_argument("--draft", required=True, help="JSON unter drafts/ oder ready-for-buffer/")
+    parser.add_argument("--draft", action="append", required=True,
+                        help="JSON unter drafts/ oder ready-for-buffer/ (mehrfach für einen Batch)")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true", help="Nur lokal prüfen; keine API-Aufrufe.")
     mode.add_argument("--check-connection", action="store_true", help="Buffer-Kanäle nur lesend prüfen.")
@@ -652,16 +677,24 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        draft_path, text, raw = read_draft(args.draft)
-        if args.dry_run:
-            assets = parse_assets(raw)
-            print(f"DRY-RUN OK: {draft_path}, Ziel {json.loads(raw.decode('utf-8'))['target']}, {len(text)} Zeichen, {len(assets)} Medien.")
-
-            print("Keine API-Aufrufe, keine Buffer-Aktion.")
-        elif args.check_connection:
+        if args.check_connection:
             check_connection()
         else:
-            send_draft(draft_path, text, raw)
+            # Validate the full batch before sending the first draft.
+            prepared = [read_draft(path) for path in args.draft]
+            if len({path for path, _, _ in prepared}) != len(prepared):
+                raise ValueError("Doppelte Draft-Datei innerhalb eines Batches.")
+            if args.dry_run:
+                for draft_path, text, raw in prepared:
+                    assets = parse_assets(raw)
+                    print(f"DRY-RUN OK: {draft_path}, Ziel {json.loads(raw.decode('utf-8'))['target']}, {len(text)} Zeichen, {len(assets)} Medien.")
+                print("Keine API-Aufrufe, keine Buffer-Aktion.")
+            else:
+                # Only one process: organizations and all channel IDs read once.
+                # Fail closed after any uncertain createPost: no retry or further posts.
+                channel_cache = {}
+                for draft_path, text, raw in prepared:
+                    send_draft(draft_path, text, raw, channel_cache=channel_cache)
     except (ValueError, OSError, RuntimeError, json.JSONDecodeError) as exc:
         print(f"FEHLER: {exc}", file=sys.stderr)
         return 1

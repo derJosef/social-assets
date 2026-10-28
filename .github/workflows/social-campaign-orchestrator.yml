@@ -41,8 +41,9 @@ jobs:
          github.event.issue.author_association == 'OWNER' &&
          startsWith(github.event.issue.title, 'AIAGENT_BRIEF:'))
       }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    # Slim: 1 vCPU / 5 GB RAM; hard GitHub limit 15 min. No Docker or privileged steps.
+    runs-on: ubuntu-slim
+    timeout-minutes: 14
 
     steps:
       - name: Repository vollständig laden
@@ -262,10 +263,12 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$BUFFER_API_KEY" || { echo "BUFFER_API_KEY fehlt. Kampagne auf GitHub, Buffer nicht gesendet." >&2; exit 1; }
-          for platform in linkedin facebook instagram; do
-            file="ready-for-buffer/auto-$CAMPAIGN-$platform.json"
-            python3 scripts/buffer_draft.py --draft "$file" --send
-          done
+          # One Python process shares a read-only organization/channel lookup.
+          # Each post still has its own reservation, independent readback and receipt.
+          python3 scripts/buffer_draft.py --draft "ready-for-buffer/auto-$CAMPAIGN-linkedin.json" \
+            --draft "ready-for-buffer/auto-$CAMPAIGN-facebook.json" \
+            --draft "ready-for-buffer/auto-$CAMPAIGN-instagram.json" \
+            --send
 
       - name: Unabhängige Buffer-Prüfung (draft und verbindlicher Datumswert, nie Queue)
         if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
