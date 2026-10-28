@@ -185,7 +185,7 @@ def read_draft(given_path: str) -> tuple[str, str, bytes]:
     target = record["target"]
     assets = parse_assets(raw)
     if target == "instagram" and not assets:
-        raise ValueError("Instagram benötigt mindestens ein Bild, reiner Text ist nicht erlaubt.")
+        raise ValueError("Instagram benötigt mindestens ein Bild oder Video, reiner Text ist nicht erlaubt.")
     if target != "linkedin" and any("document" in asset for asset in assets):
         raise ValueError("PDF-Dokumente sind ausschließlich für LinkedIn freigegeben.")
     if target in ("facebook", "instagram") and len(assets) > 10:
@@ -200,6 +200,41 @@ def read_draft(given_path: str) -> tuple[str, str, bytes]:
 
 # This public repository owns all media. Never send private URLs or tokens to Buffer.
 MEDIA_HOST_PREFIX = "https://raw.githubusercontent.com/derJosef/social-assets/"
+# Exactly the six approved, SHA-checked HostEurope PAF-TV exports, no generic external hosts.
+PAF_VIDEO_BASE = "https://pauderer.de/assets/videos/social/"
+PAF_VIDEO_FILENAMES = frozenset(
+    f"PAF-TV_{number}_{slug}_{ratio}.mp4"
+    for number, slug in (
+        ("01", "ki-agenten"), ("02", "familienfoto"), ("03", "datenschutz")
+    )
+    for ratio in ("4x5", "9x16")
+)
+PAF_VIDEO_SIZES = {
+    "PAF-TV_01_ki-agenten_4x5.mp4": 26304919,
+    "PAF-TV_01_ki-agenten_9x16.mp4": 29094103,
+    "PAF-TV_02_familienfoto_4x5.mp4": 22168912,
+    "PAF-TV_02_familienfoto_9x16.mp4": 23865581,
+    "PAF-TV_03_datenschutz_4x5.mp4": 18643541,
+    "PAF-TV_03_datenschutz_9x16.mp4": 21181140,
+}
+
+
+def validate_paf_video_url(value: object) -> str:
+    """No redirects, private hosts, query strings or arbitrary server paths."""
+    if not isinstance(value, str) or len(value) > 320:
+        raise ValueError("Ungültige Video-URL.")
+    parsed = urllib.parse.urlsplit(value)
+    if (
+        parsed.scheme != "https" or parsed.netloc != "pauderer.de"
+        or parsed.username or parsed.password or parsed.port
+        or parsed.query or parsed.fragment
+        or not value.startswith(PAF_VIDEO_BASE)
+        or value[len(PAF_VIDEO_BASE):] not in PAF_VIDEO_FILENAMES
+    ):
+        raise ValueError("Nur freigegebene PAF-TV-MP4 auf pauderer.de zulässig.")
+    return value
+
+
 MEDIA_NAME_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}$")
 
 
@@ -262,6 +297,10 @@ def parse_assets(raw: bytes) -> list[dict]:
         if len(set(x["image"]["url"] for x in assets)) != len(assets):
             raise ValueError("Doppelte Bild-URLs in einem Beitrag sind nicht zulässig.")
         return assets
+    if kind == "video":
+        if set(media) != {"type", "url"}:
+            raise ValueError("Video benötigt nur type und url.")
+        return [{"video": {"url": validate_paf_video_url(media["url"])}}]
     if kind == "document":
         if set(media) != {"type", "url", "thumbnail_url", "title"}:
             raise ValueError("PDF benötigt type, url, thumbnail_url und title.")
@@ -273,34 +312,84 @@ def parse_assets(raw: bytes) -> list[dict]:
         return [{"document": {
             "url": pdf_url, "thumbnailUrl": thumb_url, "title": title.strip()
         }}]
-    raise ValueError("Medientyp nur images oder document.")
+    raise ValueError("Medientyp nur images, video oder document.")
 
 
 def verify_media_access(assets: list[dict]) -> None:
-    """Preflight public media URLs before reserving a one-time transfer receipt."""
-    urls = []
+    """Media preflight: public HTTPS + size and complete video HTTP download.
+
+    Video full-body checking happens BEFORE reserving a Buffer draft receipt and
+    can thus fail without risking duplicate Buffer posts. No video bytes are
+    ever written to the repository.
+    """
     for asset in assets:
-        media = asset.get("image") or asset.get("document")
-        urls.append((media["url"], "application/pdf" if "document" in asset else "image/"))
-        if "document" in asset:
-            urls.append((media["thumbnailUrl"], "image/"))
-    for url, content_type_prefix in urls:
-        try:
-            request = urllib.request.Request(
-                url, method="HEAD", headers={"User-Agent": "social-assets-buffer-draft/1.0"}
-            )
-            with urllib.request.urlopen(request, timeout=20) as response:
-                typ = response.headers.get("Content-Type", "").lower()
-                length = response.headers.get("Content-Length")
-                size_limit = 100_000_000 if content_type_prefix == "application/pdf" else 10_000_000
-                if typ and not (typ.startswith(content_type_prefix) or typ.startswith("application/octet-stream")):
-                    raise RuntimeError("Medien-Link liefert keinen Bild-/PDF-Inhalt.")
-                if length is not None and int(length) > size_limit:
-                    raise RuntimeError("Mediendatei überschreitet die Größenbegrenzung.")
-        except urllib.error.HTTPError as exc:
-            raise RuntimeError(f"Medien-Link nicht öffentlich abrufbar: HTTP {exc.code}.") from exc
-        except urllib.error.URLError as exc:
-            raise RuntimeError("Öffentliche Medien-URL ist nicht erreichbar.") from exc
+        kind = next(iter(asset))
+        media = asset[kind]
+        pairs = [(media["url"], kind)]
+        if kind == "document":
+            pairs.append((media["thumbnailUrl"], "image"))
+        for url, category in pairs:
+            if category == "video":
+                expected_size = PAF_VIDEO_SIZES[url[len(PAF_VIDEO_BASE):]]
+                expected_mime = "video/mp4"
+                size_limit = 95_000_000
+            elif category == "document":
+                expected_size = None
+                expected_mime = "application/pdf"
+                size_limit = 100_000_000
+            else:
+                expected_size = None
+                expected_mime = "image/"
+                size_limit = 10_000_000
+            try:
+                request = urllib.request.Request(
+                    url, method="HEAD",
+                    headers={"User-Agent": "social-assets-buffer-draft/1.0"}
+                )
+                with urllib.request.urlopen(request, timeout=25) as response:
+                    if response.geturl() != url or response.status != 200:
+                        raise RuntimeError("Medien-URL leitet um oder liefert kein HTTP 200.")
+                    typ = response.headers.get("Content-Type", "").lower()
+                    length = response.headers.get("Content-Length")
+                    if typ and not (typ.startswith(expected_mime) or
+                                    typ.startswith("application/octet-stream")):
+                        raise RuntimeError("Unerwarteter Medien-MIME-Type.")
+                    if category == "video" and (length is None or
+                                                int(length) != expected_size):
+                        raise RuntimeError("Video-Dateigröße stimmt nicht mit Release überein.")
+                    if length is not None and int(length) > size_limit:
+                        raise RuntimeError("Mediendatei überschreitet das Größenlimit.")
+                if category == "video":
+                    request = urllib.request.Request(
+                        url, headers={"User-Agent": "social-assets-buffer-draft/1.0",
+                                      "Accept-Encoding": "identity"}
+                    )
+                    total = 0
+                    header = bytearray()
+                    digest = hashlib.sha256()
+                    with urllib.request.urlopen(request, timeout=110) as response:
+                        if response.geturl() != url or response.status != 200:
+                            raise RuntimeError("Vollständiger MP4-Download ist nicht direkt möglich.")
+                        if not response.headers.get("Content-Type", "").lower().startswith("video/mp4"):
+                            raise RuntimeError("Vollständiger Abruf ist kein MP4.")
+                        while True:
+                            chunk = response.read(1024 * 1024)
+                            if not chunk:
+                                break
+                            if len(header) < 64:
+                                header.extend(chunk[:64 - len(header)])
+                            total += len(chunk)
+                            if total > expected_size:
+                                raise RuntimeError("Vollständiger MP4-Abruf ist zu groß.")
+                            digest.update(chunk)
+                    if total != expected_size or b"ftyp" not in header[:24]:
+                        raise RuntimeError("MP4 beim vollständigen Herunterladen beschädigt.")
+                    print(f"MP4_FULL_GET_VERIFIED {url.rsplit('/', 1)[-1]} "
+                          f"bytes={total} sha256={digest.hexdigest()}", flush=True)
+            except urllib.error.HTTPError as exc:
+                raise RuntimeError(f"Medien-Link nicht öffentlich abrufbar: HTTP {exc.code}.") from exc
+            except urllib.error.URLError as exc:
+                raise RuntimeError("Öffentliche Medien-URL ist nicht erreichbar.") from exc
 
 
 def verify_auto_image_bytes(draft_path: str, assets: list[dict]) -> None:
@@ -333,12 +422,12 @@ def verify_auto_image_bytes(draft_path: str, assets: list[dict]) -> None:
 
 
 
-def platform_metadata(target: str) -> dict | None:
+def platform_metadata(target: str, *, video: bool = False) -> dict | None:
     """Mandatory channel-specific post input metadata, independent of publication mode."""
     if target == "facebook":
         return {"facebook": {"type": "post"}}
     if target == "instagram":
-        return {"instagram": {"type": "post", "shouldShareToFeed": True}}
+        return {"instagram": {"type": "reel" if video else "post", "shouldShareToFeed": True}}
     if target == "linkedin":
         return None
     raise ValueError("Ungültiger Zielkanal.")
@@ -615,7 +704,7 @@ def send_draft(draft_path: str, text: str, raw: bytes, *, channel_cache: dict | 
     # Buffer may have created a post even if the network response was lost.
     variables = {
         "text": text, "channelId": channel_id, "assets": assets,
-        "metadata": platform_metadata(target),
+        "metadata": platform_metadata(target, video=any("video" in a for a in assets)),
     }
     if due_at is not None:
         variables["dueAt"] = due_at
