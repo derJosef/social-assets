@@ -1,0 +1,75 @@
+name: PAF-TV Clip 01 – German video drafts publish schedule, three exact posts
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/paf-tv-schedule-german-clip01.yml'
+      - 'scripts/paf_tv_schedule_german_clip01.py'
+      - 'tests/test_paf_tv_schedule_german_clip01.py'
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+concurrency:
+  group: buffer-schedule-single-flight
+  cancel-in-progress: false
+
+jobs:
+  offline:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-slim
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Exact German video/campaign tests, no Buffer mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m py_compile scripts/paf_tv_schedule_german_clip01.py
+          python3 -B -m unittest discover -s tests -p 'test_paf_tv_schedule_german_clip01.py' -v
+          python3 -B scripts/paf_tv_schedule_german_clip01.py --self-test
+
+  schedule-three:
+    name: Schedule ONLY three existing German PAF-TV interview video drafts
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.repository == 'derJosef/social-assets' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.issue.number == 19 &&
+      github.event.issue.pull_request == null &&
+      github.actor_id == 45994004 &&
+      github.event.comment.user.id == 45994004 &&
+      github.run_attempt == 1 &&
+      github.event.comment.body == 'PAF-TV-SCHEDULE-THREE-GERMAN-CLIP01-20261029'
+    runs-on: ubuntu-slim
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Offline contracts before any Buffer access
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest discover -s tests -p 'test_paf_tv_schedule_german_clip01.py' -v
+          python3 -B scripts/paf_tv_schedule_german_clip01.py --self-test
+      - name: Schedule only three approved video drafts with independent readbacks
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
+          BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_FACEBOOK_CHANNEL_ID }}
+          BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_INSTAGRAM_CHANNEL_ID }}
+        run: |
+          set -euo pipefail
+          python3 -u scripts/paf_tv_schedule_german_clip01.py --live
