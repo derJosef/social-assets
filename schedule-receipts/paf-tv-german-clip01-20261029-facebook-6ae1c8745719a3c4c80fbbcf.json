@@ -1,9 +1,10 @@
 {
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "verified_scheduled_video",
   "target": "facebook",
   "buffer_post_id": "6ae1c8745719a3c4c80fbbcf",
   "due_at_utc": "2026-10-29T16:00:00Z",
   "draft_file": "drafts/paf-tv-interview-clip01-facebook.json",
   "original_fingerprint": "776b37d0b5413d8a8c6b230f130c8877e09de1e8ec4705eff1c071760eff1e1d",
-  "github_run_id": "40690518996"
+  "github_run_id": "40690518996",
+  "verified_due_at_utc": "2026-10-29T16:00:00Z"
 }
