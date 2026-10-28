@@ -1,0 +1,39 @@
+name: Buffer API limits – ubuntu-slim smoke (read-only)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/buffer_draft.py'
+      - 'scripts/buffer_rate_limits.py'
+      - 'tests/test_buffer_api_safety.py'
+      - 'tests/test_buffer_rate_limits.py'
+      - '.github/workflows/social-campaign-orchestrator.yml'
+      - '.github/workflows/buffer-api-slim-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-smoke:
+    runs-on: ubuntu-slim
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install same Python dependencies as social orchestrator
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0' 'numpy==2.5.4'
+      - name: Compile modified Python modules
+        run: python3 -B -m py_compile scripts/buffer_draft.py scripts/buffer_rate_limits.py
+      - name: Full offline regression suite
+        run: python3 -B -m unittest discover -s tests -v
+      - name: Dry-run smoke (no GitHub/Buffer API)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test_file="drafts/slim-api-smoke-$GITHUB_RUN_ID.json"
+          printf '{"format_version":1,"target":"linkedin","text":"Isolierter API-Limit-Smoke-Test ohne Buffer-Aufrufe."}\n' > "$test_file"
+          python3 scripts/buffer_draft.py --draft "$test_file" --dry-run
+          rm "$test_file"
