@@ -1,0 +1,78 @@
+name: PAF-TV interview – six full MP4 fetches and one LinkedIn Buffer draft
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/buffer_draft.py
+      - scripts/paf_tv_video_fullcheck.py
+      - tests/test_paf_tv_buffer_video.py
+      - drafts/paf-tv-interview-clip01-linkedin.json
+      - .github/workflows/paf-tv-video-draft-probe.yml
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+concurrency:
+  group: buffer-drafts-single-flight
+  cancel-in-progress: false
+
+jobs:
+  offline:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-slim
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Exact video allowlist and no-publication safety tests
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/buffer_draft.py scripts/paf_tv_video_fullcheck.py
+          python3 -m unittest discover -s tests -p 'test_paf_tv_buffer_video.py' -v
+          python3 scripts/buffer_draft.py --draft drafts/paf-tv-interview-clip01-linkedin.json --dry-run
+
+  single-draft:
+    name: Full GET of six MP4 files, then ONE LinkedIn video draft
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.repository == 'derJosef/social-assets' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.issue.number == 19 &&
+      github.actor_id == 45994004 &&
+      github.event.comment.user.id == 45994004 &&
+      github.run_attempt == 1 &&
+      github.event.comment.body == 'PAF-TV-BUFFER-CLIP01-LINKEDIN-DRAFT-20261028'
+    runs-on: ubuntu-slim
+    timeout-minutes: 14
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Validate exact draft and run offline tests first
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_paf_tv_buffer_video.py' -v
+          python3 scripts/buffer_draft.py --draft drafts/paf-tv-interview-clip01-linkedin.json --dry-run
+      - name: Six real full-body HTTPS downloads; fail before Buffer on any incomplete MP4
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -u scripts/paf_tv_video_fullcheck.py
+      - name: Create exactly one Buffer DRAFT; never schedule or publish
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
+        run: |
+          set -euo pipefail
+          python3 -u scripts/buffer_draft.py --draft drafts/paf-tv-interview-clip01-linkedin.json --send
