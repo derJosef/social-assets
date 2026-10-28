@@ -1,9 +1,10 @@
 {
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "verified_scheduled_video",
   "target": "instagram",
   "buffer_post_id": "6ae1c87b26cf140c4c8554f5",
   "due_at_utc": "2026-10-29T18:00:00Z",
   "draft_file": "drafts/paf-tv-interview-clip01-instagram.json",
   "original_fingerprint": "088550485583408f31c0595cf748412084b5c5c6118f2ce7cf097b4092b87466",
-  "github_run_id": "40690518996"
+  "github_run_id": "40690518996",
+  "verified_due_at_utc": "2026-10-29T18:00:00Z"
 }
