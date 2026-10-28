@@ -74,7 +74,7 @@ class TestInterviewSchedule(unittest.TestCase):
         self.assertNotIn("shareNow",app.EDIT)
         self.assertIn("mode:customScheduled",app.EDIT)
         self.assertIn("saveToDraft:false",app.EDIT)
-        self.assertIn("tagIds: $tagIds",app.EDIT)
+        self.assertIn("tagIds:$tagIds",app.EDIT)
         self.assertIn("assets:$assets",app.EDIT)
 
     def test_receipt_rejects_missing_and_malformed_data(self):
