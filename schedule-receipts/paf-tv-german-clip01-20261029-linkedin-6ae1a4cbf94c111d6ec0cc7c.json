@@ -1,0 +1,9 @@
+{
+  "state": "pending_manual_reconciliation_on_failure",
+  "target": "linkedin",
+  "buffer_post_id": "6ae1a4cbf94c111d6ec0cc7c",
+  "due_at_utc": "2026-10-29T09:00:00Z",
+  "draft_file": "drafts/paf-tv-interview-clip01-linkedin.json",
+  "original_fingerprint": "9e6970cfd943938109aebbcda6de8a5b128a8cef2a7e12ed7fec04d81103dcb0",
+  "github_run_id": "40690518996"
+}
