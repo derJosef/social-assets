@@ -1,0 +1,10 @@
+{
+  "state": "pending_manual_reconciliation_on_failure",
+  "post_id": "6ae1c87b26cf140c4c8554f5",
+  "target": "instagram",
+  "date_utc": "2026-10-29T18:00:00Z",
+  "original_media": "https://pauderer.de/assets/videos/social/PAF-TV_01_ki-agenten_9x16.mp4",
+  "new_media": "https://pauderer.de/assets/videos/social/PAF-TV_01_ki-agenten_9x16_cover20261028.mp4",
+  "original_content_sha256": "8fdaaba36572e4db6a674b9a8c9d8bec7ab15bb56b709a4c24cfcf4b7f77af30",
+  "github_run_id": "40709854465"
+}
