@@ -7,6 +7,15 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch, Mock
+from datetime import datetime, timezone
+
+
+class _HistoricalPafClock(datetime):
+    @classmethod
+    def now(cls, tz=None):
+        fixed = cls(2026, 10, 29, 0, 0, tzinfo=timezone.utc)
+        return fixed.astimezone(tz) if tz is not None else fixed.replace(tzinfo=None)
+
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"scripts"))
@@ -72,7 +81,9 @@ class ScheduledPostTests(unittest.TestCase):
         def get(key,query,vars):
             self.assertEqual(query,app.QUERY)
             return {"post":posts[vars["id"]]}
-        data=app.preflight("fake-token",get=get)
+        # Historic one-time shift: freeze only the test clock, not production rules.
+        with patch.object(app, "datetime", _HistoricalPafClock):
+            data=app.preflight("fake-token",get=get)
         self.assertEqual(len(data),2)
         self.assertEqual([x["post"]["channel"] for x in data],["instagram","linkedin"])
     def test_only_edit_fields(self):

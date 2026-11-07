@@ -1,7 +1,7 @@
 import json
 import tempfile
 import unittest
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -10,7 +10,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import autonomous_campaign_gate as gate
 
 
+# Keep the historic October 2026 campaign fixture stable as wall-clock time advances.
+# This freezes only the clock observed by the quality-gate module under test.
+class _HistoricalGateClock(datetime):
+    @classmethod
+    def now(cls, tz=None):
+        fixed = cls(2026, 10, 9, 0, 0, tzinfo=timezone.utc)
+        return fixed.astimezone(tz) if tz is not None else fixed.replace(tzinfo=None)
+
+
 class AutonomousCampaignGateTests(unittest.TestCase):
+    def setUp(self):
+        clock = patch.object(gate, "datetime", _HistoricalGateClock)
+        clock.start()
+        self.addCleanup(clock.stop)
+
     def test_both_draft_paths_pin_same_inter_and_pillow_before_quality_gate(self):
         root = Path(__file__).resolve().parents[1]
         workflows = [

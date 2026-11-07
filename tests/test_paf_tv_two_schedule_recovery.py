@@ -6,6 +6,15 @@ from pathlib import Path
 import sys
 import unittest
 from unittest.mock import patch
+from datetime import datetime, timezone
+
+
+class _HistoricalPafClock(datetime):
+    @classmethod
+    def now(cls, tz=None):
+        fixed = cls(2026, 10, 29, 0, 0, tzinfo=timezone.utc)
+        return fixed.astimezone(tz) if tz is not None else fixed.replace(tzinfo=None)
+
 import os,json,tempfile
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"scripts"))
@@ -61,7 +70,9 @@ class Tests(unittest.TestCase):
         def mock_get(key,query,variables):
             self.assertEqual(query,app.QUERY)
             return {"post":lookup[variables["id"]]}
-        self.assertEqual(len(app.preflight("fake",get=mock_get)),2)
+        # Historical November 2026 schedule fixture, insulated from today's date.
+        with patch.object(app, "datetime", _HistoricalPafClock):
+            self.assertEqual(len(app.preflight("fake",get=mock_get)),2)
     def test_old_receipt_path_is_explicit(self):
         self.assertIn("40673207492",app.FIRST_RUN)
         self.assertTrue(app.FIRST_ONLY.endswith(app.old.POSTS[0]["id"]+".json"))
