@@ -779,6 +779,8 @@ def send_draft(draft_path: str, text: str, raw: bytes, *, channel_cache: dict | 
     due_at = planned_due_at(draft_path, target)
     if picturefix and due_at is not None:
         raise RuntimeError("PictureFix preview cannot carry dueAt.")
+    if picturefix and not channel_preference(target):
+        raise RuntimeError("Explicit PictureFix Buffer channel ID is required; no channel guessing.")
     quality = authorize_auto_dated_draft(draft_path) if due_at is not None else None
     channel_id = resolve_channel(buffer_key, target, channel_preference(target),
                                  channel_cache=channel_cache)
