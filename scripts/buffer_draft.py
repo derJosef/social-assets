@@ -79,6 +79,22 @@ query VerifyDatedDraft($id: PostId!) {
 }
 """
 
+# Same Buffer GraphQL adapter; isolated undated brand preview only.
+READ_PICTUREFIX_DRAFT = """
+query VerifyPictureFixDraft($id: PostId!) {
+  post(input: { id: $id }) {
+    id channelId channelService status dueAt text
+    assets { type source }
+  }
+}
+"""
+PICTUREFIX_LOGO_BLOB = "0cd926e6631209dd4e5c8029dfb72c29bbf89ea8"
+PICTUREFIX_DRAFT_NAMES = {
+    "facebook": "drafts/picturefix-pf01-facebook.json",
+    "instagram": "drafts/picturefix-pf01-instagram.json",
+}
+PICTUREFIX_IMAGE_NAME = "PictureFix_PF01_Facebook_Instagram_1080x1350_zur_Freigabe.png"
+
 AUTO_DRAFT_RE = re.compile(
     r"^ready-for-buffer/auto-(20\d{2}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*)-"
     r"(linkedin|facebook|instagram)\.json$"
@@ -180,7 +196,33 @@ def read_draft(given_path: str) -> tuple[str, str, bytes]:
         raise ValueError("Format 1 erlaubt nur format_version, target und text.")
     if fmt == 2 and set(record) != {"format_version", "target", "text", "media"}:
         raise ValueError("Format 2 benötigt genau format_version, target, text und media.")
-    if fmt not in (1, 2):
+    if fmt == 3:
+        # A new brand may not inherit the original AI-Agent-Builder draft authority.
+        if set(record) != {"format_version", "brand", "target", "text", "media",
+                           "image_sha256", "logo_git_blob_sha1"} or record["brand"] != "picturefix":
+            raise ValueError("PictureFix requires its complete brand-specific draft.")
+        target = record["target"]
+        if target not in PICTUREFIX_DRAFT_NAMES or accepted_path != PICTUREFIX_DRAFT_NAMES[target]:
+            raise ValueError("PictureFix allows only two fixed PF-01 draft filenames.")
+        if (not isinstance(record["image_sha256"], str)
+                or not re.fullmatch(r"[0-9a-f]{64}", record["image_sha256"])
+                or record["logo_git_blob_sha1"] != PICTUREFIX_LOGO_BLOB):
+            raise ValueError("PictureFix approved source image/logo provenance missing.")
+        media = record["media"]
+        if (not isinstance(media, dict) or set(media) != {"type", "images"}
+                or media.get("type") != "images"
+                or not isinstance(media.get("images"), list) or len(media["images"]) != 1):
+            raise ValueError("PictureFix PF-01 requires exactly one image.")
+        image = media["images"][0]
+        if not isinstance(image, dict) or set(image) != {"url", "alt_text"}:
+            raise ValueError("PictureFix image requires URL and alt text.")
+        url = validate_media_url(image["url"], "images")
+        suffix = url[len(MEDIA_HOST_PREFIX):]
+        commit, slash, media_path = suffix.partition("/")
+        if (not slash or not re.fullmatch(r"[a-f0-9]{40}", commit)
+                or media_path != "media/images/" + PICTUREFIX_IMAGE_NAME):
+            raise ValueError("PictureFix needs a pinned final PF-01 image with original logo.")
+    if fmt not in (1, 2, 3):
         raise ValueError("Unbekanntes Entwurfsformat.")
     target = record["target"]
     assets = parse_assets(raw)
@@ -273,7 +315,7 @@ def parse_assets(raw: bytes) -> list[dict]:
     record = json.loads(raw.decode("utf-8"))
     if record.get("format_version") == 1:
         return []
-    if record.get("format_version") != 2:
+    if record.get("format_version") not in (2, 3):
         raise ValueError("Unbekanntes Entwurfsformat.")
     media = record.get("media")
     if not isinstance(media, dict):
@@ -420,6 +462,56 @@ def verify_auto_image_bytes(draft_path: str, assets: list[dict]) -> None:
         if len(raw) > 10_000_000 or hashlib.sha256(raw).hexdigest() != expected:
             raise RuntimeError("GitHub-Bildinhalt stimmt nicht mit dem freigegebenen Bild überein")
 
+
+
+def verify_picturefix_image_bytes(record: dict, assets: list[dict]) -> None:
+    """Verify the real immutable PNG bytes before any Buffer side effect."""
+    if record.get("format_version") != 3:
+        return
+    if len(assets) != 1 or "image" not in assets[0]:
+        raise RuntimeError("PictureFix needs exactly one original image.")
+    url = assets[0]["image"]["url"]
+    try:
+        with urllib.request.urlopen(urllib.request.Request(
+            url, headers={"User-Agent": "social-assets-picturefix-draft/1.0"}
+        ), timeout=45) as response:
+            if response.status != 200 or response.geturl() != url:
+                raise RuntimeError("PictureFix image redirected or not HTTP 200.")
+            raw_image = response.read(10_000_001)
+    except (urllib.error.HTTPError, urllib.error.URLError) as exc:
+        raise RuntimeError("PictureFix original PNG not accessible.") from exc
+    if (len(raw_image) > 10_000_000 or
+            hashlib.sha256(raw_image).hexdigest() != record["image_sha256"]):
+        raise RuntimeError("PictureFix image SHA-256 verification failed.")
+    if (len(raw_image) < 24 or raw_image[:8] != bytes((137, 80, 78, 71, 13, 10, 26, 10))
+            or raw_image[12:16] != b"IHDR"
+            or (int.from_bytes(raw_image[16:20], "big"),
+                int.from_bytes(raw_image[20:24], "big")) != (1080, 1350)):
+        raise RuntimeError("PictureFix PNG signature/dimensions mismatch.")
+
+
+def verified_picturefix_post(post: object, *, post_id: str, channel_id: str,
+                             target: str, original_text: str) -> str | None:
+    """Independent Buffer GET confirms unpublished image-bearing post."""
+    if not isinstance(post, dict):
+        return None
+    if (post.get("id") != post_id or post.get("channelId") != channel_id
+            or str(post.get("channelService", "")).lower() != target
+            or str(post.get("status", "")).lower() != "draft"
+            or post.get("dueAt") is not None or post.get("text") != original_text):
+        return None
+    media = post.get("assets")
+    if (not isinstance(media, list) or len(media) != 1 or not isinstance(media[0], dict)
+            or str(media[0].get("type", "")).lower() != "image"):
+        return None
+    url = media[0].get("source")
+    if not isinstance(url, str) or len(url) > 1600:
+        return None
+    parsed = urllib.parse.urlsplit(url)
+    if (parsed.scheme != "https" or not parsed.hostname or parsed.username
+            or parsed.password or parsed.port is not None or parsed.fragment):
+        return None
+    return url
 
 
 def platform_metadata(target: str, *, video: bool = False) -> dict | None:
@@ -674,14 +766,26 @@ def send_draft(draft_path: str, text: str, raw: bytes, *, channel_cache: dict | 
     if not all((github_token, buffer_key)):
         raise RuntimeError("GitHub-Token oder BUFFER_API_KEY fehlt.")
 
-    target = json.loads(raw.decode("utf-8"))["target"]
+    record = json.loads(raw.decode("utf-8"))
+    target = record["target"]
+    picturefix = record.get("format_version") == 3
+    caller_brand = os.environ.get("BUFFER_BRAND", "ai-agent-builder")
+    if picturefix:
+        if (caller_brand != "picturefix" or os.environ.get("GITHUB_EVENT_NAME") != "issue_comment"
+                or os.environ.get("GITHUB_ACTOR") != "derJosef-agents"):
+            raise RuntimeError("PictureFix can only use authorized brand draft-only event.")
+    elif caller_brand != "ai-agent-builder":
+        raise RuntimeError("Another brand cannot use PictureFix Buffer credentials.")
     due_at = planned_due_at(draft_path, target)
+    if picturefix and due_at is not None:
+        raise RuntimeError("PictureFix preview cannot carry dueAt.")
     quality = authorize_auto_dated_draft(draft_path) if due_at is not None else None
     channel_id = resolve_channel(buffer_key, target, channel_preference(target),
                                  channel_cache=channel_cache)
     assets = parse_assets(raw)
     verify_media_access(assets)
     verify_auto_image_bytes(draft_path, assets)
+    verify_picturefix_image_bytes(record, assets)
     receipt = receipt_path(draft_path)
     if fetch_receipt(github_token, receipt) is not None:
         raise RuntimeError(
@@ -735,6 +839,26 @@ def send_draft(draft_path: str, text: str, raw: bytes, *, channel_cache: dict | 
         pending["state"] = "verified_prescheduled_draft_not_queued"
     else:
         pending.update({"state": "draft_created", "buffer_post_id": post_id})
+        if picturefix:
+            # Never retry an uncertain Buffer create; record ID BEFORE readback.
+            pending["state"] = "created_requires_independent_check"
+            receipt_sha = put_receipt(
+                github_token, receipt, pending,
+                f"buffer: identify PictureFix preview {draft_path}", sha=receipt_sha,
+            )
+            checked = buffer_graphql(buffer_key, READ_PICTUREFIX_DRAFT, {"id": post_id}).get("post")
+            verified_image = verified_picturefix_post(
+                checked, post_id=post_id, channel_id=channel_id,
+                target=target, original_text=text,
+            )
+            if verified_image is None:
+                raise RuntimeError("ALARM: Buffer failed PictureFix image/draft/dueAt readback.")
+            pending.update({
+                "state": "verified_unpublished_draft_with_image",
+                "channel_id": channel_id, "original_image_sha256": record["image_sha256"],
+                "buffer_asset_url": verified_image, "buffer_due_at": None,
+                "buffer_status": "draft",
+            })
     try:
         put_receipt(
             github_token,
@@ -750,6 +874,9 @@ def send_draft(draft_path: str, text: str, raw: bytes, *, channel_cache: dict | 
         ) from exc
     if due_at is not None:
         print(f"Erfolg: verifizierter Buffer-Draft (Post-ID: {post_id}, dueAt={due_at}). Keine Queue/Publikation.")
+    elif picturefix:
+        print(f"PICTUREFIX_BUFFER_READBACK_PASS Post-ID={post_id}, target={target}, "
+              "status=draft, dueAt=null, image=attached; no queue/publish.")
     else:
         print(f"Erfolg: Buffer-Entwurf angelegt (Post-ID: {post_id}). Keine Planung/Veröffentlichung.")
     print(f"GitHub-Beleg: {receipt}")
