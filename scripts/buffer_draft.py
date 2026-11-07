@@ -488,6 +488,17 @@ def verify_picturefix_image_bytes(record: dict, assets: list[dict]) -> None:
             or (int.from_bytes(raw_image[16:20], "big"),
                 int.from_bytes(raw_image[20:24], "big")) != (1080, 1350)):
         raise RuntimeError("PictureFix PNG signature/dimensions mismatch.")
+    # A matching filename and IHDR header are insufficient: decode and
+    # verify all PNG chunks, including checksums, before Buffer is touched.
+    from io import BytesIO
+    from PIL import Image, UnidentifiedImageError
+    try:
+        with Image.open(BytesIO(raw_image)) as verified:
+            if verified.format != "PNG" or verified.size != (1080, 1350):
+                raise RuntimeError("PictureFix PNG not a valid complete 1080x1350 image.")
+            verified.verify()
+    except (OSError, SyntaxError, ValueError, UnidentifiedImageError) as exc:
+        raise RuntimeError("PictureFix original PNG decoding/integrity failed.") from exc
 
 
 def verified_picturefix_post(post: object, *, post_id: str, channel_id: str,
