@@ -158,3 +158,46 @@ jobs:
             test -n "$BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID" || { echo "PF Pinterest board missing" >&2; exit 1; }
           fi
           python3 scripts/buffer_draft.py --draft "$draft" --send
+
+  picturefix-preflight:
+    # Read-only inspection of the separate PictureFix Buffer account, without
+    # any image, draft, receipt, queue, schedule, or publication mutation.
+    if: >-
+      ${{
+        github.event_name == 'issue_comment' &&
+        github.ref == 'refs/heads/main' &&
+        github.actor == 'derJosef-agents' &&
+        github.event.comment.user.login == 'derJosef-agents' &&
+        github.event.issue.number == 64 &&
+        !github.event.issue.pull_request &&
+        github.event.issue.user.login == 'derJosef-agents' &&
+        github.event.issue.title == 'PICTUREFIX BUFFER DRAFT CONTROL' &&
+        github.event.comment.body == 'PF01_PREFLIGHT_ONLY'
+      }}
+    permissions:
+      contents: read
+    name: PictureFix PF-01 – isolated read-only API/channel/board preflight
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    steps:
+      - name: Checkout vetted adapter on main without stored credentials
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Validate PictureFix account and three channels without writes
+        shell: bash
+        env:
+          BUFFER_BRAND: picturefix
+          BUFFER_API_KEY: ${{ secrets.BUFFER_PICTUREFIX_API_KEY }}
+          BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_FACEBOOK_CHANNEL_ID }}
+          BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_INSTAGRAM_CHANNEL_ID }}
+          BUFFER_PINTEREST_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_PINTEREST_CHANNEL_ID }}
+          BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID: ${{ secrets.BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID }}
+        run: |
+          set -euo pipefail
+          python3 scripts/buffer_draft.py --check-picturefix-connection
