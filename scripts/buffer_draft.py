@@ -829,6 +829,35 @@ def check_connection() -> None:
     print("Nur Buffer-Daten gelesen. Kein Entwurf erstellt, nichts eingeplant oder veröffentlicht.")
 
 
+def check_picturefix_connection() -> None:
+    """Read-only tenant preflight: never reserves receipts or calls createPost."""
+    if (os.environ.get("GITHUB_REPOSITORY") != REPOSITORY
+            or os.environ.get("GITHUB_REF") != "refs/heads/main"
+            or os.environ.get("GITHUB_EVENT_NAME") != "issue_comment"
+            or os.environ.get("GITHUB_ACTOR") != "derJosef-agents"
+            or os.environ.get("BUFFER_BRAND") != "picturefix"):
+        raise RuntimeError("PictureFix tenant preflight only allowed by the control issue on main.")
+    token = os.environ.get("BUFFER_API_KEY", "")
+    if not token:
+        raise RuntimeError("PictureFix's dedicated Buffer API key is missing.")
+    channel_ids = {}
+    for target in ("facebook", "instagram", "pinterest"):
+        channel_id = channel_preference(target)
+        if not channel_id:
+            raise RuntimeError("A dedicated PictureFix channel ID is missing.")
+        channel_ids[target] = channel_id
+    board = os.environ.get("BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID", "").strip()
+    if not board:
+        raise RuntimeError("PictureFix Pinterest board ID is missing.")
+    cache = {}
+    for target, channel_id in channel_ids.items():
+        resolved = resolve_channel(token, target, channel_id, channel_cache=cache)
+        if resolved != channel_id:
+            raise RuntimeError("PictureFix channel mismatch.")
+    verify_picturefix_board(token, channel_ids["pinterest"], board)
+    print("PICTUREFIX_READ_ONLY_PREFLIGHT_PASS: Facebook, Instagram, Pinterest, board; no posts, receipts, queue or schedule.")
+
+
 def send_draft(draft_path: str, text: str, raw: bytes, *, channel_cache: dict | None = None) -> None:
     if os.environ.get("GITHUB_REPOSITORY") != REPOSITORY or os.environ.get("GITHUB_REF") != "refs/heads/main":
         raise RuntimeError("Live-Übertragung nur durch GitHub Actions auf social-assets/main.")
@@ -966,18 +995,28 @@ def send_draft(draft_path: str, text: str, raw: bytes, *, channel_cache: dict | 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Buffer: geprüfte Entwürfe für drei Kanäle übertragen.")
-    parser.add_argument("--draft", action="append", required=True,
+    parser.add_argument("--draft", action="append",
                         help="JSON unter drafts/ oder ready-for-buffer/ (mehrfach für einen Batch)")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true", help="Nur lokal prüfen; keine API-Aufrufe.")
     mode.add_argument("--check-connection", action="store_true", help="Buffer-Kanäle nur lesend prüfen.")
+    mode.add_argument("--check-picturefix-connection", action="store_true",
+                      help="Drei PictureFix-Kanäle und Pinterest-Board nur lesend prüfen.")
     mode.add_argument("--send", action="store_true", help="Explizit als Buffer-Entwurf übertragen.")
     args = parser.parse_args()
 
     try:
-        if args.check_connection:
+        if args.check_picturefix_connection:
+            if args.draft:
+                raise ValueError("PictureFix preflight does not accept draft paths.")
+            check_picturefix_connection()
+        elif args.check_connection:
+            if not args.draft:
+                raise ValueError("An existing draft path is required.")
             check_connection()
         else:
+            if not args.draft:
+                raise ValueError("At least one draft path is required.")
             # Validate the full batch before sending the first draft.
             prepared = [read_draft(path) for path in args.draft]
             if len({path for path, _, _ in prepared}) != len(prepared):
