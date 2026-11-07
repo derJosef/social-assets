@@ -9,6 +9,7 @@ import os
 import struct
 import sys
 import tempfile
+from PIL import Image
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -114,9 +115,9 @@ class PictureFixBufferBridgeTests(unittest.TestCase):
 
     def test_pixel_and_sha_verification_requires_actual_png_bytes(self):
         # Synthetic fixture: immutable URL + exact byte hash + PNG IHDR.
-        raw_png = (bytes((137, 80, 78, 71, 13, 10, 26, 10)) +
-                   bytes((0, 0, 0, 13)) + b"IHDR" +
-                   struct.pack(">II", 1080, 1350) + b"test")
+        image_bytes = io.BytesIO()
+        Image.new("RGB", (1080, 1350), (216, 198, 173)).save(image_bytes, format="PNG")
+        raw_png = image_bytes.getvalue()
         obj = draft(image_sha256=hashlib.sha256(raw_png).hexdigest())
         assets = buffer.parse_assets(json.dumps(obj).encode())
         with mock.patch.object(buffer.urllib.request, "urlopen",
@@ -128,14 +129,25 @@ class PictureFixBufferBridgeTests(unittest.TestCase):
                 buffer.verify_picturefix_image_bytes(obj, assets)
 
     def test_reject_wrong_png_dimensions_even_when_sha_matches(self):
-        data = (bytes((137, 80, 78, 71, 13, 10, 26, 10)) +
-                bytes((0, 0, 0, 13)) + b"IHDR" +
-                struct.pack(">II", 1000, 1500) + b"test")
+        image_bytes = io.BytesIO()
+        Image.new("RGB", (1000, 1500), (216, 198, 173)).save(image_bytes, format="PNG")
+        data = image_bytes.getvalue()
         obj = draft(image_sha256=hashlib.sha256(data).hexdigest())
         assets = buffer.parse_assets(json.dumps(obj).encode())
         with mock.patch.object(buffer.urllib.request, "urlopen",
                                return_value=MockImageResponse(data)):
             with self.assertRaisesRegex(RuntimeError, "dimensions"):
+                buffer.verify_picturefix_image_bytes(obj, assets)
+
+    def test_reject_truncated_png_even_if_sha_and_ihdr_match(self):
+        image_bytes = io.BytesIO()
+        Image.new("RGB", (1080, 1350), (216, 198, 173)).save(image_bytes, format="PNG")
+        cropped = image_bytes.getvalue()[:56]
+        obj = draft(image_sha256=hashlib.sha256(cropped).hexdigest())
+        assets = buffer.parse_assets(json.dumps(obj).encode())
+        with mock.patch.object(buffer.urllib.request, "urlopen",
+                               return_value=MockImageResponse(cropped)):
+            with self.assertRaisesRegex(RuntimeError, "integrity"):
                 buffer.verify_picturefix_image_bytes(obj, assets)
 
     def test_independent_readback_requires_draft_no_due_at_and_attached_image(self):
