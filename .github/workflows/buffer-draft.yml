@@ -196,3 +196,42 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/buffer_draft.py --check-picturefix-connection
+
+  sticken-lasern-preflight:
+    # Business-specific read-only account authentication. Existing Buffer
+    # draft and PictureFix jobs never receive this credential.
+    if: >-
+      ${{
+        github.event_name == 'issue_comment' &&
+        github.ref == 'refs/heads/main' &&
+        github.actor == 'derJosef-agents' &&
+        github.event.comment.user.login == 'derJosef-agents' &&
+        github.event.issue.number == 69 &&
+        !github.event.issue.pull_request &&
+        github.event.issue.user.login == 'derJosef-agents' &&
+        github.event.issue.title == 'STICKEN-LASERN BUFFER READ ONLY CONTROL' &&
+        github.event.comment.body == 'SL_PREFLIGHT_ONLY'
+      }}
+    permissions:
+      contents: read
+    name: Sticken-Lasern – isolated read-only Buffer authentication
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    steps:
+      - name: Checkout existing Buffer adapter from main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Verify only the Sticken-Lasern Buffer organization
+        env:
+          BUFFER_BRAND: sticken-lasern
+          BUFFER_API_KEY: ${{ secrets.BUFFER_STICKEN_LASERN_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/buffer_draft.py --check-sticken-lasern-connection
