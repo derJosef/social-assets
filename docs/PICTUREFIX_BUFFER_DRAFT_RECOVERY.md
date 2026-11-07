@@ -19,11 +19,12 @@ Stand: 2026-11-07. Nur eine **technische Erweiterung** von `scripts/buffer_draft
 4. Finale 1080×1350-PNG `PictureFix_PF01_Facebook_Instagram_1080x1350_zur_Freigabe.png` mit tatsächlichem SHA-256 im **bestehenden** öffentlichen `derJosef/social-assets/media/images/` über autorisierten Branch/PR dauerhaft sichern; anschließend **Git-Blob und Dateibytes unabhängig zurücklesen**. Keine Platzhaltergrafik, keine behauptete SHA ohne die echten Bytes. Für Pinterest das ebenfalls im vorhandenen Renderer erzeugte finale `PictureFix_PF01_Pinterest_1000x1500_zur_Freigabe.png` eigenständig in `media/images/` sichern und auf **1000×1500** und SHA-256 prüfen. Der Buffer-Adapter unterstützt die dritte PictureFix-PF01-Entwurfsvariante auf dem PR-Branch; es erfolgt vor dem echten `createPost` eine Buffer-Pinnwandprüfung.
 5. Den **vollständigen** Commit-SHA der finalen Public-Media-Datei als unveränderlichen URL-Ref verwenden (kein `main`-Ref im PictureFix-Draft).
 
-## Phase 2 – getrennte PictureFix-API-Berechtigungen (noch nicht verifiziert)
+## Phase 2 – getrennte PictureFix-API-Berechtigungen
 
-- Nur aus der autorisierten PictureFix-Buffer-Organisation den eigenen Token und die **expliziten Kanal-IDs** ermitteln. GitHub-Actions-Secrets **`BUFFER_PICTUREFIX_API_KEY`**, **`BUFFER_PICTUREFIX_FACEBOOK_CHANNEL_ID`**, **`BUFFER_PICTUREFIX_INSTAGRAM_CHANNEL_ID`**, **`BUFFER_PICTUREFIX_PINTEREST_CHANNEL_ID`** sowie **`BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID`** durch zuständigen Berechtigten setzen. Secret-Inhalte nie in PR, Issue, Logs oder `brand.json`. **Keine** Übernahme von `BUFFER_API_KEY` / AI-Agent-Builder-Secrets. Der bestehende AI-Agent-Builder-Job behält seine bisherige Umgebung.
-- Neue Secrets und PictureFix-Channel-ID-Zuordnung gehören zum GitHub-Repo-`social-assets`. Bei fehlender Berechtigung zum Setzen der Secrets nur diesen Freigabepunkt melden, kein anderes Konto oder Credential nutzen.
-- Der ungemergte `social-assets` Multi-Marken-Entwurf PR #41 ist keine aktive produktive Markenisolierung; seine Regeln nicht duplizieren. Der bestehende Buffer-Adapter enthält hier nur den minimalen fest adressierten PictureFix-PF01-Pilot-Gate.
+- Im GitHub-Repo `derJosef/social-assets` ist **`BUFFER_PICTUREFIX_API_KEY`** seit dem erfolgreichen Token-Environment-Nachweis aus dem Run #42372149609 als gesetzt bestätigt. Es handelt sich um einen **PictureFix-eigenen** API-Schlüssel, niemals um den AI-Agent-Builder-Schlüssel. Keine Secret-Werte in PR, Issue oder Logs übertragen.
+- **Kanal-IDs:** Werden ab dem aktualisierten Adapter mit diesem PictureFix-Schlüssel live über die Buffer-API ermittelt und strikt gegen die eindeutige Organisation und alle drei dokumentierten Profile geprüft. Die früher aufgeführten `BUFFER_PICTUREFIX_FACEBOOK_CHANNEL_ID`, `BUFFER_PICTUREFIX_INSTAGRAM_CHANNEL_ID` und `BUFFER_PICTUREFIX_PINTEREST_CHANNEL_ID` sind daher **optional**; falls gesetzt, müssen sie mit dem Readback übereinstimmen.
+- **Pinterest-Board:** `BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID` ist nur dann erforderlich, wenn mehr als eine Pinnwand zum nachgewiesenen PictureFix-Kanal gehört. Bei genau einer Pinnwand wird deren ID im Runner intern eindeutig ermittelt; bei Mehrdeutigkeit bricht er ab, statt willkürlich auszuwählen.
+- Die getrennte API-Probe `PF01_PREFLIGHT_ONLY` prüft die tatsächliche Kontoverbindung vor jeder Entwurfserstellung. Der ungemergte Multi-Marken-Entwurf PR #41 ist keine aktive Berechtigung; der geprüfte PF-01-Pilot bleibt eng abgegrenzt.
 
 ## Phase 3 – exakt drei formatierte PF-01-Drafts vorbereiten
 
@@ -50,6 +51,21 @@ Dateinamen **`drafts/picturefix-pf01-facebook.json`**, **`drafts/picturefix-pf01
 ```
 
 Für Instagram `target` und Text aus PR #65 separat einsetzen. Für Pinterest `target: "pinterest"`, die abweichende finale Bilddatei `PictureFix_PF01_Pinterest_1000x1500_zur_Freigabe.png` mit **echtem gepinntem Commit und eigenem SHA-256**, den Pinterest-Text von PF-01 sowie die zusätzlichen Pflichtfelder `"pinterest_title": "Kleine Fotos, große Erinnerungen – alte Familienfotos bewahren"` und `"pinterest_url": "https://picturefix.de"` verwenden. Das Pinterest-Board ist **kein Freitext- oder willkürliches Eingabefeld**: den für den tatsächlich mit PictureFix verbundenen Kanal gemeldeten `metadata.boards[].serviceId` prüfen und nur die zutreffende Pinnwand über das separate GitHub Secret `BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID` zulassen. Fehlendes Board blockiert vor dem Buffer-Schreibaufruf. Offizielle Quelle: <https://developers.buffer.com/types/PinterestPostMetadataInput.html>. **Die Platzhalter sind NICHT ausführbar** und dürfen niemals als echte Hashes/URLs ausgegeben werden. Beide Dateien mit ihrem Bild im Branch prüfen und als PR mergen lassen. Keine `dueAt`, `scheduled`- oder Publikationsfelder. Website-Artikel **PFG-01 bleibt ein eigenständiger Website-Entwurf**; kein erfundener Artikel-Link.
+
+## Vereinfachter Kanal- und Pinnwandnachweis (07.11.2026)
+
+Der PictureFix-spezifische Buffer-API-Key **ist in GitHub erfolgreich als Secret vorhanden**: echte read-only Action <https://github.com/derJosef/social-assets/actions/runs/42372149609> meldete, dass der Key gesetzt ist, aber die vier separaten Kanal-/Pinnwand-IDs leer sind. Ein vorangegangener Lauf #42372037928 wurde noch vor Jobstart abgebrochen; daraus keine API-Aussage ableiten.
+
+**Neue minimalinvasive Wiederherstellung auf geprüftem Branch:** Die bestehenden Kanal-IDs müssen künftig **nicht mehr manuell als Secrets** hinterlegt werden, sofern Buffer über den **eigenen PictureFix-Token** diese eindeutig zurückgibt:
+- Exakt **eine** Organisation namens `PictureFix` mit `channelCount = 3`.
+- Exakt drei aktive, nicht gesperrte Kanäle mit Namen `PictureFix Fotorestaurierung` (Facebook), `picturefix.de` (Instagram) und `picturefixde` (Pinterest), alle derselben Organisation zugeordnet.
+- Kein anderes Konto oder zusätzliche Profile; jede Abweichung blockiert den API-Write. Falls optionale, früher hinterlegte Kanal-IDs vorhanden sind, müssen sie exakt mit dem Live-Ergebnis übereinstimmen.
+- Pinterest: Bei **genau einer** per API mit dem PictureFix-Kanal verifizierten Pinnwand wird diese automatisch verwendet. Bei mehreren Pinnwänden bleibt das separate Secret `BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID` **erforderlich**, um eine Fehlzuordnung zu vermeiden. Keine Ausgabe von geheimen Token- oder API-Kanal-IDs in öffentlich lesbaren Workflow-Logs.
+- Der `PF01_PREFLIGHT_ONLY`-Check läuft weiterhin ohne Medien und ohne Schreibmutation. Die drei tatsächlichen Draft-Triggers bleiben unverändert auf Issue #64 beschränkt.
+
+Damit wird die frühere technische Forderung nach fünf manuell zu pflegenden GitHub-Secrets zu einem **dedizierten PictureFix-API-Key** plus nur bei mehrdeutiger Pinnwand einer expliziten Boardauswahl reduziert. Diese Änderung lässt die vorhandenen AI-Agent-Builder-Buffer-Pfade unverändert, keine Generierungs-, Restaurierungs-, Slider- oder Zahlungslogik angefasst.
+
+**Die Produktionsabnahme kann erst nach echtem erfolgreichem Preflight und später Buffer-Draft-Readback bestätigt werden.** Kein automatischer Buffer-Draft durch den Preflight. Dokumentation: <https://developers.buffer.com/guides/data-model>, <https://developers.buffer.com/types/Channel.html> und <https://developers.buffer.com/types/PinterestPostMetadataInput.html>.
 
 ## Phase 3a – PictureFix-Konto vor dem Bildtransfer nur LESEND prüfen
 

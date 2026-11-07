@@ -106,6 +106,26 @@ PICTUREFIX_IMAGE_SIZES = {
     "instagram": (1080, 1350),
     "pinterest": (1000, 1500),
 }
+# Buffer's public GraphQL schema exposes organization names and channel names.
+# Discovery fails closed unless the PictureFix account has the exact approved
+# organization and three connected profiles. Never enumerate AAB channels.
+PICTUREFIX_EXPECTED_PROFILES = {
+    "facebook": "PictureFix Fotorestaurierung",
+    "instagram": "picturefix.de",
+    "pinterest": "picturefixde",
+}
+GET_PICTUREFIX_ORGANIZATIONS = """
+query PictureFixOrganizations {
+  account { organizations { id name channelCount } }
+}
+"""
+GET_PICTUREFIX_CHANNELS = """
+query PictureFixChannels($organizationId: OrganizationId!) {
+  channels(input: { organizationId: $organizationId }) {
+    id name service organizationId isDisconnected isLocked
+  }
+}
+"""
 GET_PICTUREFIX_PINTEREST_BOARDS = """
 query PictureFixPinterestBoards($id: ChannelId!) {
   channel(input: { id: $id }) {
@@ -684,6 +704,84 @@ def channel_preference(target: str) -> str:
     return os.environ.get(name, "").strip()
 
 
+def discover_picturefix_channels(token: str, *, channel_cache: dict | None = None) -> dict:
+    """Only accept the one genuine PictureFix organization and three known profiles.
+
+    Returns Buffer-internal IDs without persisting, printing or guessing them.
+    Separate AAB credentials, channels and workflows remain unaffected.
+    """
+    if channel_cache is not None and "picturefix_verified" in channel_cache:
+        return channel_cache["picturefix_verified"]
+    account = buffer_graphql(token, GET_PICTUREFIX_ORGANIZATIONS, {}).get("account")
+    orgs = account.get("organizations") if isinstance(account, dict) else None
+    if (not isinstance(orgs, list) or len(orgs) != 1
+            or not isinstance(orgs[0], dict)
+            or orgs[0].get("name") != "PictureFix"
+            or orgs[0].get("channelCount") != 3):
+        raise RuntimeError("Dedicated Buffer token must belong to the single 3-channel PictureFix organization.")
+    org_id = orgs[0].get("id")
+    if not isinstance(org_id, str) or not org_id:
+        raise RuntimeError("Invalid PictureFix Buffer organization ID.")
+    channels = buffer_graphql(token, GET_PICTUREFIX_CHANNELS,
+                              {"organizationId": org_id}).get("channels")
+    if not isinstance(channels, list) or len(channels) != 3:
+        raise RuntimeError("PictureFix must have exactly three accessible channels.")
+    verified = {}
+    for channel in channels:
+        if not isinstance(channel, dict):
+            raise RuntimeError("Unexpected PictureFix channel data.")
+        service = channel.get("service")
+        name = channel.get("name")
+        channel_id = channel.get("id")
+        if (service not in PICTUREFIX_EXPECTED_PROFILES
+                or name != PICTUREFIX_EXPECTED_PROFILES[service]
+                or channel.get("organizationId") != org_id
+                or channel.get("isDisconnected") is not False
+                or channel.get("isLocked") is not False
+                or not isinstance(channel_id, str) or not channel_id
+                or service in verified):
+            raise RuntimeError("A PictureFix channel does not match the confirmed profile or is not usable.")
+        configured = channel_preference(service)
+        if configured and configured != channel_id:
+            raise RuntimeError("Configured PictureFix channel ID disagrees with live Buffer channel.")
+        verified[service] = channel_id
+    if set(verified) != set(PICTUREFIX_EXPECTED_PROFILES):
+        raise RuntimeError("One of the three PictureFix channel profiles is missing.")
+    if len(set(verified.values())) != 3:
+        raise RuntimeError("PictureFix channel ID collision.")
+    if channel_cache is not None:
+        channel_cache["picturefix_verified"] = verified
+    return verified
+
+
+def discover_picturefix_board(token: str, channel_id: str) -> str:
+    """Use an explicitly configured board or the *single* available board.
+
+    Multiple boards need an explicit user choice: never pin to an arbitrary one.
+    """
+    response = buffer_graphql(token, GET_PICTUREFIX_PINTEREST_BOARDS, {"id": channel_id})
+    channel = response.get("channel")
+    metadata = channel.get("metadata") if isinstance(channel, dict) else None
+    if (not isinstance(channel, dict) or channel.get("id") != channel_id
+            or not isinstance(metadata, dict)
+            or not isinstance(metadata.get("boards"), list)):
+        raise RuntimeError("Cannot verify Pinterest board ownership in PictureFix.")
+    boards = metadata["boards"]
+    ids = [board["serviceId"] for board in boards
+           if isinstance(board, dict) and isinstance(board.get("serviceId"), str)
+           and board["serviceId"].strip()]
+    if len(ids) != len(boards) or len(set(ids)) != len(ids) or not ids:
+        raise RuntimeError("Invalid or missing PictureFix Pinterest boards.")
+    explicit = os.environ.get("BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID", "").strip()
+    if explicit:
+        if explicit not in ids:
+            raise RuntimeError("Configured Pinterest board is not connected to PictureFix.")
+        return explicit
+    if len(ids) != 1:
+        raise RuntimeError("PictureFix has multiple Pinterest boards; the chosen board must be configured.")
+    return ids[0]
+
+
 def verify_picturefix_board(token: str, channel_id: str, board_service_id: str) -> None:
     """Pinterest requires a selected board, verified against the actual PictureFix channel."""
     if (not isinstance(board_service_id, str) or not board_service_id.strip()
@@ -830,7 +928,7 @@ def check_connection() -> None:
 
 
 def check_picturefix_connection() -> None:
-    """Read-only tenant preflight: never reserves receipts or calls createPost."""
+    """Read-only tenant preflight: no receipts, drafts, posts or publishing."""
     if (os.environ.get("GITHUB_REPOSITORY") != REPOSITORY
             or os.environ.get("GITHUB_REF") != "refs/heads/main"
             or os.environ.get("GITHUB_EVENT_NAME") != "issue_comment"
@@ -840,22 +938,10 @@ def check_picturefix_connection() -> None:
     token = os.environ.get("BUFFER_API_KEY", "")
     if not token:
         raise RuntimeError("PictureFix's dedicated Buffer API key is missing.")
-    channel_ids = {}
-    for target in ("facebook", "instagram", "pinterest"):
-        channel_id = channel_preference(target)
-        if not channel_id:
-            raise RuntimeError("A dedicated PictureFix channel ID is missing.")
-        channel_ids[target] = channel_id
-    board = os.environ.get("BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID", "").strip()
-    if not board:
-        raise RuntimeError("PictureFix Pinterest board ID is missing.")
-    cache = {}
-    for target, channel_id in channel_ids.items():
-        resolved = resolve_channel(token, target, channel_id, channel_cache=cache)
-        if resolved != channel_id:
-            raise RuntimeError("PictureFix channel mismatch.")
-    verify_picturefix_board(token, channel_ids["pinterest"], board)
-    print("PICTUREFIX_READ_ONLY_PREFLIGHT_PASS: Facebook, Instagram, Pinterest, board; no posts, receipts, queue or schedule.")
+    channels = discover_picturefix_channels(token)
+    discover_picturefix_board(token, channels["pinterest"])
+    print("PICTUREFIX_READ_ONLY_PREFLIGHT_PASS: separate PictureFix org, three exact active profiles and Pinterest board; no posts, receipts, queue or schedule.")
+
 
 
 def send_draft(draft_path: str, text: str, raw: bytes, *, channel_cache: dict | None = None) -> None:
@@ -879,15 +965,15 @@ def send_draft(draft_path: str, text: str, raw: bytes, *, channel_cache: dict | 
     due_at = planned_due_at(draft_path, target)
     if picturefix and due_at is not None:
         raise RuntimeError("PictureFix preview cannot carry dueAt.")
-    if picturefix and not channel_preference(target):
-        raise RuntimeError("Explicit PictureFix Buffer channel ID is required; no channel guessing.")
     quality = authorize_auto_dated_draft(draft_path) if due_at is not None else None
-    channel_id = resolve_channel(buffer_key, target, channel_preference(target),
-                                 channel_cache=channel_cache)
+    if picturefix:
+        channel_id = discover_picturefix_channels(buffer_key, channel_cache=channel_cache)[target]
+    else:
+        channel_id = resolve_channel(buffer_key, target, channel_preference(target),
+                                     channel_cache=channel_cache)
     pinterest_board_id = ""
     if picturefix and target == "pinterest":
-        pinterest_board_id = os.environ.get("BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID", "").strip()
-        verify_picturefix_board(buffer_key, channel_id, pinterest_board_id)
+        pinterest_board_id = discover_picturefix_board(buffer_key, channel_id)
     assets = parse_assets(raw)
     verify_media_access(assets)
     verify_auto_image_bytes(draft_path, assets)

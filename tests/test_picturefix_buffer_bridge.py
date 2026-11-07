@@ -195,8 +195,10 @@ class PictureFixBufferBridgeTests(unittest.TestCase):
                 buffer.send_draft("drafts/picturefix-pf01-facebook.json",
                                   draft()["text"], raw)
         env["BUFFER_BRAND"] = "picturefix"
-        with mock.patch.dict(os.environ, env, clear=True):
-            with self.assertRaisesRegex(RuntimeError, "channel ID"):
+        with (mock.patch.dict(os.environ, env, clear=True),
+              mock.patch.object(buffer, "discover_picturefix_channels",
+                                side_effect=RuntimeError("PictureFix organization mismatch"))):
+            with self.assertRaisesRegex(RuntimeError, "organization mismatch"):
                 buffer.send_draft("drafts/picturefix-pf01-facebook.json",
                                   draft()["text"], raw)
 

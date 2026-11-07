@@ -149,14 +149,9 @@ jobs:
           esac
           test -n "$BUFFER_API_KEY" || { echo "Dedicated PictureFix API key not configured" >&2; exit 1; }
           # No implicit fall back to the AI-Agent-Builder Buffer credentials.
-          if [[ "$TRIGGER" == "PF01_FACEBOOK_DRAFT_ONLY" ]]; then
-            test -n "$BUFFER_FACEBOOK_CHANNEL_ID" || { echo "PF Facebook channel ID missing" >&2; exit 1; }
-          elif [[ "$TRIGGER" == "PF01_INSTAGRAM_DRAFT_ONLY" ]]; then
-            test -n "$BUFFER_INSTAGRAM_CHANNEL_ID" || { echo "PF Instagram channel ID missing" >&2; exit 1; }
-          else
-            test -n "$BUFFER_PINTEREST_CHANNEL_ID" || { echo "PF Pinterest channel ID missing" >&2; exit 1; }
-            test -n "$BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID" || { echo "PF Pinterest board missing" >&2; exit 1; }
-          fi
+          # Brand ownership and exact three social handles are verified live
+          # by the adapter using the dedicated token; configured IDs, if any,
+          # must still match. Multiple Pinterest boards require a selected ID.
           python3 scripts/buffer_draft.py --draft "$draft" --send
 
   picturefix-preflight:
