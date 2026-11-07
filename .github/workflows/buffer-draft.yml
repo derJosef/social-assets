@@ -1,6 +1,10 @@
 name: Buffer – LinkedIn-Entwurf
 
 on:
+  # Dispatch from a trusted, numbered control issue because the connected
+  # GitHub app exposes issue comments but not workflow_dispatch.
+  issue_comment:
+    types: [created]
   workflow_dispatch:
     inputs:
       draft_file:
@@ -29,6 +33,7 @@ concurrency:
 
 jobs:
   draft:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     name: Nur Entwurf, keine Veröffentlichung
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -68,6 +73,7 @@ jobs:
           BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
           BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_FACEBOOK_CHANNEL_ID }}
           BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_INSTAGRAM_CHANNEL_ID }}
+          BUFFER_BRAND: ai-agent-builder
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
@@ -82,3 +88,116 @@ jobs:
           else
             python3 scripts/buffer_draft.py --draft "$DRAFT_FILE" --dry-run
           fi
+
+  picturefix-preview:
+    # Exactly issue #64, created by the designated GitHub agents identity.
+    # No workflow_dispatch parameters, user-selected ref, generic path, dueAt,
+    # queue or publishing interface. Code is checked out from protected main.
+    if: >-
+      ${{
+        github.event_name == 'issue_comment' &&
+        github.ref == 'refs/heads/main' &&
+        github.actor == 'derJosef-agents' &&
+        github.event.comment.user.login == 'derJosef-agents' &&
+        github.event.issue.number == 64 &&
+        !github.event.issue.pull_request &&
+        github.event.issue.user.login == 'derJosef-agents' &&
+        github.event.issue.title == 'PICTUREFIX BUFFER DRAFT CONTROL' &&
+        (
+          github.event.comment.body == 'PF01_FACEBOOK_DRAFT_ONLY' ||
+          github.event.comment.body == 'PF01_INSTAGRAM_DRAFT_ONLY' ||
+          github.event.comment.body == 'PF01_PINTEREST_DRAFT_ONLY'
+        )
+      }}
+    name: PictureFix PF-01 – only unpublished draft + image readback
+    runs-on: ubuntu-slim
+    timeout-minutes: 6
+    steps:
+      - name: Verified Buffer integration from protected main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Verify real PictureFix PNG structure
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0'
+
+      - name: Send exactly one approved PF-01 image-bearing draft
+        shell: bash
+        env:
+          BUFFER_BRAND: picturefix
+          BUFFER_API_KEY: ${{ secrets.BUFFER_PICTUREFIX_API_KEY }}
+          BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_FACEBOOK_CHANNEL_ID }}
+          BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_INSTAGRAM_CHANNEL_ID }}
+          BUFFER_PINTEREST_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_PINTEREST_CHANNEL_ID }}
+          BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID: ${{ secrets.BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+          TRIGGER: ${{ github.event.comment.body }}
+        run: |
+          set -euo pipefail
+          # The trigger is an exact allowlist value, never executed as code.
+          case "$TRIGGER" in
+            PF01_FACEBOOK_DRAFT_ONLY) draft="drafts/picturefix-pf01-facebook.json" ;;
+            PF01_INSTAGRAM_DRAFT_ONLY) draft="drafts/picturefix-pf01-instagram.json" ;;
+            PF01_PINTEREST_DRAFT_ONLY) draft="drafts/picturefix-pf01-pinterest.json" ;;
+            *) echo "Disallowed PictureFix trigger" >&2; exit 1 ;;
+          esac
+          test -n "$BUFFER_API_KEY" || { echo "Dedicated PictureFix API key not configured" >&2; exit 1; }
+          # No implicit fall back to the AI-Agent-Builder Buffer credentials.
+          if [[ "$TRIGGER" == "PF01_FACEBOOK_DRAFT_ONLY" ]]; then
+            test -n "$BUFFER_FACEBOOK_CHANNEL_ID" || { echo "PF Facebook channel ID missing" >&2; exit 1; }
+          elif [[ "$TRIGGER" == "PF01_INSTAGRAM_DRAFT_ONLY" ]]; then
+            test -n "$BUFFER_INSTAGRAM_CHANNEL_ID" || { echo "PF Instagram channel ID missing" >&2; exit 1; }
+          else
+            test -n "$BUFFER_PINTEREST_CHANNEL_ID" || { echo "PF Pinterest channel ID missing" >&2; exit 1; }
+            test -n "$BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID" || { echo "PF Pinterest board missing" >&2; exit 1; }
+          fi
+          python3 scripts/buffer_draft.py --draft "$draft" --send
+
+  picturefix-preflight:
+    # Read-only inspection of the separate PictureFix Buffer account, without
+    # any image, draft, receipt, queue, schedule, or publication mutation.
+    if: >-
+      ${{
+        github.event_name == 'issue_comment' &&
+        github.ref == 'refs/heads/main' &&
+        github.actor == 'derJosef-agents' &&
+        github.event.comment.user.login == 'derJosef-agents' &&
+        github.event.issue.number == 64 &&
+        !github.event.issue.pull_request &&
+        github.event.issue.user.login == 'derJosef-agents' &&
+        github.event.issue.title == 'PICTUREFIX BUFFER DRAFT CONTROL' &&
+        github.event.comment.body == 'PF01_PREFLIGHT_ONLY'
+      }}
+    permissions:
+      contents: read
+    name: PictureFix PF-01 – isolated read-only API/channel/board preflight
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    steps:
+      - name: Checkout vetted adapter on main without stored credentials
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Validate PictureFix account and three channels without writes
+        shell: bash
+        env:
+          BUFFER_BRAND: picturefix
+          BUFFER_API_KEY: ${{ secrets.BUFFER_PICTUREFIX_API_KEY }}
+          BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_FACEBOOK_CHANNEL_ID }}
+          BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_INSTAGRAM_CHANNEL_ID }}
+          BUFFER_PINTEREST_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_PINTEREST_CHANNEL_ID }}
+          BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID: ${{ secrets.BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID }}
+        run: |
+          set -euo pipefail
+          python3 scripts/buffer_draft.py --check-picturefix-connection
