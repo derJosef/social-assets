@@ -125,9 +125,14 @@ class PictureFixAutodiscoveryTests(unittest.TestCase):
                 "BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID": "someone-elses-board"
             })
 
+    def test_empty_boards_have_actionable_diagnosis(self):
+        def clear_boards(d):
+            d["boards"]["channel"]["metadata"]["boards"] = []
+        with self.assertRaisesRegex(RuntimeError, "board list is empty"):
+            self.discover(clear_boards)
+
     def test_invalid_boards_are_rejected(self):
         for corrupt in (
-            lambda d: d["boards"]["channel"]["metadata"].update(boards=[]),
             lambda d: d["boards"]["channel"]["metadata"].update(boards=[{}]),
             lambda d: d["boards"]["channel"]["metadata"].update(
                 boards=[{"serviceId": "pf-board"}, {"serviceId": "pf-board"}]),

@@ -781,11 +781,13 @@ def discover_picturefix_board(token: str, channel_id: str) -> str:
             or not isinstance(metadata.get("boards"), list)):
         raise RuntimeError("Cannot verify Pinterest board ownership in PictureFix.")
     boards = metadata["boards"]
+    if not boards:
+        raise RuntimeError("PictureFix Pinterest board list is empty in Buffer API; refresh the Pinterest channel.")
     ids = [board["serviceId"] for board in boards
            if isinstance(board, dict) and isinstance(board.get("serviceId"), str)
            and board["serviceId"].strip()]
-    if len(ids) != len(boards) or len(set(ids)) != len(ids) or not ids:
-        raise RuntimeError("Invalid or missing PictureFix Pinterest boards.")
+    if len(ids) != len(boards) or len(set(ids)) != len(ids):
+        raise RuntimeError("PictureFix Pinterest board metadata is incomplete or duplicated.")
     explicit = os.environ.get("BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID", "").strip()
     if explicit:
         if explicit not in ids:
