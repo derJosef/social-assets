@@ -978,8 +978,12 @@ def check_sticken_lasern_connection() -> None:
     )
 
 
-def check_picturefix_connection() -> None:
-    """Read-only tenant preflight: no receipts, drafts, posts or publishing."""
+def check_picturefix_connection(*, require_pinterest_board: bool = True) -> None:
+    """Read-only tenant preflight: no receipts, drafts, posts or publishing.
+
+    A targeted FB/IG health check can report independently of Pinterest boards.
+    Pinterest delivery still requires its separate board check without exception.
+    """
     if (os.environ.get("GITHUB_REPOSITORY") != REPOSITORY
             or os.environ.get("GITHUB_REF") != "refs/heads/main"
             or os.environ.get("GITHUB_EVENT_NAME") != "issue_comment"
@@ -988,8 +992,11 @@ def check_picturefix_connection() -> None:
         raise RuntimeError("PictureFix tenant preflight only allowed by the control issue on main.")
     token = normalize_picturefix_api_key(os.environ.get("BUFFER_API_KEY", ""))
     channels = discover_picturefix_channels(token)
-    discover_picturefix_board(token, channels["pinterest"])
-    print("PICTUREFIX_READ_ONLY_PREFLIGHT_PASS: separate PictureFix org, three exact active profiles and Pinterest board; no posts, receipts, queue or schedule.")
+    if require_pinterest_board:
+        discover_picturefix_board(token, channels["pinterest"])
+        print("PICTUREFIX_READ_ONLY_PREFLIGHT_PASS: separate PictureFix org, three exact active profiles and Pinterest board; no posts, receipts, queue or schedule.")
+    else:
+        print("PICTUREFIX_FACEBOOK_INSTAGRAM_PREFLIGHT_PASS: dedicated PictureFix org, Facebook and Instagram profiles verified; Pinterest board deliberately unchecked, no posts or queue changes.")
 
 
 
@@ -1139,6 +1146,8 @@ def main() -> int:
     mode.add_argument("--check-connection", action="store_true", help="Buffer-Kanäle nur lesend prüfen.")
     mode.add_argument("--check-picturefix-connection", action="store_true",
                       help="Drei PictureFix-Kanäle und Pinterest-Board nur lesend prüfen.")
+    mode.add_argument("--check-picturefix-social-connection", action="store_true",
+                      help="PictureFix Facebook/Instagram unabhängig vom Pinterest-Board nur lesend prüfen.")
     mode.add_argument("--check-sticken-lasern-connection", action="store_true",
                       help="Getrenntes Sticken-Lasern-Buffer-Konto nur lesend prüfen.")
     mode.add_argument("--send", action="store_true", help="Explizit als Buffer-Entwurf übertragen.")
@@ -1153,6 +1162,10 @@ def main() -> int:
             if args.draft:
                 raise ValueError("PictureFix preflight does not accept draft paths.")
             check_picturefix_connection()
+        elif args.check_picturefix_social_connection:
+            if args.draft:
+                raise ValueError("PictureFix social preflight does not accept draft paths.")
+            check_picturefix_connection(require_pinterest_board=False)
         elif args.check_connection:
             if not args.draft:
                 raise ValueError("An existing draft path is required.")
