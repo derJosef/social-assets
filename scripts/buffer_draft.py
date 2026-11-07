@@ -704,6 +704,20 @@ def channel_preference(target: str) -> str:
     return os.environ.get(name, "").strip()
 
 
+def normalize_picturefix_api_key(raw: str) -> str:
+    """Discard accidental outer paste whitespace; never log or silently rewrite token contents."""
+    if not isinstance(raw, str):
+        raise RuntimeError("Missing dedicated PictureFix Buffer API key.")
+    key = raw.strip(" \t\r\n")
+    if not key:
+        raise RuntimeError("Missing dedicated PictureFix Buffer API key.")
+    if key.lower().startswith("bearer "):
+        raise RuntimeError("PictureFix Buffer secret must contain only the raw API key, not 'Bearer'.")
+    if any(not 33 <= ord(char) <= 126 for char in key):
+        raise RuntimeError("PictureFix Buffer API key has invalid internal whitespace or control characters.")
+    return key
+
+
 def discover_picturefix_channels(token: str, *, channel_cache: dict | None = None) -> dict:
     """Only accept the one genuine PictureFix organization and three known profiles.
 
@@ -935,9 +949,7 @@ def check_picturefix_connection() -> None:
             or os.environ.get("GITHUB_ACTOR") != "derJosef-agents"
             or os.environ.get("BUFFER_BRAND") != "picturefix"):
         raise RuntimeError("PictureFix tenant preflight only allowed by the control issue on main.")
-    token = os.environ.get("BUFFER_API_KEY", "")
-    if not token:
-        raise RuntimeError("PictureFix's dedicated Buffer API key is missing.")
+    token = normalize_picturefix_api_key(os.environ.get("BUFFER_API_KEY", ""))
     channels = discover_picturefix_channels(token)
     discover_picturefix_board(token, channels["pinterest"])
     print("PICTUREFIX_READ_ONLY_PREFLIGHT_PASS: separate PictureFix org, three exact active profiles and Pinterest board; no posts, receipts, queue or schedule.")
@@ -955,6 +967,8 @@ def send_draft(draft_path: str, text: str, raw: bytes, *, channel_cache: dict | 
     record = json.loads(raw.decode("utf-8"))
     target = record["target"]
     picturefix = record.get("format_version") == 3
+    if picturefix:
+        buffer_key = normalize_picturefix_api_key(buffer_key)
     caller_brand = os.environ.get("BUFFER_BRAND", "ai-agent-builder")
     if picturefix:
         if (caller_brand != "picturefix" or os.environ.get("GITHUB_EVENT_NAME") != "issue_comment"
