@@ -92,8 +92,32 @@ PICTUREFIX_LOGO_BLOB = "0cd926e6631209dd4e5c8029dfb72c29bbf89ea8"
 PICTUREFIX_DRAFT_NAMES = {
     "facebook": "drafts/picturefix-pf01-facebook.json",
     "instagram": "drafts/picturefix-pf01-instagram.json",
+    "pinterest": "drafts/picturefix-pf01-pinterest.json",
 }
 PICTUREFIX_IMAGE_NAME = "PictureFix_PF01_Facebook_Instagram_1080x1350_zur_Freigabe.png"
+PICTUREFIX_PINTEREST_IMAGE_NAME = "PictureFix_PF01_Pinterest_1000x1500_zur_Freigabe.png"
+PICTUREFIX_IMAGE_NAMES = {
+    "facebook": PICTUREFIX_IMAGE_NAME,
+    "instagram": PICTUREFIX_IMAGE_NAME,
+    "pinterest": PICTUREFIX_PINTEREST_IMAGE_NAME,
+}
+PICTUREFIX_IMAGE_SIZES = {
+    "facebook": (1080, 1350),
+    "instagram": (1080, 1350),
+    "pinterest": (1000, 1500),
+}
+GET_PICTUREFIX_PINTEREST_BOARDS = """
+query PictureFixPinterestBoards($id: ChannelId!) {
+  channel(input: { id: $id }) {
+    id
+    metadata {
+      ... on PinterestMetadata {
+        boards { serviceId }
+      }
+    }
+  }
+}
+"""
 
 AUTO_DRAFT_RE = re.compile(
     r"^ready-for-buffer/auto-(20\d{2}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*)-"
@@ -189,18 +213,29 @@ def read_draft(given_path: str) -> tuple[str, str, bytes]:
     if len(raw) > 100_000:
         raise ValueError("Entwurfsdatei ist zu groß.")
     record = json.loads(raw.decode("utf-8"))
-    if not isinstance(record, dict) or record.get("target") not in ("linkedin", "facebook", "instagram"):
-        raise ValueError("Nur LinkedIn-, Facebook- und Instagram-Entwürfe werden akzeptiert.")
+    if not isinstance(record, dict) or record.get("target") not in ("linkedin", "facebook", "instagram", "pinterest"):
+        raise ValueError("Unzulässiger Zielkanal.")
     fmt = record.get("format_version")
+    if record["target"] == "pinterest" and fmt != 3:
+        raise ValueError("Pinterest ist nur für den kontrollierten PictureFix-Pilot erlaubt.")
     if fmt == 1 and set(record) != {"format_version", "target", "text"}:
         raise ValueError("Format 1 erlaubt nur format_version, target und text.")
     if fmt == 2 and set(record) != {"format_version", "target", "text", "media"}:
         raise ValueError("Format 2 benötigt genau format_version, target, text und media.")
     if fmt == 3:
         # A new brand may not inherit the original AI-Agent-Builder draft authority.
-        if set(record) != {"format_version", "brand", "target", "text", "media",
-                           "image_sha256", "logo_git_blob_sha1"} or record["brand"] != "picturefix":
+        expected = {"format_version", "brand", "target", "text", "media",
+                    "image_sha256", "logo_git_blob_sha1"}
+        if record["target"] == "pinterest":
+            expected |= {"pinterest_title", "pinterest_url"}
+        if set(record) != expected or record["brand"] != "picturefix":
             raise ValueError("PictureFix requires its complete brand-specific draft.")
+        if record["target"] == "pinterest":
+            title = record["pinterest_title"]
+            if not isinstance(title, str) or not 1 <= len(title.strip()) <= 100:
+                raise ValueError("PictureFix Pinterest requires a short pin title.")
+            if record["pinterest_url"] != "https://picturefix.de":
+                raise ValueError("PictureFix Pinterest uses only the verified homepage URL.")
         target = record["target"]
         if target not in PICTUREFIX_DRAFT_NAMES or accepted_path != PICTUREFIX_DRAFT_NAMES[target]:
             raise ValueError("PictureFix allows only two fixed PF-01 draft filenames.")
@@ -220,7 +255,7 @@ def read_draft(given_path: str) -> tuple[str, str, bytes]:
         suffix = url[len(MEDIA_HOST_PREFIX):]
         commit, slash, media_path = suffix.partition("/")
         if (not slash or not re.fullmatch(r"[a-f0-9]{40}", commit)
-                or media_path != "media/images/" + PICTUREFIX_IMAGE_NAME):
+                or media_path != "media/images/" + PICTUREFIX_IMAGE_NAMES[target]):
             raise ValueError("PictureFix needs a pinned final PF-01 image with original logo.")
     if fmt not in (1, 2, 3):
         raise ValueError("Unbekanntes Entwurfsformat.")
@@ -486,7 +521,7 @@ def verify_picturefix_image_bytes(record: dict, assets: list[dict]) -> None:
     if (len(raw_image) < 24 or raw_image[:8] != bytes((137, 80, 78, 71, 13, 10, 26, 10))
             or raw_image[12:16] != b"IHDR"
             or (int.from_bytes(raw_image[16:20], "big"),
-                int.from_bytes(raw_image[20:24], "big")) != (1080, 1350)):
+                int.from_bytes(raw_image[20:24], "big")) != PICTUREFIX_IMAGE_SIZES[record["target"]]):
         raise RuntimeError("PictureFix PNG signature/dimensions mismatch.")
     # A matching filename and IHDR header are insufficient: decode and
     # verify all PNG chunks, including checksums, before Buffer is touched.
@@ -494,8 +529,8 @@ def verify_picturefix_image_bytes(record: dict, assets: list[dict]) -> None:
     from PIL import Image, UnidentifiedImageError
     try:
         with Image.open(BytesIO(raw_image)) as verified:
-            if verified.format != "PNG" or verified.size != (1080, 1350):
-                raise RuntimeError("PictureFix PNG not a valid complete 1080x1350 image.")
+            if verified.format != "PNG" or verified.size != PICTUREFIX_IMAGE_SIZES[record["target"]]:
+                raise RuntimeError("PictureFix PNG dimensions or structure invalid.")
             verified.verify()
     except (OSError, SyntaxError, ValueError, UnidentifiedImageError) as exc:
         raise RuntimeError("PictureFix original PNG decoding/integrity failed.") from exc
@@ -525,12 +560,18 @@ def verified_picturefix_post(post: object, *, post_id: str, channel_id: str,
     return url
 
 
-def platform_metadata(target: str, *, video: bool = False) -> dict | None:
+def platform_metadata(target: str, *, video: bool = False, pinterest_board_id: str = "",
+                      pinterest_title: str = "", pinterest_url: str = "") -> dict | None:
     """Mandatory channel-specific post input metadata, independent of publication mode."""
     if target == "facebook":
         return {"facebook": {"type": "post"}}
     if target == "instagram":
         return {"instagram": {"type": "reel" if video else "post", "shouldShareToFeed": True}}
+    if target == "pinterest":
+        if not pinterest_board_id or not pinterest_title or pinterest_url != "https://picturefix.de":
+            raise ValueError("Verified Pinterest board, title and destination required.")
+        return {"pinterest": {"boardServiceId": pinterest_board_id,
+                              "title": pinterest_title, "url": pinterest_url}}
     if target == "linkedin":
         return None
     raise ValueError("Ungültiger Zielkanal.")
@@ -589,7 +630,7 @@ def put_receipt(token: str, receipt: str, content: dict, message: str, sha: str 
 def resolve_channel(token: str, target: str, preferred_id: str = "",
                     *, channel_cache: dict | None = None) -> str:
     """Select one matching Buffer service; optionally reuse read-only lookup in this run."""
-    if target not in ("linkedin", "facebook", "instagram"):
+    if target not in ("linkedin", "facebook", "instagram", "pinterest"):
         raise ValueError("Unbekannter Buffer-Kanal.")
     # A cache is passed only during one CLI batch. No cross-run / persistent cache.
     if channel_cache is not None and "index" in channel_cache:
@@ -598,7 +639,7 @@ def resolve_channel(token: str, target: str, preferred_id: str = "",
         account = buffer_graphql(token, GET_ORGANIZATIONS, {}).get("account")
         if not isinstance(account, dict) or not isinstance(account.get("organizations"), list):
             raise RuntimeError("Buffer-Organisationen konnten nicht gelesen werden.")
-        index = {"linkedin": set(), "facebook": set(), "instagram": set()}
+        index = {"linkedin": set(), "facebook": set(), "instagram": set(), "pinterest": set()}
         for organization in account["organizations"]:
             org_id = organization.get("id") if isinstance(organization, dict) else None
             if not isinstance(org_id, str) or not org_id:
@@ -638,8 +679,27 @@ def channel_preference(target: str) -> str:
         "linkedin": "BUFFER_CHANNEL_ID",
         "facebook": "BUFFER_FACEBOOK_CHANNEL_ID",
         "instagram": "BUFFER_INSTAGRAM_CHANNEL_ID",
+        "pinterest": "BUFFER_PINTEREST_CHANNEL_ID",
     }[target]
     return os.environ.get(name, "").strip()
+
+
+def verify_picturefix_board(token: str, channel_id: str, board_service_id: str) -> None:
+    """Pinterest requires a selected board, verified against the actual PictureFix channel."""
+    if (not isinstance(board_service_id, str) or not board_service_id.strip()
+            or len(board_service_id) > 128):
+        raise RuntimeError("A dedicated PictureFix Pinterest board ID is required.")
+    response = buffer_graphql(token, GET_PICTUREFIX_PINTEREST_BOARDS, {"id": channel_id})
+    channel = response.get("channel")
+    if not isinstance(channel, dict) or channel.get("id") != channel_id:
+        raise RuntimeError("PictureFix Pinterest channel cannot be read independently.")
+    metadata = channel.get("metadata")
+    if not isinstance(metadata, dict) or not isinstance(metadata.get("boards"), list):
+        raise RuntimeError("PictureFix Pinterest boards are not available.")
+    board_ids = {board.get("serviceId") for board in metadata["boards"]
+                 if isinstance(board, dict) and isinstance(board.get("serviceId"), str)}
+    if board_service_id not in board_ids:
+        raise RuntimeError("Configured Pinterest board is not on the selected PictureFix channel.")
 
 
 def planned_due_at(draft_path: str, target: str, *, now: datetime | None = None) -> str | None:
@@ -795,6 +855,10 @@ def send_draft(draft_path: str, text: str, raw: bytes, *, channel_cache: dict | 
     quality = authorize_auto_dated_draft(draft_path) if due_at is not None else None
     channel_id = resolve_channel(buffer_key, target, channel_preference(target),
                                  channel_cache=channel_cache)
+    pinterest_board_id = ""
+    if picturefix and target == "pinterest":
+        pinterest_board_id = os.environ.get("BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID", "").strip()
+        verify_picturefix_board(buffer_key, channel_id, pinterest_board_id)
     assets = parse_assets(raw)
     verify_media_access(assets)
     verify_auto_image_bytes(draft_path, assets)
@@ -821,7 +885,12 @@ def send_draft(draft_path: str, text: str, raw: bytes, *, channel_cache: dict | 
     # Buffer may have created a post even if the network response was lost.
     variables = {
         "text": text, "channelId": channel_id, "assets": assets,
-        "metadata": platform_metadata(target, video=any("video" in a for a in assets)),
+        "metadata": platform_metadata(
+            target, video=any("video" in a for a in assets),
+            pinterest_board_id=pinterest_board_id,
+            pinterest_title=record.get("pinterest_title", ""),
+            pinterest_url=record.get("pinterest_url", ""),
+        ),
     }
     if due_at is not None:
         variables["dueAt"] = due_at
