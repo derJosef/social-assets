@@ -109,7 +109,7 @@ jobs:
         )
       }}
     name: PictureFix PF-01 – only unpublished draft + image readback
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     timeout-minutes: 6
     steps:
       - name: Verified Buffer integration from protected main
