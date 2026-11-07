@@ -704,18 +704,23 @@ def channel_preference(target: str) -> str:
     return os.environ.get(name, "").strip()
 
 
-def normalize_picturefix_api_key(raw: str) -> str:
-    """Discard accidental outer paste whitespace; never log or silently rewrite token contents."""
+def normalize_dedicated_buffer_key(raw: str, brand: str) -> str:
+    """Validate a brand-specific token without logging it or changing its interior."""
     if not isinstance(raw, str):
-        raise RuntimeError("Missing dedicated PictureFix Buffer API key.")
+        raise RuntimeError(f"Missing dedicated {brand} Buffer API key.")
     key = raw.strip(" \t\r\n")
     if not key:
-        raise RuntimeError("Missing dedicated PictureFix Buffer API key.")
+        raise RuntimeError(f"Missing dedicated {brand} Buffer API key.")
     if key.lower().startswith("bearer "):
-        raise RuntimeError("PictureFix Buffer secret must contain only the raw API key, not 'Bearer'.")
+        raise RuntimeError(f"{brand} Buffer secret must contain only the raw API key, not 'Bearer'.")
     if any(not 33 <= ord(char) <= 126 for char in key):
-        raise RuntimeError("PictureFix Buffer API key has invalid internal whitespace or control characters.")
+        raise RuntimeError(f"{brand} Buffer API key has invalid internal whitespace or control characters.")
     return key
+
+
+def normalize_picturefix_api_key(raw: str) -> str:
+    """Keep existing PictureFix token handling unchanged."""
+    return normalize_dedicated_buffer_key(raw, "PictureFix")
 
 
 def discover_picturefix_channels(token: str, *, channel_cache: dict | None = None) -> dict:
@@ -943,6 +948,36 @@ def check_connection() -> None:
     print("Nur Buffer-Daten gelesen. Kein Entwurf erstellt, nichts eingeplant oder veröffentlicht.")
 
 
+def check_sticken_lasern_connection() -> None:
+    """Read-only business account check, distinct from Claudia's personal brand."""
+    if (os.environ.get("GITHUB_REPOSITORY") != REPOSITORY
+            or os.environ.get("GITHUB_REF") != "refs/heads/main"
+            or os.environ.get("GITHUB_EVENT_NAME") != "issue_comment"
+            or os.environ.get("GITHUB_ACTOR") != "derJosef-agents"
+            or os.environ.get("BUFFER_BRAND") != "sticken-lasern"):
+        raise RuntimeError("Sticken-Lasern read-only preflight requires its own control issue on main.")
+    token = normalize_dedicated_buffer_key(
+        os.environ.get("BUFFER_API_KEY", ""), "Sticken-Lasern"
+    )
+    data = buffer_graphql(token, GET_PICTUREFIX_ORGANIZATIONS, {})
+    account = data.get("account")
+    orgs = account.get("organizations") if isinstance(account, dict) else None
+    if (not isinstance(orgs, list) or len(orgs) != 1
+            or not isinstance(orgs[0], dict)
+            or orgs[0].get("name") not in
+                ("Sticken & Lasern", "Sticken-Lasern", "Veredelt! by Claudia")
+            or not isinstance(orgs[0].get("id"), str)
+            or not orgs[0]["id"]):
+        raise RuntimeError(
+            "Buffer API returned no uniquely verified Sticken-Lasern organization; "
+            "do not transfer content or infer cross-brand permissions."
+        )
+    print(
+        "STICKEN_LASERN_READ_ONLY_PREFLIGHT_PASS: dedicated account verified; "
+        "no channels, drafts, receipts, queues or publishing changed."
+    )
+
+
 def check_picturefix_connection() -> None:
     """Read-only tenant preflight: no receipts, drafts, posts or publishing."""
     if (os.environ.get("GITHUB_REPOSITORY") != REPOSITORY
@@ -1104,11 +1139,17 @@ def main() -> int:
     mode.add_argument("--check-connection", action="store_true", help="Buffer-Kanäle nur lesend prüfen.")
     mode.add_argument("--check-picturefix-connection", action="store_true",
                       help="Drei PictureFix-Kanäle und Pinterest-Board nur lesend prüfen.")
+    mode.add_argument("--check-sticken-lasern-connection", action="store_true",
+                      help="Getrenntes Sticken-Lasern-Buffer-Konto nur lesend prüfen.")
     mode.add_argument("--send", action="store_true", help="Explizit als Buffer-Entwurf übertragen.")
     args = parser.parse_args()
 
     try:
-        if args.check_picturefix_connection:
+        if args.check_sticken_lasern_connection:
+            if args.draft:
+                raise ValueError("Sticken-Lasern preflight cannot accept draft paths.")
+            check_sticken_lasern_connection()
+        elif args.check_picturefix_connection:
             if args.draft:
                 raise ValueError("PictureFix preflight does not accept draft paths.")
             check_picturefix_connection()
