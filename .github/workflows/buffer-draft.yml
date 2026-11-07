@@ -105,7 +105,8 @@ jobs:
         github.event.issue.title == 'PICTUREFIX BUFFER DRAFT CONTROL' &&
         (
           github.event.comment.body == 'PF01_FACEBOOK_DRAFT_ONLY' ||
-          github.event.comment.body == 'PF01_INSTAGRAM_DRAFT_ONLY'
+          github.event.comment.body == 'PF01_INSTAGRAM_DRAFT_ONLY' ||
+          github.event.comment.body == 'PF01_PINTEREST_DRAFT_ONLY'
         )
       }}
     name: PictureFix PF-01 – only unpublished draft + image readback
@@ -133,6 +134,8 @@ jobs:
           BUFFER_API_KEY: ${{ secrets.BUFFER_PICTUREFIX_API_KEY }}
           BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_FACEBOOK_CHANNEL_ID }}
           BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_INSTAGRAM_CHANNEL_ID }}
+          BUFFER_PINTEREST_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_PINTEREST_CHANNEL_ID }}
+          BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID: ${{ secrets.BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID }}
           GITHUB_TOKEN: ${{ github.token }}
           TRIGGER: ${{ github.event.comment.body }}
         run: |
@@ -141,13 +144,17 @@ jobs:
           case "$TRIGGER" in
             PF01_FACEBOOK_DRAFT_ONLY) draft="drafts/picturefix-pf01-facebook.json" ;;
             PF01_INSTAGRAM_DRAFT_ONLY) draft="drafts/picturefix-pf01-instagram.json" ;;
+            PF01_PINTEREST_DRAFT_ONLY) draft="drafts/picturefix-pf01-pinterest.json" ;;
             *) echo "Disallowed PictureFix trigger" >&2; exit 1 ;;
           esac
           test -n "$BUFFER_API_KEY" || { echo "Dedicated PictureFix API key not configured" >&2; exit 1; }
           # No implicit fall back to the AI-Agent-Builder Buffer credentials.
           if [[ "$TRIGGER" == "PF01_FACEBOOK_DRAFT_ONLY" ]]; then
             test -n "$BUFFER_FACEBOOK_CHANNEL_ID" || { echo "PF Facebook channel ID missing" >&2; exit 1; }
-          else
+          elif [[ "$TRIGGER" == "PF01_INSTAGRAM_DRAFT_ONLY" ]]; then
             test -n "$BUFFER_INSTAGRAM_CHANNEL_ID" || { echo "PF Instagram channel ID missing" >&2; exit 1; }
+          else
+            test -n "$BUFFER_PINTEREST_CHANNEL_ID" || { echo "PF Pinterest channel ID missing" >&2; exit 1; }
+            test -n "$BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID" || { echo "PF Pinterest board missing" >&2; exit 1; }
           fi
           python3 scripts/buffer_draft.py --draft "$draft" --send
