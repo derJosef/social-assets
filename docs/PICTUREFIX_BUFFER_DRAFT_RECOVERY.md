@@ -34,7 +34,7 @@ Dateinamen **`drafts/picturefix-pf01-facebook.json`** und **`drafts/picturefix-p
   "format_version": 3,
   "brand": "picturefix",
   "target": "facebook",
-  "text": "<Plattformtext aus dem freigegebenen PF-01-Entwurf PR #65, inklusive Werbeillustrationshinweis>",
+  "text": "<Plattformtext aus dem noch nicht veröffentlichten PF-01-Textentwurf PR #65, inklusive Werbeillustrationshinweis>",
   "media": {
     "type": "images",
     "images": [
