@@ -28,7 +28,11 @@ permissions:
   pull-requests: read # Only for protected brief-approval PR provenance.
 
 concurrency:
-  group: buffer-drafts-single-flight
+  # Strict serialization for ALL Buffer-writing workflows stays unchanged.
+  # Read-only issue diagnostics have no Buffer or GitHub mutation capability;
+  # give each comment its own group so unrelated legacy issue_comment runs
+  # cannot cancel a queued account/channel check before it starts.
+  group: ${{ github.event_name == 'issue_comment' && ((github.event.issue.number == 64 && (github.event.comment.body == 'PF01_PREFLIGHT_ONLY' || github.event.comment.body == 'PF01_FB_IG_PREFLIGHT_ONLY')) || (github.event.issue.number == 69 && github.event.comment.body == 'SL_PREFLIGHT_ONLY')) && format('buffer-readonly-{0}', github.event.comment.id) || 'buffer-drafts-single-flight' }}
   cancel-in-progress: false
 
 jobs:
