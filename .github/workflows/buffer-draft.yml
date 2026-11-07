@@ -123,6 +123,9 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Verify real PictureFix PNG structure
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0'
+
       - name: Send exactly one approved PF-01 image-bearing draft
         shell: bash
         env:
