@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "linkedin",
+  "text": "Welche Details geben wir auf Unternehmensfotos unbeabsichtigt preis?\n\nMeist denken wir an Gesichter, Namensschilder, Bildschirme oder vertrauliche Dokumente. Bei sehr hochauflösenden Nahaufnahmen gehören auch deutlich sichtbare Fingerkuppen in die Prüfung.\n\nDrei einfache Schritte:\n1. Auflösung und Ausschnitt prüfen: Müssen Fingerkuppen in maximaler Schärfe zu sehen sein?\n2. Unnötige Details reduzieren: Bei öffentlichen Nahaufnahmen sensible Bereiche verdecken, unkenntlich machen oder einen anderen Bildausschnitt wählen.\n3. Gerätezugriffe absichern: Eine starke PIN oder ein starkes Passwort und geeignete zusätzliche Schutzmechanismen bleiben wichtig. Biometrie ist keine geheime Information.\n\nDas muss nicht jede Veröffentlichung kompliziert machen. Es erweitert lediglich den Blick auf Informationen, die ein Bild preisgeben kann.\n\nDie fachliche Grundlage und eine kurze Foto-Checkliste stehen in „TechniKInside“ auf pauderer.de.\n\nQuelle: NIST SP 800-63B; CCC-Vortrag (2014).\n#Datenschutz #Informationssicherheit #KI",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-21-fingerabdruck-selfie-03.png",
+        "alt_text": "Smartphone und drei abstrakte Datenschutz-Kontrollsymbole auf tiefblauem Hintergrund."
+      }
+    ]
+  }
+}

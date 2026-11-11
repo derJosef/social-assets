@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "instagram",
+  "text": "Drei Checks, bevor dein Selfie online geht:\n\n1. Fingerkuppen auf Nahaufnahmen prüfen.\n2. Unnötig scharfe biometrische Details vermeiden.\n3. Smartphone mit einer starken PIN oder einem Passwort absichern.\n\nEin Fingerabdruck ist kein geheimes Passwort – und lässt sich nicht einfach austauschen.\n\nMehr erfahren: „TechniKInside“ auf pauderer.de.\n\nQuelle: NIST SP 800-63B.\n#Datenschutz #KI #SelfieTipps",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-21-fingerabdruck-selfie-03.png",
+        "alt_text": "Smartphone und drei abstrakte Datenschutz-Kontrollsymbole auf tiefblauem Hintergrund."
+      }
+    ]
+  }
+}

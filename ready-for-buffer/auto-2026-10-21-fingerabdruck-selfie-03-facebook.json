@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "facebook",
+  "text": "Bevor du ein Selfie oder Gruppenfoto teilst, helfen drei kurze Checks:\n\n1. Sind Fingerkuppen in einer Nahaufnahme ungewöhnlich deutlich zu erkennen?\n2. Braucht das Bild wirklich die volle Auflösung – oder wäre ein anderer Ausschnitt sinnvoll?\n3. Sind dein Handy und wichtige Konten auch unabhängig vom Fingerabdruck gut geschützt?\n\nBiometrische Merkmale sind anders als Passwörter: Einen Fingerabdruck kannst du nicht einfach wechseln.\n\nDas heißt nicht, dass du keine Selfies mehr veröffentlichen solltest. Aber ein genauer Blick kann sinnvoll sein.\n\nDie Hintergründe findest du in „TechniKInside“ auf pauderer.de.\n\nQuelle: NIST SP 800-63B.\n#Datenschutz #Selfie #KI",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-21-fingerabdruck-selfie-03.png",
+        "alt_text": "Smartphone und drei abstrakte Datenschutz-Kontrollsymbole auf tiefblauem Hintergrund."
+      }
+    ]
+  }
+}
