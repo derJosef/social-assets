@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "linkedin",
+  "text": "Kann jemand mit KI deinen Fingerabdruck aus einem Foto kopieren und dein Smartphone entsperren?\n\nDie entscheidende Antwort lautet: Zwischen diesen beiden Schritten liegen erhebliche technische Hürden.\n\nSchritt 1: Bildauswertung. Ein Foto kann Fingerabdrucklinien zeigen. Die Bildqualität bestimmt, welche Details überhaupt vorhanden sind. KI-Schärfung kann Strukturen besser sichtbar machen, kann aber auch plausible, falsche Einzelheiten ergänzen.\n\nSchritt 2: Angriffsgeeignete Nachbildung. Ein technisch brauchbarer Abdruck muss die tatsächlichen relevanten Merkmale in passender Qualität abbilden.\n\nSchritt 3: Überwindung des Sensors. Auch ein nachgebildeter Fingerabdruck überwindet nicht automatisch Schutzmechanismen des Geräts. Angreifer brauchen zudem einen geeigneten Angriffspunkt – bei einem Smartphone typischerweise physischen Zugriff.\n\nCisco Talos demonstrierte 2020 Sensorangriffe mit künstlichen Fingerabdrücken, beschrieb die Herstellung aber als mühsam und mit praktischen Grenzen verbunden. Diese Ergebnisse sind keine Erfolgsquote für Selfie-Fotos.\n\nFür Unternehmen zählt deshalb eine nüchterne Bewertung: Biometrie erhöht die Benutzerfreundlichkeit, ersetzt aber kein durchdachtes Zugriffskonzept.\n\nDie ausführliche Einordnung findest du unter „TechniKInside“ auf pauderer.de.\n\nQuellen: Cisco Talos (08.04.2020); NIST SP 800-63B.\n#ITSecurity #Biometrie #KI #Informationssicherheit",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/main/media/images/2026-10-21-fingerabdruck-selfie-02.png",
+        "alt_text": "Illustration einer mehrstufigen Fingerabdruckanalyse vor einem gesperrten Smartphone."
+      }
+    ]
+  }
+}
