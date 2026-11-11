@@ -1,0 +1,64 @@
+name: PAF-TV Buffer video playback – read-only diagnostics
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/paf_tv_buffer_player_readonly.py
+      - .github/workflows/paf-tv-buffer-player-readonly.yml
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+jobs:
+  static:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-slim
+    timeout-minutes: 4
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Validate exact read-only GraphQL and static Python syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B -m py_compile scripts/paf_tv_buffer_player_readonly.py
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('scripts/paf_tv_buffer_player_readonly.py').read_text('utf-8')
+          assert 'post(input: {id: $id})' in s
+          assert 'createPost(' not in s and 'editPost(' not in s
+          assert 'deletePost(' not in s and 'schedulePost(' not in s
+          assert 'read-only' in s.lower()
+          print('BUFFER_PLAYBACK_AUDIT_STATIC_PASS')
+          PY
+
+  inspect:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.repository == 'derJosef/social-assets' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.issue.number == 19 &&
+      github.event.comment.user.id == 45994004 &&
+      github.actor_id == 45994004 &&
+      github.run_attempt == 1 &&
+      github.event.comment.body == 'PAF-TV-BUFFER-PLAYER-AUDIT-READONLY-20261028'
+    runs-on: ubuntu-slim
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Buffer assets + media HTTP headers; no changes
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+        run: |
+          set -euo pipefail
+          python3 -u scripts/paf_tv_buffer_player_readonly.py
