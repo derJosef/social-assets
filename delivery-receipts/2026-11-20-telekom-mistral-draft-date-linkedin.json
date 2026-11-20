@@ -1,0 +1,10 @@
+{
+  "channel": "linkedin",
+  "post_id": "6afff0a57b0a126cebb56f34",
+  "old_due_at_utc": "2026-12-09T15:00:00Z",
+  "new_due_at_utc": "2026-11-20T14:30:00Z",
+  "new_local_berlin": "2026-11-20T15:30:00+01:00",
+  "immutable_fingerprint": "23302f7af1d779645a7b5f4c83ebbbb6dbe33fff9e79106037dc11f8d27323d8",
+  "run_id": "44714953756",
+  "state": "pending_manual_reconciliation_on_failure"
+}
