@@ -1,11 +1,12 @@
 {
   "campaign": "2026-11-20-telekom-mistral-news-date-correction",
   "run_id": "44714953756",
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "verified_three_draft_dates_only_no_publish",
   "post_ids": [
     "6afff0ab738ce4635f93ac57",
     "6afff0a57b0a126cebb56f34",
     "6afff0b14c1afd05defcc931"
   ],
-  "change_scope": "draft_due_at_only; never publish"
+  "change_scope": "draft_due_at_only; never publish",
+  "verified_at_utc": "2026-11-20T09:57:13.743861+00:00"
 }
