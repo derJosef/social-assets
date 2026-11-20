@@ -1,0 +1,72 @@
+name: PictureFix PF-03 – Drei datierte Buffer-Entwürfe, nie veröffentlichen
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write # Only create/update the one-shot receipt on automation-receipts.
+
+# Reuse the same single-flight Buffer writer group repaired in PR #86.
+# Never cancel a pending writer and never run two writers simultaneously.
+concurrency:
+  group: buffer-drafts-single-flight
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  pf03-dated-draft:
+    if: >-
+      ${{
+        github.ref == 'refs/heads/main' &&
+        github.actor == 'derJosef-agents' &&
+        github.event.comment.user.login == 'derJosef-agents' &&
+        github.event.issue.number == 64 &&
+        !github.event.issue.pull_request &&
+        github.event.issue.user.login == 'derJosef-agents' &&
+        github.event.issue.title == 'PICTUREFIX BUFFER DRAFT CONTROL' &&
+        (
+          github.event.comment.body == 'PF03_FACEBOOK_DATED_DRAFT_ONLY' ||
+          github.event.comment.body == 'PF03_INSTAGRAM_DATED_DRAFT_ONLY' ||
+          github.event.comment.body == 'PF03_PINTEREST_DATED_DRAFT_ONLY'
+        )
+      }}
+    name: Ein PictureFix PF-03-Entwurf mit Bild und Termin (nur Draft)
+    runs-on: ubuntu-slim
+    timeout-minutes: 7
+    steps:
+      - name: Geprüften Code ausschließlich aus main beziehen
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: PNG-Validierung
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0'
+
+      - name: Genau einen PF-03-Draft erstellen und zurücklesen
+        shell: bash
+        env:
+          BUFFER_BRAND: picturefix
+          BUFFER_API_KEY: ${{ secrets.BUFFER_PICTUREFIX_API_KEY }}
+          BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_FACEBOOK_CHANNEL_ID }}
+          BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_INSTAGRAM_CHANNEL_ID }}
+          BUFFER_PINTEREST_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_PINTEREST_CHANNEL_ID }}
+          BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID: ${{ secrets.BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+          TRIGGER: ${{ github.event.comment.body }}
+        run: |
+          set -euo pipefail
+          case "$TRIGGER" in
+            PF03_FACEBOOK_DATED_DRAFT_ONLY) target=facebook ;;
+            PF03_INSTAGRAM_DATED_DRAFT_ONLY) target=instagram ;;
+            PF03_PINTEREST_DATED_DRAFT_ONLY) target=pinterest ;;
+            *) echo 'Disallowed PF-03 trigger' >&2; exit 1 ;;
+          esac
+          test -n "$BUFFER_API_KEY" || { echo 'Dedicated PictureFix token missing' >&2; exit 1; }
+          python3 -m scripts.picturefix.pf03_dated_drafts --target "$target" --send
