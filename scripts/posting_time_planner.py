@@ -23,7 +23,8 @@ MIN_CHANNEL_GAP = timedelta(days=3)
 UTC_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
 # (weekday with Monday=0, local hour), ranked editorial pilot candidates.
-# Independently checked Buffer AND Sprout Social 2026 data on 2026-10-12.
+# Rechecked independently on 2026-11-20: Buffer (Sep/Oct 2026) and
+# Sprout Social (Mar 2026), with differing Facebook peak-hour findings.
 # Different source populations disagree, especially Facebook overall;
 # Sprout's Software & Tech segment also supports weekday mornings.
 # These are audience-level hypotheses, not Josef's own engagement statistics.
@@ -33,7 +34,7 @@ SLOTS = {
     "instagram": ((2, 18), (2, 12), (1, 19)),
 }
 
-RESEARCH_CHECKED_AT = date(2026, 10, 12)
+RESEARCH_CHECKED_AT = date(2026, 11, 20)
 RESEARCH_URLS = {
     "linkedin": (
         "https://buffer.com/resources/best-time-to-post-on-linkedin/",
