@@ -1,0 +1,66 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-11-20-telekom-mistral-europa-v2",
+  "checked_at": "2026-11-20",
+  "sources": [
+    {
+      "url": "https://www.telekom.com/de/newsroom/aktuelles/medieninformationen/2026/11/deutsche-telekom-staerkt-souveraene-ki-in-deutschland",
+      "published_at": "2026-11-19",
+      "checked_at": "2026-11-20"
+    },
+    {
+      "url": "https://www.computerbase.de/news/wirtschaft/europaeische-ki-telekom-investiert-100-millionen-euro-in-mistral.100408/",
+      "published_at": "2026-11-19",
+      "checked_at": "2026-11-20"
+    },
+    {
+      "url": "https://www.deutschlandfunk.de/deutsche-telekom-beteiligt-sich-an-franzoesischem-ki-entwickler-mistral-ai-100.html",
+      "published_at": "2026-11-19",
+      "checked_at": "2026-11-20"
+    }
+  ],
+  "checks": {
+    "novelty": true,
+    "claims_with_sources": true,
+    "language_and_cta": true,
+    "six_hats": true,
+    "privacy_and_rights": true,
+    "brand_image": true,
+    "posting_time_research": true
+  },
+  "image": {
+    "final": "media/images/2026-11-20-telekom-mistral-europa-v2-branded.png",
+    "base": "media/source-images/2026-11-20-telekom-mistral-europa-v2-base.png",
+    "sha256": "9ec530052b1868420222d340ba3d8b9b2fbd76865a8623e1bcdb337b1a1dd5ec",
+    "layout": "logo_only",
+    "review_spec": "visual-reviews/2026-11-20-telekom-mistral-europa-v2.json",
+    "source_sha256": "2b1160960536776d51e64c3ca5802021c3db461e6752b5ff02e9ee7f3e592b53",
+    "ai_disclosure": {
+      "required": false,
+      "text": null,
+      "pixel_verified": false
+    },
+    "heading_corner": null,
+    "heading_box": null
+  },
+  "posts": {
+    "linkedin": "ready-for-buffer/auto-2026-11-20-telekom-mistral-europa-v2-linkedin.json",
+    "facebook": "ready-for-buffer/auto-2026-11-20-telekom-mistral-europa-v2-facebook.json",
+    "instagram": "ready-for-buffer/auto-2026-11-20-telekom-mistral-europa-v2-instagram.json"
+  },
+  "posting_times": {
+    "linkedin": {
+      "local": "2026-12-09T16:00:00+01:00",
+      "utc": "2026-12-09T15:00:00Z"
+    },
+    "facebook": {
+      "local": "2026-12-03T09:00:00+01:00",
+      "utc": "2026-12-03T08:00:00Z"
+    },
+    "instagram": {
+      "local": "2026-12-02T18:00:00+01:00",
+      "utc": "2026-12-02T17:00:00Z"
+    }
+  }
+}
