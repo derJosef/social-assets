@@ -105,7 +105,7 @@ def collect(*, get=buffer_graphql, key: str | None = None) -> dict:
 
 def main() -> int:
     if os.environ.get("GITHUB_EVENT_NAME") != "issue_comment":
-        print("Only restricted comment-based owner audit is authorized.", file=sys.stderr)
+        print("Only restricted comment-based editorial audit is authorized.", file=sys.stderr)
         return 1
     try:
         data = collect()

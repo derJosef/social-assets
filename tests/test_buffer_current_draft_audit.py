@@ -51,10 +51,18 @@ class AuditTests(unittest.TestCase):
 
     def test_workflow_guarded_and_query_is_read_only(self):
         w=WORKFLOW.read_text()
-        for item in ("issue_comment:","github.actor == 'derJosef'","github.event.issue.number == 19",
+        for item in ("issue_comment:","github.actor == 'derJosef'", "github.actor == 'derJosef-agents'",
+                     "github.event.comment.user.login == github.actor",
+                     "github.event.issue.user.login == 'derJosef'",
+                     "github.event.issue.number == 19",
                      "AUDIT_AI_AGENT_BUFFER_DRAFTS_20261013","contents: read",
                      "persist-credentials: false","retention-days: 1"):
             self.assertIn(item,w)
+        # The new agents route is read-only and only authorizes its own exact
+        # control comment on the existing owner-authored audit issue.
+        self.assertIn("(github.actor == 'derJosef' || github.actor == 'derJosef-agents')", w)
+        self.assertIn("!github.event.issue.pull_request", w)
+        self.assertIn("github.event.issue.title == 'AIAGENT_BRIEF:2026-10-13-lieferanten-pdf-prueftor-e2e-003'", w)
         for danger in ("createPost(","editPost(","git push","contents: write",
                        "workflow_dispatch:","schedule:"):
             self.assertNotIn(danger,w)
