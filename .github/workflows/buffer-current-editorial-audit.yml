@@ -15,7 +15,7 @@ jobs:
   audit:
     if: >-
       ${{
-        github.actor == 'derJosef' &&
+        (github.actor == 'derJosef' || github.actor == 'derJosef-agents') &&
         github.ref == 'refs/heads/main' &&
         github.event_name == 'issue_comment' &&
         github.event.action == 'created' &&
@@ -23,7 +23,7 @@ jobs:
         !github.event.issue.pull_request &&
         github.event.issue.user.login == 'derJosef' &&
         github.event.issue.title == 'AIAGENT_BRIEF:2026-10-13-lieferanten-pdf-prueftor-e2e-003' &&
-        github.event.comment.user.login == 'derJosef' &&
+        github.event.comment.user.login == github.actor &&
         github.event.comment.body == 'AUDIT_AI_AGENT_BUFFER_DRAFTS_20261013'
       }}
     name: Review ALL current AI Agent Builder Buffer posts – READ ONLY
