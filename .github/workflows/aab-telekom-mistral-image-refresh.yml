@@ -1,0 +1,60 @@
+name: AI Agent Builder – Telekom T in drei vorhandenen Buffer-Entwürfen
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: aab-telekom-mistral-20261120-three-in-place-image-edits
+  cancel-in-progress: false
+
+jobs:
+  correct-three-draft-images:
+    if: >-
+      ${{
+        github.event_name == 'issue_comment' &&
+        github.event.action == 'created' &&
+        github.ref == 'refs/heads/main' &&
+        github.run_attempt == 1 &&
+        github.actor == 'derJosef-agents' &&
+        github.actor_id == 350701981 &&
+        github.event.issue.number == 77 &&
+        github.event.issue.pull_request &&
+        github.event.issue.user.id == 350701981 &&
+        github.event.comment.user.id == 350701981 &&
+        github.event.comment.body == 'AAB_TELEKOM_MISTRAL_FIX_THREE_EXISTING_DRAFT_IMAGES_ONCE_20261120'
+      }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Nur geprüftes main auschecken
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Pillow für Formatprüfung
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0'
+
+      - name: Drei bestehende Buffer-Drafts lesend prüfen und ausschließlich deren Bilder ändern
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/production_activation_guard.py
+          python3 -B scripts/aab_telekom_mistral_image_refresh.py --live
+
+      - name: Unabhängigen Live-Readback bestätigen
+        if: success()
+        run: echo "Drei vorhandene Post-IDs geprüft, Bilder ersetzt, Drafts und dueAt unverändert. Keine neuen Posts, keine Queue oder Veröffentlichung." >> "$GITHUB_STEP_SUMMARY"
