@@ -1,0 +1,19 @@
+{
+  "format_version": 3,
+  "brand": "picturefix",
+  "target": "pinterest",
+  "text": "Manchmal steckt eine ganze Familiengeschichte in einem einzigen alten Foto. Entdecke, wie PictureFix dabei helfen kann, Kratzer, Staub und verblasste Kontraste digital zu verbessern – ohne den ursprünglichen Charakter der Aufnahme aus den Augen zu verlieren.\n\nAlte Fotos bewahren und Familienerinnerungen erhalten.\n\nKI-generierte Werbeillustration, kein echtes Restaurierungsergebnis.",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/05d902ec11f4bb80b8692f18da24e170f84f7cca/media/images/PictureFix_PF01_Pinterest_1000x1500_zur_Freigabe.png",
+        "alt_text": "KI-generierte Sepia-Werbeillustration. Ein Mädchen in Kleidung der 1940er-Jahre mit geflochtenen Zöpfen und Stoffpuppe tritt aus einem vergilbten Papierfoto hervor. Kein echtes Restaurierungsergebnis."
+      }
+    ]
+  },
+  "image_sha256": "30fdf528505a6e2ca3bf0aed768f876cd32e650e4d39e7a55950cc8b33789c8a",
+  "logo_git_blob_sha1": "0cd926e6631209dd4e5c8029dfb72c29bbf89ea8",
+  "pinterest_title": "Kleine Fotos. Große Erinnerungen. | Familienfotos bewahren",
+  "pinterest_url": "https://picturefix.de"
+}

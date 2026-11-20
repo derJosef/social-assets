@@ -1,0 +1,43 @@
+{
+  "project": "PictureFix PF-01",
+  "date": "2026-11-20",
+  "status": "draft-needs-josef-final-approval",
+  "input_images_verified_sha256": [
+    "d6210a70d229620c8feb6f0d70396c96aa5cf7a5a6a27eb62ffc70525db59792",
+    "70765cfb88184c9a4ed51213728aa01071e377dba1495a550ef85b4acdfce106"
+  ],
+  "logo_git_blob": "0cd926e6631209dd4e5c8029dfb72c29bbf89ea8",
+  "outputs": [
+    {
+      "role": "facebook_instagram",
+      "path": "media/images/picturefix-pf01-familienfoto-4x5-mit-originallogo.png",
+      "bytes": 2138831,
+      "sha256": "dd368b75a8275c4cffa253489326112d4b4636250ed1e008144d3ad049bb8a54",
+      "git_blob": "dacc8140be53f245ca9b6f0a8621697ca343ea3a",
+      "dimensions": [
+        1122,
+        1402
+      ]
+    },
+    {
+      "role": "pinterest",
+      "path": "media/images/picturefix-pf01-familienfoto-pinterest-2x3-mit-originallogo.png",
+      "bytes": 2167346,
+      "sha256": "d4da349dd11e3b468eacc141b2f7313f34583f73007a31c12d19b3561b71db7b",
+      "git_blob": "0ad8e535ca100561365d0ae2de9bff9a4f16a465",
+      "dimensions": [
+        1024,
+        1536
+      ]
+    }
+  ],
+  "qa": [
+    "source SHA256 verified",
+    "logo git blob verified",
+    "output dimensions checked",
+    "pixels outside bounded logo rectangle unchanged",
+    "visually inspected",
+    "not submitted to Buffer"
+  ],
+  "authorization": "Josef: 'passt super' – approval of source motif; final logo layout and channel captions pending"
+}
