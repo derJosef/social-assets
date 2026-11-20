@@ -1,0 +1,7 @@
+{
+  "draft_file": "drafts/picturefix-pf01-pinterest.json",
+  "target": "pinterest",
+  "draft_sha256": "cef7e6864a6b4a1499c8e807ea6d45466f9cf9989f47d927ac2ac53766ad187d",
+  "state": "pending_manual_reconciliation_on_failure",
+  "github_run_id": "44708786032"
+}
