@@ -1,0 +1,106 @@
+{
+  "started_at": "2026-11-20T07:02:43.195948+00:00",
+  "mode": "drafts",
+  "state": "buffer_drafts_verified",
+  "steps": {
+    "brief": {
+      "status": "PASS",
+      "detail": ""
+    },
+    "primary_source_fetch": {
+      "status": "PASS",
+      "detail": "3 Quellen"
+    },
+    "time_studies": {
+      "status": "PASS",
+      "detail": "6 Studien"
+    },
+    "editorial_input_and_structure": {
+      "status": "PASS",
+      "detail": "Bereits redaktionell erstellte Textvorlage"
+    },
+    "autonomous_model_generation": {
+      "status": "NOT_RUN",
+      "detail": "Kein Modellaufruf – alternative Eingabe"
+    },
+    "brand_image_and_campaign_gate": {
+      "status": "PASS",
+      "detail": ""
+    }
+  },
+  "campaign": "2026-11-20-telekom-mistral-europa-v2",
+  "files": {
+    "base": "media/source-images/2026-11-20-telekom-mistral-europa-v2-base.png",
+    "final": "media/images/2026-11-20-telekom-mistral-europa-v2-branded.png",
+    "receipt": "artwork-receipts/2026-11-20-telekom-mistral-europa-v2.json",
+    "manifest": "campaign-manifests/2026-11-20-telekom-mistral-europa-v2.json",
+    "plan": "drafts/2026-11-20-telekom-mistral-europa-v2-plan.md",
+    "posts": [
+      "ready-for-buffer/auto-2026-11-20-telekom-mistral-europa-v2-linkedin.json",
+      "ready-for-buffer/auto-2026-11-20-telekom-mistral-europa-v2-facebook.json",
+      "ready-for-buffer/auto-2026-11-20-telekom-mistral-europa-v2-instagram.json"
+    ]
+  },
+  "finished_at": "2026-11-20T07:02:53.119330+00:00",
+  "buffer_verification": {
+    "status": "PASS",
+    "checked_at": "2026-11-20T07:03:20.557760+00:00",
+    "posts": {
+      "linkedin": {
+        "post_id": "6afff0a57b0a126cebb56f34",
+        "channel_id": "6aac167eea19ca0bde6ada5b",
+        "service": "linkedin",
+        "status": "draft",
+        "dueAt": "2026-12-09T15:00:00Z",
+        "scheduled_local": "2026-12-09T16:00:00+01:00",
+        "text": "100 Millionen Euro für Mistral AI: Die Deutsche Telekom setzt auf europäische KI.\n\nDas ist mehr als eine Finanzmeldung. Es könnte ein wichtiger Schritt für den praktischen KI-Einsatz in deutschen Unternehmen werden.\n\nAm 19. November 2026 hat die Deutsche Telekom bekannt gegeben, dass ihr T.Capital Tech Fund 100 Millionen Euro in das französische KI-Unternehmen Mistral AI investiert hat.\n\nGeplant ist eine strategische Partnerschaft:\n\n🇪🇺 Mistral bringt leistungsfähige europäische KI-Modelle und Unternehmenssoftware ein.\n\n🇩🇪 Die Telekom bringt ihre Infrastruktur, Kundenbeziehungen und Integrationserfahrung mit.\n\nInsbesondere Industrieunternehmen, regulierte Branchen und öffentliche Einrichtungen sollen davon profitieren.\n\nWarum finde ich das als AI Agent Builder besonders interessant?\n\nWeil leistungsfähige KI-Modelle allein noch keine funktionierenden Unternehmensprozesse schaffen.\n\nEin Beispiel:\n\nEin KI-Agent liest eingehende Auftragsbestätigungen, erkennt Liefertermine und bereitet automatisch Kalendereinträge vor.\n\nDabei sind drei Fragen entscheidend:\n\n✅ Wo und unter wessen Kontrolle werden die Daten verarbeitet?\n✅ Wie zuverlässig arbeitet die KI mit bestehenden Geschäftssystemen zusammen?\n✅ Wer kontrolliert das Ergebnis und gibt kritische Aktionen frei?\n\nGenau hier liegt aus meiner Sicht die eigentliche Herausforderung.\n\nDie Verbindung europäischer KI-Technologie mit leistungsfähiger Infrastruktur könnte neue Möglichkeiten eröffnen. Ob daraus tatsächlich überzeugende Lösungen entstehen, muss sich noch zeigen.\n\nMein Fazit:\n\nEuropäische KI-Souveränität wird nicht allein durch Investitionen oder die Wahl eines europäischen Modells erreicht.\n\nSie entsteht dort, wo Unternehmen leistungsfähige KI sicher, nachvollziehbar und wirtschaftlich sinnvoll in ihre Prozesse integrieren können.\n\nWas meint ihr: Wird die Zusammenarbeit von Telekom und Mistral die europäische KI-Landschaft nachhaltig stärken?\n\nQuelle: Deutsche Telekom, Pressemitteilung vom 19.11.2026\nhttps://www.telekom.com/de/newsroom/aktuelles/medieninformationen/2026/11/deutsche-telekom-staerkt-souveraene-ki-in-deutschland\n\n#KünstlicheIntelligenz #MistralAI #DeutscheTelekom #AIAgentBuilder #KISouveränität #Automatisierung",
+        "review_image_url": "https://raw.githubusercontent.com/derJosef/social-assets/12075b51ca2372c1d134290f58f842412f32b4bc/media/images/2026-11-20-telekom-mistral-europa-v2-branded.png",
+        "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/12075b51ca2372c1d134290f58f842412f32b4bc/media/images/2026-11-20-telekom-mistral-europa-v2-branded.png",
+        "image_attached_in_buffer": true,
+        "buffer_dashboard_url": "https://publish.buffer.com",
+        "buffer_link_kind": "official_dashboard_not_direct_post",
+        "buffer_direct_post_url": null,
+        "editorial_approval": "pending_after_draft",
+        "published": false
+      },
+      "facebook": {
+        "post_id": "6afff0ab738ce4635f93ac57",
+        "channel_id": "6ac781e46a5c39ccb64fe01c",
+        "service": "facebook",
+        "status": "draft",
+        "dueAt": "2026-12-03T08:00:00Z",
+        "scheduled_local": "2026-12-03T09:00:00+01:00",
+        "text": "🇪🇺 100 Millionen Euro: Die Deutsche Telekom steigt bei Mistral AI ein!\n\nEine interessante Nachricht für alle, die sich mit Künstlicher Intelligenz beschäftigen.\n\nDie Deutsche Telekom investiert über ihre Beteiligungsgesellschaft T.Capital 100 Millionen Euro in das französische KI-Unternehmen Mistral AI.\n\nBeide Unternehmen planen, gemeinsam KI-Lösungen für deutsche Unternehmen und Behörden zu entwickeln.\n\nWas könnte das für den Mittelstand bedeuten?\n\nBislang stehen viele Betriebe vor Fragen wie:\n\n🔹 Müssen wir für leistungsfähige KI auf amerikanische Anbieter setzen?\n🔹 Können wir selbst bestimmen, wo unsere Unternehmensdaten verarbeitet werden?\n🔹 Wie integrieren wir KI sinnvoll in unsere bestehenden Abläufe?\n\nDie geplante Zusammenarbeit könnte zusätzliche europäische Möglichkeiten eröffnen.\n\nAls AI Agent Builder beschäftige ich mich genau mit solchen Fragen.\n\nDenn ob ein KI-Agent beispielsweise Rechnungen verarbeitet, Kundenanfragen beantwortet oder Liefertermine organisiert:\n\nEntscheidend ist nicht nur die Qualität des KI-Modells. Der gesamte Prozess muss funktionieren, kontrollierbar bleiben und zum Unternehmen passen.\n\nDie Telekom-Mistral-Partnerschaft ist dafür ein interessantes Signal. Konkrete neue gemeinsame Produkte wurden allerdings noch nicht angekündigt.\n\nWie wichtig ist euch eine europäische Alternative bei Künstlicher Intelligenz?\n\nQuelle: Deutsche Telekom, 19.11.2026\nhttps://www.telekom.com/de/newsroom/aktuelles/medieninformationen/2026/11/deutsche-telekom-staerkt-souveraene-ki-in-deutschland\n\n#MistralAI #DeutscheTelekom #KünstlicheIntelligenz #Mittelstand #KIAgenten",
+        "review_image_url": "https://raw.githubusercontent.com/derJosef/social-assets/12075b51ca2372c1d134290f58f842412f32b4bc/media/images/2026-11-20-telekom-mistral-europa-v2-branded.png",
+        "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/12075b51ca2372c1d134290f58f842412f32b4bc/media/images/2026-11-20-telekom-mistral-europa-v2-branded.png",
+        "image_attached_in_buffer": true,
+        "buffer_dashboard_url": "https://publish.buffer.com",
+        "buffer_link_kind": "official_dashboard_not_direct_post",
+        "buffer_direct_post_url": null,
+        "editorial_approval": "pending_after_draft",
+        "published": false
+      },
+      "instagram": {
+        "post_id": "6afff0b14c1afd05defcc931",
+        "channel_id": "6ac79a686a5c39ccb650f94b",
+        "service": "instagram",
+        "status": "draft",
+        "dueAt": "2026-12-02T17:00:00Z",
+        "scheduled_local": "2026-12-02T18:00:00+01:00",
+        "text": "🚨 100 MILLIONEN EURO FÜR EUROPÄISCHE KI!\n\n🇩🇪 Deutsche Telekom investiert in\n🇫🇷 Mistral AI.\n\nAm 19. November 2026 wurde die Beteiligung offiziell bekannt gegeben.\n\nWas steckt dahinter?\n\n💶 100 Millionen Euro Investment\n🤝 Strategische Partnerschaft geplant\n🏭 KI für deutsche Industrie und Unternehmen\n🇪🇺 Mehr europäische KI-Infrastruktur und technologische Wahlmöglichkeiten\n\nAber eines ist wichtig:\n\nEin gutes KI-Modell macht noch keinen guten KI-Agenten.\n\nErst wenn KI zuverlässig mit Geschäftsprozessen zusammenarbeitet, Daten kontrolliert verarbeitet und wichtige Entscheidungen nachvollziehbar bleiben, entsteht wirklicher Nutzen.\n\nGenau darum geht es beim AI Agent Building.\n\nDie Investition ist ein vielversprechender Schritt. Ob die Zusammenarbeit die Erwartungen erfüllt, wird die praktische Umsetzung zeigen.\n\n💬 Was denkst du? Brauchen wir mehr europäische KI-Alternativen?\n\nQuelle: Deutsche Telekom, Pressemitteilung vom 19.11.2026.\n\n#MistralAI #DeutscheTelekom #EuropäischeKI #KIAgentBuilder #KISouveränität #Digitalisierung #Mittelstand",
+        "review_image_url": "https://raw.githubusercontent.com/derJosef/social-assets/12075b51ca2372c1d134290f58f842412f32b4bc/media/images/2026-11-20-telekom-mistral-europa-v2-branded.png",
+        "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/12075b51ca2372c1d134290f58f842412f32b4bc/media/images/2026-11-20-telekom-mistral-europa-v2-branded.png",
+        "image_attached_in_buffer": true,
+        "buffer_dashboard_url": "https://publish.buffer.com",
+        "buffer_link_kind": "official_dashboard_not_direct_post",
+        "buffer_direct_post_url": null,
+        "editorial_approval": "pending_after_draft",
+        "published": false
+      }
+    }
+  },
+  "github_run_id": "44691953113",
+  "github_run_url": "https://github.com/derJosef/social-assets/actions/runs/44691953113",
+  "job_status": "success",
+  "receipt_at": "2026-11-20T07:03:20.597935+00:00"
+}
