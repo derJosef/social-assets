@@ -1,0 +1,11 @@
+{
+  "state": "pending_manual_reconciliation_on_failure",
+  "campaign": "2026-11-20-eu-ai-act-kmu-2026",
+  "image": "https://raw.githubusercontent.com/derJosef/social-assets/83873228dcfc26895975368f4edf9fc10945a881/media/images/2026-11-20-eu-ai-act-kmu-2026-v2-branded.png",
+  "post_ids": [
+    "6b002be239116a845dd02cca",
+    "6b002be79dd03fda0b064a26",
+    "6b002bebc0a7142f84b4bff1"
+  ],
+  "github_run_id": "44731658369"
+}
