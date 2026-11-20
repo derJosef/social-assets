@@ -33,12 +33,12 @@ except ImportError:
     from legacy_six_buffer_image_edit import POST_QUERY, safe_metadata, signature
 
 
-CAMPAIGN = "2026-11-20-telekom-mistral-europa-v2"
-IMAGE_SHA256 = "0db9fb88884b0739349044accd30d85fb583819590d15c0fdbd4978f236b08db"
-IMAGE_COMMIT = "d162192889431197cbda437fe6b66cb1e4044134"
+CAMPAIGN = "2026-11-20-telekom-mistral-europa-v6-cyan-t"
+IMAGE_SHA256 = "f46f3412a1f787b17b531b508e6777c9e7e6a1ad2a1fb34112287c65faf54cfa"
+IMAGE_COMMIT = "21cb4d7b9bc1f60450d17cfe952cab5ebba4e604"
 NEW_IMAGE_URL = (
     "https://raw.githubusercontent.com/derJosef/social-assets/" + IMAGE_COMMIT
-    + "/media/images/2026-11-20-telekom-mistral-europa-v3-telekom-t-branded.png"
+    + "/media/images/2026-11-20-telekom-mistral-europa-v6-cyan-t-flow-branded.png"
 )
 OLD_IMAGE_URL = (
     "https://raw.githubusercontent.com/derJosef/social-assets/"
@@ -62,13 +62,14 @@ POSTS = {
         "due_at": "2026-12-02T17:00:00Z",
     },
 }
-TRIGGER = "AAB_TELEKOM_MISTRAL_FIX_THREE_EXISTING_DRAFT_IMAGES_ONCE_20261120"
-TRIGGER_PR = 77
+TRIGGER = "AAB_TELEKOM_MISTRAL_APPROVED_CYAN_T_REPLACE_THREE_DRAFT_IMAGES_ONCE_20261120"
+TRIGGER_PR = 82
 AGENT_ID = 350701981
-BATCH_RECEIPT = "delivery-receipts/2026-11-20-telekom-mistral-v3-image-refresh-batch.json"
+BATCH_RECEIPT = "delivery-receipts/2026-11-20-telekom-mistral-v6-image-refresh-batch.json"
 ALT = (
-    "Redaktionelle KI-Visualisierung: Das offizielle magentafarbene Telekom-T "
-    "über europäischer KI-Infrastruktur; AI Agent Builder-Logo unten rechts."
+    "Redaktionelle KI-Visualisierung: Ein cyanblaues, in Rechentechnik integriertes "
+    "Telekom-T sendet einen Datenstrom an ein abstraktes KI-Netzwerk; "
+    "originales Pauderer-Logo unten rechts."
 )
 
 EDIT = """
@@ -98,6 +99,21 @@ class DraftImageBlocked(RuntimeError):
 def require(condition: bool, reason: str) -> None:
     if not condition:
         raise DraftImageBlocked(reason)
+
+
+def same_instant(actual: object, expected: str) -> bool:
+    """Buffer returns RFC3339 .000Z; compare UTC instants, not formatting."""
+    if not isinstance(actual, str):
+        return False
+    try:
+        def utc(value: str) -> datetime:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                raise ValueError("Entwurfstermin ohne Zeitzone")
+            return parsed.astimezone(timezone.utc)
+        return utc(actual) == utc(expected)
+    except ValueError:
+        return False
 
 
 def verify_image(fetch=None) -> None:
@@ -151,7 +167,7 @@ def check_post(raw: object, channel: str, *, expect_new: bool = False) -> dict:
             f"Buffer-Kanal nicht bestätigt: {channel}")
     schedule_matches = (
         raw.get("status") == "draft" and
-        raw.get("dueAt") == expected["due_at"] and
+        same_instant(raw.get("dueAt"), expected["due_at"]) and
         raw.get("shareMode") == "customScheduled" and
         raw.get("schedulingType") == "automatic"
     )
@@ -178,14 +194,14 @@ def check_post(raw: object, channel: str, *, expect_new: bool = False) -> dict:
     meta = safe_metadata(raw, channel)
     return {
         "id": expected["id"], "channel": channel,
-        "text": raw["text"], "due_at": expected["due_at"],
+        "text": raw["text"], "due_at": raw["dueAt"],
         "tags": [t["id"] for t in tags], "metadata": meta,
         "signature": signature(raw),
     }
 
 
 def receipt_path(channel: str) -> str:
-    return f"delivery-receipts/2026-11-20-telekom-mistral-v3-image-refresh-{channel}.json"
+    return f"delivery-receipts/2026-11-20-telekom-mistral-v6-image-refresh-{channel}.json"
 
 
 def live_edit(*, get=buffer_graphql, fetch=None,
