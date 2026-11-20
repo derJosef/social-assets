@@ -1,5 +1,5 @@
 {
-  "state": "created_requires_independent_check",
+  "state": "verified_prescheduled_draft_not_queued_with_image",
   "campaign": "PF-02",
   "draft_file": "drafts/picturefix-pf02-instagram.json",
   "target": "instagram",
@@ -8,5 +8,9 @@
   "planned_due_at_utc": "2026-11-25T17:00:00Z",
   "channel_id": "6aedff5ce29c69a17184054f",
   "github_run_id": "44719722292",
-  "buffer_post_id": "6b00213e0c6d6b90527b5a70"
+  "buffer_post_id": "6b00213e0c6d6b90527b5a70",
+  "buffer_status": "draft",
+  "buffer_due_at": "2026-11-25T17:00:00Z",
+  "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/dcf26b0851e2888ea8b767e95f2b91a92d0d6602/media/images/PictureFix_PF02_Facebook_Instagram_1080x1350.png",
+  "verified_at_utc": "2026-11-20T10:30:23.763024+00:00"
 }
