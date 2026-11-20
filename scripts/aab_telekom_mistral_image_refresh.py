@@ -149,11 +149,19 @@ def check_post(raw: object, channel: str, *, expect_new: bool = False) -> dict:
     require(raw.get("channelId") == expected["channel_id"] and
             str(raw.get("channelService", "")).lower() == channel,
             f"Buffer-Kanal nicht bestätigt: {channel}")
-    require(raw.get("status") == "draft" and
-            raw.get("dueAt") == expected["due_at"] and
-            raw.get("shareMode") == "customScheduled" and
-            raw.get("schedulingType") == "automatic",
-            f"Status, geplanter Entwurfstermin oder Planungsmodus abgewichen: {channel}")
+    schedule_matches = (
+        raw.get("status") == "draft" and
+        raw.get("dueAt") == expected["due_at"] and
+        raw.get("shareMode") == "customScheduled" and
+        raw.get("schedulingType") == "automatic"
+    )
+    # Only non-sensitive scheduling fields; no post text, tags, media or credentials.
+    # Diagnostic is deliberately read-only and still fails closed.
+    require(schedule_matches,
+            f"Status, geplanter Entwurfstermin oder Planungsmodus abgewichen: {channel} "
+            f"status={raw.get('status')!r} dueAt={raw.get('dueAt')!r} "
+            f"shareMode={raw.get('shareMode')!r} "
+            f"schedulingType={raw.get('schedulingType')!r}")
     require(isinstance(raw.get("text"), str) and len(raw["text"].strip()) > 100,
             f"Text fehlt oder ist zu kurz: {channel}")
     tags = raw.get("tags")
