@@ -1,0 +1,81 @@
+name: PictureFix – Kampagne automatisch als drei sichere Buffer-Entwürfe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'picturefix/campaigns/PF-*.json'
+
+# Strictly one live Buffer writer across legacy PF01/02/03 and AI Agent Builder.
+concurrency:
+  group: buffer-drafts-single-flight
+  cancel-in-progress: false
+  queue: max
+
+permissions:
+  contents: write # Only one-shot receipts on automation-receipts.
+
+jobs:
+  three-drafts:
+    if: >-
+      ${{
+        github.ref == 'refs/heads/main' &&
+        github.event_name == 'push' &&
+        github.actor == 'derJosef-agents' &&
+        github.actor_id == '350701981' &&
+        github.run_attempt == '1' &&
+        !github.event.deleted
+      }}
+    runs-on: ubuntu-slim
+    timeout-minutes: 15
+    name: Drei datierte PictureFix-Drafts, ohne Veröffentlichung
+    steps:
+      - name: Immutable code and images from triggering main commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: PNG integrity verifier
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0'
+
+      - name: Allow only one brand-new campaign and its two approved images
+        id: campaign
+        shell: bash
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git cat-file -e "${BEFORE}^{commit}"
+          git cat-file -e "${AFTER}^{commit}"
+          git diff --no-renames --name-status "$BEFORE" "$AFTER" > "$RUNNER_TEMP/picturefix-changes.txt"
+          manifest=$(python3 - "$RUNNER_TEMP/picturefix-changes.txt" <<'PY'
+          import pathlib, sys
+          from scripts.picturefix.campaign_batch_drafts import select_new_manifest
+          print(select_new_manifest(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8')))
+          PY
+          )
+          echo "manifest=$manifest" >> "$GITHUB_OUTPUT"
+
+      - name: Preflight, reserve, create and independently read all three drafts
+        shell: bash
+        env:
+          BUFFER_BRAND: picturefix
+          BUFFER_API_KEY: ${{ secrets.BUFFER_PICTUREFIX_API_KEY }}
+          BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_FACEBOOK_CHANNEL_ID }}
+          BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_INSTAGRAM_CHANNEL_ID }}
+          BUFFER_PINTEREST_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_PINTEREST_CHANNEL_ID }}
+          BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID: ${{ secrets.BUFFER_PICTUREFIX_PINTEREST_BOARD_SERVICE_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+          MANIFEST: ${{ steps.campaign.outputs.manifest }}
+        run: |
+          set -euo pipefail
+          test -n "$BUFFER_API_KEY" || { echo 'Dedicated PictureFix token missing' >&2; exit 1; }
+          python3 -m scripts.picturefix.campaign_batch_drafts --manifest "$MANIFEST" --send
