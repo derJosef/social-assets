@@ -1,0 +1,65 @@
+name: PictureFix PF-01 – Termin in bestehendem Buffer-Entwurf
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write # Exclusively one-shot receipt on automation-receipts.
+
+concurrency:
+  group: buffer-drafts-single-flight
+  cancel-in-progress: false
+
+jobs:
+  preschedule-existing:
+    if: >-
+      ${{
+        github.ref == 'refs/heads/main' &&
+        github.actor == 'derJosef-agents' &&
+        github.event.comment.user.login == 'derJosef-agents' &&
+        github.event.issue.number == 81 &&
+        !github.event.issue.pull_request &&
+        github.event.issue.user.login == 'derJosef-agents' &&
+        github.event.issue.title == 'PICTUREFIX PF01 EXISTING DRAFT PRESCHEDULE CONTROL' &&
+        (
+          github.event.comment.body == 'PF01_FACEBOOK_PRESCHEDULE_DRAFT_ONLY' ||
+          github.event.comment.body == 'PF01_INSTAGRAM_PRESCHEDULE_DRAFT_ONLY' ||
+          github.event.comment.body == 'PF01_PINTEREST_PRESCHEDULE_DRAFT_ONLY'
+        )
+      }}
+    name: Bestehenden PictureFix-Entwurf datieren – keine Freigabe
+    runs-on: ubuntu-slim
+    timeout-minutes: 6
+    steps:
+      - name: Freigegebener Adapter von main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Genau einen unveröffentlichten PF-01-Entwurf terminieren
+        shell: bash
+        env:
+          BUFFER_BRAND: picturefix
+          BUFFER_API_KEY: ${{ secrets.BUFFER_PICTUREFIX_API_KEY }}
+          BUFFER_FACEBOOK_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_FACEBOOK_CHANNEL_ID }}
+          BUFFER_INSTAGRAM_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_INSTAGRAM_CHANNEL_ID }}
+          BUFFER_PINTEREST_CHANNEL_ID: ${{ secrets.BUFFER_PICTUREFIX_PINTEREST_CHANNEL_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+          TRIGGER: ${{ github.event.comment.body }}
+        run: |
+          set -euo pipefail
+          case "$TRIGGER" in
+            PF01_FACEBOOK_PRESCHEDULE_DRAFT_ONLY) target=facebook ;;
+            PF01_INSTAGRAM_PRESCHEDULE_DRAFT_ONLY) target=instagram ;;
+            PF01_PINTEREST_PRESCHEDULE_DRAFT_ONLY) target=pinterest ;;
+            *) echo 'PictureFix trigger rejected' >&2; exit 1 ;;
+          esac
+          test -n "$BUFFER_API_KEY" || { echo 'Dedicated PictureFix token missing' >&2; exit 1; }
+          python3 -m scripts.picturefix.pf01_preschedule_existing --target "$target" --send
