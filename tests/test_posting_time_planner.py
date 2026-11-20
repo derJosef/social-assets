@@ -25,7 +25,8 @@ class PostingTimePlannerTests(unittest.TestCase):
         self.today = date(2026, 10, 12)
 
     def propose(self, today=None):
-        return planner.propose_times(today or self.today, self.root)
+        return planner.propose_times(today or self.today, self.root,
+                                     research_checked_at=date(2026, 10, 12))
 
     def book(self, target, utc, filename="existing-request.json"):
         request = {"target": target, "publish_at_utc": utc,
@@ -103,7 +104,8 @@ class PostingTimePlannerTests(unittest.TestCase):
         for i, utc in enumerate(busy):
             self.reserve_manifest("linkedin", utc, filename=f"existing-{i}.json")
         today = date(2026, 10, 16)
-        chosen = planner.propose_times(today, self.root)
+        chosen = planner.propose_times(today, self.root,
+                                        research_checked_at=date(2026, 10, 12))
         self.assertEqual(chosen["linkedin"]["local"], "2026-11-25T16:00:00+01:00")
         self.assertEqual(chosen["linkedin"]["utc"], "2026-11-25T15:00:00Z")
         expected = datetime(2026, 11, 25, 15, tzinfo=timezone.utc)
@@ -128,7 +130,8 @@ class PostingTimePlannerTests(unittest.TestCase):
                 utc = when.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
                 self.reserve_manifest("linkedin", utc, filename=f"reserve-{day_offset}.json")
         with self.assertRaisesRegex(planner.TimePlanningBlocked, "56 Tagen"):
-            planner.propose_times(today, self.root)
+            planner.propose_times(today, self.root,
+                                  research_checked_at=date(2026, 10, 12))
 
     def test_three_days_channel_spacing(self):
         self.reserve_manifest("instagram", "2026-10-23T16:00:00Z")
@@ -163,15 +166,22 @@ class PostingTimePlannerTests(unittest.TestCase):
             self.assertEqual(len(urls), 2)
             self.assertTrue(any("buffer.com" in url for url in urls))
             self.assertTrue(any("sproutsocial.com" in url for url in urls))
-        self.assertEqual(planner.RESEARCH_CHECKED_AT, date(2026, 10, 12))
+        self.assertEqual(planner.RESEARCH_CHECKED_AT, date(2026, 11, 20))
         self.assertEqual(planner.SLOTS["linkedin"][0], (2, 16))
         self.assertEqual(planner.SLOTS["instagram"][0], (2, 18))
 
+    def test_current_november_research_supports_upcoming_slots(self):
+        result = planner.propose_times(date(2026, 11, 20), self.root)
+        for item in result.values():
+            self.assertIn("+01:00", item["local"])
+            self.assertGreaterEqual(datetime.fromisoformat(item["local"]).date(),
+                                    date(2026, 11, 25))
+
     def test_research_older_than_thirty_days_blocks_before_planning(self):
         with self.assertRaisesRegex(planner.TimePlanningBlocked, "30 Tage"):
-            planner.propose_times(date(2026, 11, 12), self.root)
+            planner.propose_times(date(2026, 12, 21), self.root)
         with self.assertRaisesRegex(planner.TimePlanningBlocked, "aus der Zukunft"):
-            planner.propose_times(date(2026, 10, 11), self.root)
+            planner.propose_times(date(2026, 11, 19), self.root)
 
     def test_no_writes_or_network_imports(self):
         before = sorted(p.relative_to(self.root) for p in self.root.rglob("*") if p.is_file())
