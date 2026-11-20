@@ -1,0 +1,11 @@
+{
+  "state": "pending_manual_reconciliation_on_failure",
+  "campaign": "PF-02",
+  "draft_file": "drafts/picturefix-pf02-facebook.json",
+  "target": "facebook",
+  "draft_sha256": "743df62fd2bd73fa89d9ac9994523843638ca7178ca4dc5f34355966bd8f9fc5",
+  "original_image_sha256": "f7dc6d94d7cda54e96f16ab61d347e5b8bf5ef08c0c597af7df6111322368e1e",
+  "planned_due_at_utc": "2026-11-25T11:00:00Z",
+  "channel_id": "6aedfe89e29c69a17183fbc0",
+  "github_run_id": "44719593416"
+}
