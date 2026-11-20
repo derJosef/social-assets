@@ -100,6 +100,21 @@ def require(condition: bool, reason: str) -> None:
         raise DraftImageBlocked(reason)
 
 
+def same_instant(actual: object, expected: str) -> bool:
+    """Buffer returns RFC3339 .000Z; compare UTC instants, not formatting."""
+    if not isinstance(actual, str):
+        return False
+    try:
+        def utc(value: str) -> datetime:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                raise ValueError("Entwurfstermin ohne Zeitzone")
+            return parsed.astimezone(timezone.utc)
+        return utc(actual) == utc(expected)
+    except ValueError:
+        return False
+
+
 def verify_image(fetch=None) -> None:
     fetch = fetch or fetch_image
     binary = fetch(NEW_IMAGE_URL)
@@ -151,7 +166,7 @@ def check_post(raw: object, channel: str, *, expect_new: bool = False) -> dict:
             f"Buffer-Kanal nicht bestätigt: {channel}")
     schedule_matches = (
         raw.get("status") == "draft" and
-        raw.get("dueAt") == expected["due_at"] and
+        same_instant(raw.get("dueAt"), expected["due_at"]) and
         raw.get("shareMode") == "customScheduled" and
         raw.get("schedulingType") == "automatic"
     )
@@ -178,7 +193,7 @@ def check_post(raw: object, channel: str, *, expect_new: bool = False) -> dict:
     meta = safe_metadata(raw, channel)
     return {
         "id": expected["id"], "channel": channel,
-        "text": raw["text"], "due_at": expected["due_at"],
+        "text": raw["text"], "due_at": raw["dueAt"],
         "tags": [t["id"] for t in tags], "metadata": meta,
         "signature": signature(raw),
     }
