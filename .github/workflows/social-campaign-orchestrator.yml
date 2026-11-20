@@ -47,20 +47,24 @@ jobs:
 
     steps:
       - name: Repository vollständig laden
+        id: checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           persist-credentials: true
 
       - name: Python einrichten
+        id: setup
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
       - name: Bild- und QA-Abhängigkeiten
+        id: deps
         run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0' 'numpy==2.5.4'
 
       - name: Offline-Regressionen (keine API-Aufrufe)
+        id: offline
         shell: bash
         run: |
           set -euo pipefail
@@ -117,6 +121,7 @@ jobs:
           echo "CAMPAIGN=$CAMPAIGN" >> "$GITHUB_ENV"
 
       - name: Protected main und geschützt schreibbaren Receipt-Ledger vor Live-Drafts prüfen
+        id: guard
         if: steps.request.outputs.mode == 'drafts'
         shell: bash
         env:
@@ -127,6 +132,7 @@ jobs:
           echo "GitHub-Schutz für main und Receipt-Branch bestätigt; keine Queue-/Publish-Freigabe." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Kampagnen-Duplikat VOR ChatGPT-Bildimport ausschließen
+        id: collision
         if: steps.request.outputs.mode == 'drafts'
         shell: bash
         run: |
@@ -136,6 +142,7 @@ jobs:
           [[ -z "$existing" ]] || { echo "Kampagnen-Branch bereits vorhanden; Bild nicht erneut importieren." >&2; exit 1; }
 
       - name: Vorhandenes ChatGPT-PNG über Adobe-Link sicher importieren und SHA prüfen
+        id: image_import
         if: steps.request.outputs.mode == 'drafts'
         shell: bash
         run: |
@@ -149,6 +156,7 @@ jobs:
           fi
 
       - name: Vorbereitete ChatGPT-Texte und vorhandenes 4:5-Motiv verifizieren
+        id: preflight
         if: steps.request.outputs.mode == 'drafts'
         shell: bash
         run: |
@@ -156,6 +164,7 @@ jobs:
           python3 scripts/prepared_brief_preflight.py --brief "$BRIEF"
 
       - name: Bisherige automatische Kanaltermine read-only für die Planung laden
+        id: reservations
         if: steps.request.outputs.mode == 'drafts'
         shell: bash
         run: |
@@ -166,6 +175,7 @@ jobs:
           python3 scripts/campaign_reservations.py
 
       - name: Inter-Schrift nur für die echte Bildproduktion beziehen
+        id: font
         if: steps.request.outputs.mode == 'drafts'
         shell: bash
         run: |
@@ -185,6 +195,7 @@ jobs:
           python3 scripts/social_orchestrator.py --brief "$BRIEF" --mode "$RUN_MODE" --report "$REPORT_PATH"
 
       - name: Geprüfte Assets auf unveränderlichem Bild-Commit sichern (NICHT main)
+        id: freeze
         if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
         shell: bash
         run: |
@@ -252,6 +263,7 @@ jobs:
           echo "$((expected + expected_post_count)) neue Kampagnendateien nur auf $branch (nicht main); Medien per Bild-Commit $image_commit fixiert." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Vorbereitete Beiträge ohne Fremdtrigger DIREKT als Drafts senden
+        id: send
         if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
         shell: bash
         env:
@@ -271,6 +283,7 @@ jobs:
             --send
 
       - name: Unabhängige Buffer-Prüfung (draft und verbindlicher Datumswert, nie Queue)
+        id: readback
         if: steps.request.outputs.mode == 'drafts' && steps.build.outcome == 'success'
         shell: bash
         env:
@@ -289,27 +302,39 @@ jobs:
           REQUEST_CAMPAIGN: ${{ steps.request.outputs.campaign }}
           REPORT_PATH: ${{ runner.temp }}/social-orchestrator-report.json
           JOB_STATUS: ${{ job.status }}
+          OUTCOME_CHECKOUT: ${{ steps.checkout.outcome }}
+          OUTCOME_SETUP: ${{ steps.setup.outcome }}
+          OUTCOME_DEPS: ${{ steps.deps.outcome }}
+          OUTCOME_OFFLINE: ${{ steps.offline.outcome }}
+          OUTCOME_REQUEST: ${{ steps.request.outcome }}
+          OUTCOME_GUARD: ${{ steps.guard.outcome }}
+          OUTCOME_COLLISION: ${{ steps.collision.outcome }}
+          OUTCOME_IMAGE_IMPORT: ${{ steps.image_import.outcome }}
+          OUTCOME_PREFLIGHT: ${{ steps.preflight.outcome }}
+          OUTCOME_RESERVATIONS: ${{ steps.reservations.outcome }}
+          OUTCOME_FONT: ${{ steps.font.outcome }}
+          OUTCOME_BUILD: ${{ steps.build.outcome }}
+          OUTCOME_FREEZE: ${{ steps.freeze.outcome }}
+          OUTCOME_SEND: ${{ steps.send.outcome }}
+          OUTCOME_READBACK: ${{ steps.readback.outcome }}
         run: |
           set -euo pipefail
           mkdir -p /tmp/social-final-report
           python3 - <<'PY'
           import os,json
-          from datetime import datetime,timezone
-          path=os.environ["REPORT_PATH"]
-          try:
-              with open(path,encoding="utf-8") as f: data=json.load(f)
-          except (OSError,ValueError):
-              data={"steps":{},"state":"blocked_before_preparation"}
-          data["github_run_id"]=os.environ["GITHUB_RUN_ID"]
-          data["github_run_url"]=f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
-          data["job_status"]=os.environ["JOB_STATUS"]
-          data["receipt_at"]=datetime.now(timezone.utc).isoformat()
-          cid=os.environ.get("REQUEST_CAMPAIGN","") or "preflight"
-          data["campaign"]=data.get("campaign") or cid
-          with open("/tmp/social-final-report/receipt.json","w",encoding="utf-8") as f:
-              json.dump(data,f,ensure_ascii=False,indent=2);f.write("\n")
-          print(f"Report status: {data.get('state')}, job={data['job_status']}")
+          keys=("checkout", "setup", "deps", "offline", "request", "guard", "collision",
+                "image_import", "preflight", "reservations", "font", "build", "freeze",
+                "send", "readback")
+          outcomes={key:os.getenv("OUTCOME_"+key.upper(),"") or "skipped" for key in keys}
+          with open("/tmp/social-final-report/outcomes.json","w",encoding="utf-8") as f:
+              json.dump(outcomes,f)
           PY
+          python3 scripts/action_phase_ledger.py \
+            --report "$REPORT_PATH" \
+            --outcomes /tmp/social-final-report/outcomes.json \
+            --output /tmp/social-final-report/receipt.json \
+            --repo "$GITHUB_REPOSITORY" --run-id "$GITHUB_RUN_ID" \
+            --job-status "$JOB_STATUS" --campaign "${REQUEST_CAMPAIGN:-preflight}"
           # Read-only report rendering; unverified or partial runs say BLOCKED,
           # never emit a fictitious Buffer post link or an approval claim.
           python3 scripts/social_weekly_review.py \
