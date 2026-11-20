@@ -1,0 +1,10 @@
+{
+  "state": "pending_manual_reconciliation_on_failure",
+  "draft_file": "drafts/picturefix-pf01-pinterest.json",
+  "target": "pinterest",
+  "buffer_post_id": "6b000f2c0f5eda1a57d865eb",
+  "channel_id": "6aee0027e29c69a171840e38",
+  "planned_due_at_utc": "2026-11-23T09:00:00Z",
+  "original_image_sha256": "30fdf528505a6e2ca3bf0aed768f876cd32e650e4d39e7a55950cc8b33789c8a",
+  "github_run_id": "44713564881"
+}
