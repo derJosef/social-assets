@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "source": "media/source-images/2026-11-20-eu-ai-act-kmu-2026-source.png",
+  "source_sha256": "2129c7b6e531c3f8d34c288eaf3c2b250c0872b8338f4d710fd9f02277dec1f6",
+  "layout": "headline",
+  "heading": "AI ACT 2026: WAS KMU JETZT PRÜFEN",
+  "visual_review": {
+    "no_people": true,
+    "no_robot": true,
+    "no_foreign_logo": true,
+    "no_generated_text": true,
+    "plausible_details": true,
+    "matches_topic": true,
+    "heading_and_logo_space": true
+  },
+  "review_evidence": "ChatGPT inspected the actual generated 1122x1402 PNG on 2026-11-20 after removing unintended stylized person symbols in a separate image edit. Final version shows a generic transparent shield with abstract faceted geometric validation marker, layered glass workflow panels, and cyan/amber signal nodes. Dark upper-left text region and unobstructed lower-right logo area. No people, robots, third-party marks, generated text or trademarks detected. Conceptual visualization rather than technical depiction. This is ChatGPT visual inspection, NOT a human visual review and NOT publication approval.",
+  "chatgpt_review": {
+    "kind": "chatgpt_visual_inspection_draft_only",
+    "source_sha256": "2129c7b6e531c3f8d34c288eaf3c2b250c0872b8338f4d710fd9f02277dec1f6"
+  }
+}

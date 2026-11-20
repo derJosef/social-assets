@@ -1,0 +1,55 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-11-20-eu-ai-act-kmu-2026",
+  "execution_mode": "drafts",
+  "topic": "Der AI Omnibus zur EU-KI-Verordnung ist seit 27. Juli 2026 in Kraft (EU-Verordnung 2026/1744). Er vereinfacht bestimmte Vorgaben und verschiebt Anwendungstermine für bestimmte Hochrisiko-Systeme, nicht pauschal für alle KI-Anwendungen. Für kleine und mittlere Unternehmen mit KI-Agenten: Bestandsaufnahme, Einsatzrolle, Risikoeinordnung, Datenflüsse und menschliche Freigaben praktisch prüfen. Keine individuelle Rechtsberatung oder Behauptung einer pauschalen Aussetzung des AI Act.",
+  "sources": [
+    {
+      "url": "https://digital-strategy.ec.europa.eu/en/news/ai-omnibus-enters-force",
+      "published_at": "2026-07-27"
+    },
+    {
+      "url": "https://eur-lex.europa.eu/eli/reg/2026/1744/oj?locale=de",
+      "published_at": "2026-07-24"
+    },
+    {
+      "url": "https://ai-act-service-desk.ec.europa.eu/en/ai-act-explorer",
+      "published_at": "2026-07-27"
+    }
+  ],
+  "posting_sources": [
+    "https://buffer.com/resources/best-time-to-post-on-linkedin/",
+    "https://sproutsocial.com/insights/best-times-to-post-on-linkedin/",
+    "https://buffer.com/resources/best-time-to-post-on-facebook/",
+    "https://sproutsocial.com/insights/best-times-to-post-on-facebook/",
+    "https://buffer.com/resources/when-is-the-best-time-to-post-on-instagram/",
+    "https://sproutsocial.com/insights/best-times-to-post-on-instagram/"
+  ],
+  "image_review": "visual-reviews/2026-11-20-eu-ai-act-kmu-2026.json",
+  "prepared_content": {
+    "posts": {
+      "linkedin": "AI Act 2026: Mehr Zeit für bestimmte Regeln heißt nicht weniger Verantwortung für KI-Agenten.\n\nSeit dem 27. Juli 2026 gilt der sogenannte AI Omnibus (Verordnung EU 2026/1744). Er vereinfacht Teile der europäischen KI-Regeln. Für bestimmte Hochrisiko-Anwendungen wurden die Fristen angepasst: unter anderem auf den 2. Dezember 2027 für Fälle nach Anhang III und den 2. August 2028 für Hochrisiko-KI in bestimmten regulierten Produkten nach Anhang I. Das ist keine pauschale Verschiebung des gesamten AI Act.\n\nWas bedeutet das für einen mittelständischen Betrieb, der heute einen KI-Agenten einführt?\n\nIch würde mit fünf Fragen anfangen:\n\n1. INVENTAR: Welche KI-Systeme und Agenten setzen wir tatsächlich ein?\n2. ROLLE: Sind wir Anbieter oder Betreiber – und wer ist verantwortlich?\n3. RISIKO: Welche konkreten Aufgaben führt das System aus, und welche Regeln gelten dafür?\n4. DATEN: Woher kommen Informationen, und wohin fließen sie?\n5. FREIGABE: Welche Aktionen darf der Agent vorbereiten, welche muss ein Mensch bestätigen?\n\nBeispiel: Ein Agent kann eingehende Kundenanfragen sortieren und eine Antwort vorschlagen. Ob er sie ohne Prüfung versenden darf, ist eine gesonderte Entscheidung über Prozess, Risiko und Rechte.\n\nMein Fazit: Die neue Rechtslage ist ein guter Anlass für eine saubere Bestandsaufnahme – kein Grund, die Kontrollen auszusetzen. Die rechtliche Einordnung hängt vom konkreten Anwendungsfall ab.\n\nWelche dieser fünf Fragen ist bei euch heute am schwierigsten zu beantworten?\n\nQuellen: Europäische Kommission, 27.07.2026; Verordnung (EU) 2026/1744.\nhttps://digital-strategy.ec.europa.eu/en/news/ai-omnibus-enters-force\n\n#AIAct #KIAgenten #Mittelstand #AIGovernance #AIagentBuilder",
+      "facebook": "🇪🇺 Der EU AI Act wurde 2026 angepasst. Was heißt das für Betriebe mit KI-Agenten?\n\nDer AI Omnibus ist seit dem 27. Juli 2026 in Kraft. Für bestimmte Hochrisiko-KI gelten neue Fristen, und einzelne Vorgaben wurden vereinfacht. Aber: Nicht alle Pflichten sind auf später verschoben.\n\nFür den Alltag im Mittelstand finde ich drei praktische Fragen wichtiger als Schlagzeilen über Termine:\n\n🔹 WO? In welchen Prozessen arbeitet bei uns bereits KI – vielleicht auch unsichtbar in einer Software?\n🔹 WAS? Welche Daten sieht der Agent, und was darf er selbstständig verändern oder versenden?\n🔹 WER? Wer prüft Ergebnisse und übernimmt die Freigabe bei wichtigen Entscheidungen?\n\nStell dir einen KI-Agenten vor, der Rechnungsdaten ausliest und Buchungsvorschläge erstellt. Das kann Zeit sparen. Die endgültige Buchung sollte aber zu einem klar definierten Prüf- und Rechtekonzept passen.\n\nMein Tipp: Erst die eigenen Anwendungsfälle erfassen, dann die passenden Anforderungen prüfen. Eine allgemeine Fristenübersicht ersetzt diese Einordnung nicht.\n\nWie weit seid ihr mit einer Übersicht eurer KI-Anwendungen?\n\nQuelle: Europäische Kommission, 27.07.2026, und EU-Verordnung 2026/1744.\nhttps://digital-strategy.ec.europa.eu/en/news/ai-omnibus-enters-force\n\n#AIAct #KünstlicheIntelligenz #Mittelstand #KIAgenten",
+      "instagram": "🇪🇺 AI ACT 2026: ERST EINORDNEN, DANN AUTOMATISIEREN.\n\nDer AI Omnibus ist seit 27. Juli 2026 in Kraft. Er vereinfacht Teile der Regeln und verschiebt bestimmte Hochrisiko-Fristen. ⏳\n\nWichtig: Das ist KEIN Freifahrtschein für jeden KI-Agenten.\n\nFür deinen Betrieb zählen jetzt drei Checks:\n\n1️⃣ EINSATZ: Wo arbeitet bereits KI mit?\n2️⃣ KONTROLLE: Auf welche Daten und Aktionen darf ein Agent zugreifen?\n3️⃣ FREIGABE: Wer bestätigt kritische Schritte?\n\n💡 Praxisbeispiel: Der Agent liest eine Kundenanfrage, bereitet die Antwort vor – ein Mensch prüft sie vor dem Versand.\n\nNeue Fristen sind hilfreich. Klare Verantwortlichkeiten bleiben unverzichtbar.\n\n💬 Hast du schon eine Liste deiner KI-Anwendungen?\n\nQuelle: EU-Kommission, 27.07.2026; Verordnung (EU) 2026/1744.\n\n#AIAct #KIAgentBuilder #KIAgenten #AIGovernance #Mittelstand #Digitalisierung"
+    },
+    "visual": null,
+    "six_hats": {
+      "white": "Die EU-Kommission bestätigt das Inkrafttreten des AI Omnibus am 27. Juli 2026. Die Verordnung (EU) 2026/1744 änderte den AI Act. Die Termine 2. Dezember 2027 (Anhang III) und 2. August 2028 (Anhang I) gelten spezifischen Hochrisiko-Konstellationen und nicht pauschal jeder KI-Nutzung.",
+      "red": "Kleinere Betriebe wünschen sich Entlastung und Rechtssicherheit; zugleich können wechselnde Termine Unsicherheit und Sorge vor bürokratischen Fehlern auslösen.",
+      "black": "Die Verordnung ersetzt keine Einzelfallprüfung; die Begriffe Hochrisiko, Anbieter, Betreiber und konkrete Einsatzrolle dürfen nicht vermischt werden. Die rechtlichen Pflichten variieren je Anwendungsfall. Keine falsche Aussage über umfassende Fristenverlängerung oder pauschale Befreiung von Anforderungen.",
+      "yellow": "Die Reform macht aus der abstrakten Rechtsdebatte einen hilfreichen Praxisanlass für die Inventarisierung von KI-Anwendungen, begrenzte Agentenrechte und klare menschliche Freigaben.",
+      "green": "Das neue originale 4:5-Motiv visualisiert kontrollierte Workflow-Knoten unter einer transparenten Schutzstruktur, ohne Personendarstellung, Fremdmarken oder erzeugte Schrift. Originalmarke wird erst im geprüften GitHub-Compositor hinzugefügt.",
+      "blue": "Eine neue Kampagne mit drei verschiedenen Kanaltexten, zwei amtlichen Rechtsquellen und dem offiziellen EU-Explorer. Neue Bildbytes sind lokal SHA256-geprüft, in GitHub per immutabler Datei vorgesehen, keine manuelle Adobe-Weitergabe. Veröffentlichungsdatum nur als Vorschlag auf Buffer status=draft mit dueAt, nie scheduled oder published; unabhängiger Readback ist Pflicht."
+    },
+    "risks": [
+      "Rechts- und Anwendungsstand vor einer tatsächlichen Veröffentlichung erneut gegen die amtliche konsolidierte Fassung prüfen; keine individuelle Rechtsberatung.",
+      "Termine nur in Bezug auf die benannten Hochrisiko-Kategorien darstellen, nicht auf alle KI-Systeme verallgemeinern.",
+      "Generisches Beispiel ohne echte Kundendaten; keine Aussagen zur Compliance einzelner Unternehmen.",
+      "Originalbild mit SHA256 und visuellem ChatGPT-Draft-only-Review; kein menschlicher Freigabebeleg. Markenlogo separat aus verifizierter Originaldatei.",
+      "Kein bezahlter API-Modellaufruf. Die drei Texte sind für den Orchestrator vollständig vorbereitet.",
+      "Keine Doppelproduktion: neue eindeutige Kampagnenkennung; vor Transfer bestehende Buffer-Receipts und Kampagnenzweige prüfen.",
+      "Nur echte Buffer-Drafts mit belegtem Post-ID, Status und dueAt. Keine Queue, keine geplante Veröffentlichung, kein Publish ohne Josef."
+    ]
+  }
+}
