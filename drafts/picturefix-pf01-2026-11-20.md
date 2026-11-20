@@ -14,7 +14,15 @@ Ein kleines, vergilbtes Kinderporträt aus der Nachkriegszeit – ein Mädchen m
 - Facebook/Instagram (ca. 4:5): [picturefix-pf01-familienfoto-4x5.png](../media/images/picturefix-pf01-familienfoto-4x5.png) – 1122×1402 px, 2.387.955 Byte, SHA-256 `d6210a70d229620c8feb6f0d70396c96aa5cf7a5a6a27eb62ffc70525db59792`.
 - Pinterest (2:3): [picturefix-pf01-familienfoto-pinterest-2x3.png](../media/images/picturefix-pf01-familienfoto-pinterest-2x3.png) – 1024×1536 px, 2.456.654 Byte, SHA-256 `70765cfb88184c9a4ed51213728aa01071e377dba1495a550ef85b4acdfce106`.
 - Stilreferenz: freigegebenes Bild vom 07.11.2026, `a_realistic_cinematic_vintage_photo_styled_illust.png`, SHA-256 `a6856a58c56bbe2789a4bf825ce428ea5a5ae7c59cc4d94708735f6a1e8bb333` in der ChatGPT-Bibliothek, vor der Generierung bytegenau geprüft.
-- Original-Logo: `derJosef/picturefix-de-website@main/app/public/assets/brand/PictureFixLogo_Web.png`. **Noch kein Logo in den Entwürfen montiert**. Nie nachgenerieren oder verzerren.
+- Original-Logo: `derJosef/picturefix-de-website@main/app/public/assets/brand/PictureFixLogo_Web.png`, Git-Blob `0cd926e6631209dd4e5c8029dfb72c29bbf89ea8`. Das Logo ist in den ergänzten finalen Designvorlagen **proportional überlagert**, nicht durch KI nachgezeichnet.
+
+## Logo-montierte Designvorlagen (zur letzten Sichtfreigabe)
+
+- Facebook/Instagram: [PF01_4x5_mit_Originallogo.png](../media/images/picturefix-pf01-familienfoto-4x5-mit-originallogo.png) – 1122×1402 px; 2.138.831 Byte; SHA-256 `dd368b75a8275c4cffa253489326112d4b4636250ed1e008144d3ad049bb8a54`; Git-Blob `dacc8140be53f245ca9b6f0a8621697ca343ea3a`.
+- Pinterest: [PF01_2x3_mit_Originallogo.png](../media/images/picturefix-pf01-familienfoto-pinterest-2x3-mit-originallogo.png) – 1024×1536 px; 2.167.346 Byte; SHA-256 `d4da349dd11e3b468eacc141b2f7313f34583f73007a31c12d19b3561b71db7b`; Git-Blob `0ad8e535ca100561365d0ae2de9bff9a4f16a465`.
+- Original-PictureFix-Logo aus der ChatGPT-Bibliothek bytegenau zurückgewonnen und gegen den dokumentierten Git-Blob `0cd926e6631209dd4e5c8029dfb72c29bbf89ea8` bestätigt.
+- Overlay jeweils nur in der linken oberen, motivfreien Fläche auf ruhiger cremeweißer Trägerfläche. Pixel außerhalb der begrenzten Logofläche unverändert; beide finalen PNGs erneut dekodiert und per Hash geprüft. Die unbranded Original-PNGs bleiben im PR nachvollziehbar erhalten.
+- **Visuell und technisch im Agentenlauf geprüft; Josefs letzte Freigabe für Layout/Text vor Buffer erforderlich.**
 
 ## Facebook
 
@@ -78,7 +86,7 @@ Alte Fotos bewahren und Familienerinnerungen erhalten.
 - Generierte Bilder sind **keine** echten Kundenfotos oder Restaurierungsbelege.
 - Keine Bildgenerierungs-, Bezahl-, Wasserzeichen- oder Restaurierungsmodule der produktiven PictureFix-Anwendung verändert.
 - Bilddateien auf PNG-Dekodierbarkeit, Maße und lokalen SHA-256-Wert geprüft. GitHub-Readback und Veröffentlichungs-Review separat erforderlich.
-- Bis zur visuellen Abnahme von Josef und zur ggf. notwendigen Original-Logo-Montage **nicht als veröffentlichungsfertig** kennzeichnen.
+- Bis zu Josefs abschließender Layout-/Textabnahme **nicht als veröffentlichungsfertig** kennzeichnen. Original-Logo ist in den logo-montierten Designvorlagen bereits ergänzt.
 - In dieser PR keine automatische Übertragung nach Buffer, kein `ready-for-buffer/`, keine Queue oder geplante Veröffentlichung.
 
 ## Thema-Evidenz
