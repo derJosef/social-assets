@@ -1,10 +1,11 @@
 {
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "verified_existing_draft_revised_unpublished",
   "campaign": "2026-11-20-eu-ai-act-kmu-2026",
   "target": "facebook",
   "post_id": "6b002be79dd03fda0b064a26",
   "expected_due_at": "2026-12-17T08:00:00Z",
   "new_image_sha256": "aa0f2369ec251048810dcdbc1c4c636350d2232ea7fc2da1e22b4b6ab24cc159",
   "new_text_sha256": "bd19df66cea0eb0e5936a3039df53d0e11ebc32611081a0a4f0465ed44aecc68",
-  "github_run_id": "44731658369"
+  "github_run_id": "44731658369",
+  "verified_at": "2026-11-20T11:57:30.503179+00:00"
 }
