@@ -2,7 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-11-20-eu-ai-act-kmu-2026-linkedin.json",
   "target": "linkedin",
   "draft_sha256": "b888a633c61df49eca29141e394ed0f341b732465698e912291be693b41c0764",
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "created_requires_independent_check",
   "github_run_id": "44725991863",
   "due_at_utc": "2026-12-16T15:00:00Z",
   "channel_id": "6aac167eea19ca0bde6ada5b",
@@ -10,5 +10,6 @@
     "campaign": "2026-11-20-eu-ai-act-kmu-2026",
     "quality_gate": "passed",
     "image_sha256": "313cfc15ff750fb9da3c7c302958fb2ca8a47154b3f1c3d01f08a21c315ab878"
-  }
+  },
+  "buffer_post_id": "6b002be239116a845dd02cca"
 }
