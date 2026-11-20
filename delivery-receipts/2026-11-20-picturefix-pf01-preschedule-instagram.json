@@ -1,0 +1,10 @@
+{
+  "state": "pending_manual_reconciliation_on_failure",
+  "draft_file": "drafts/picturefix-pf01-instagram.json",
+  "target": "instagram",
+  "buffer_post_id": "6b000ee54c1afd05de096791",
+  "channel_id": "6aedff5ce29c69a17184054f",
+  "planned_due_at_utc": "2026-11-20T20:00:00Z",
+  "original_image_sha256": "b68ea7a962141f6ddf75ab1cb29a6975e9d433aaa74e07d018cc2fbde3aa94cb",
+  "github_run_id": "44713283700"
+}
