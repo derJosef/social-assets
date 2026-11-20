@@ -1,0 +1,10 @@
+{
+  "state": "pending_manual_reconciliation_on_failure",
+  "campaign": "2026-11-20-eu-ai-act-kmu-2026",
+  "target": "instagram",
+  "post_id": "6b002bebc0a7142f84b4bff1",
+  "expected_due_at": "2026-12-16T17:00:00Z",
+  "new_image_sha256": "aa0f2369ec251048810dcdbc1c4c636350d2232ea7fc2da1e22b4b6ab24cc159",
+  "new_text_sha256": "3509199caf1750a4ee51c8e720e71fa6cdc9893a8654961668da3ca0eb4dfe7d",
+  "github_run_id": "44731658369"
+}
