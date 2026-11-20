@@ -101,8 +101,11 @@ class OrchestratorTests(unittest.TestCase):
             m.load_brief(self.name)
 
     def test_sommerzeit_and_winterzeit(self):
-        summer=m.select_times(date(2026,10,12))
-        winter=m.select_times(date(2026,11,3))
+        # Historic DST fixture uses the study snapshot available in October.
+        summer=m.propose_times(date(2026,10,12),m.ROOT,
+                               research_checked_at=date(2026,10,12))
+        winter=m.propose_times(date(2026,11,3),m.ROOT,
+                               research_checked_at=date(2026,10,12))
         self.assertTrue(all("+02:00" in v["local"] for v in summer.values()))
         self.assertTrue(all("+01:00" in v["local"] for v in winter.values()))
         self.assertTrue(all(v["utc"].endswith("Z") for v in summer.values()))
