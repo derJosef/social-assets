@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "facebook",
+  "text": "🇪🇺 Der EU AI Act wurde 2026 angepasst. Was heißt das für Betriebe mit KI-Agenten?\n\nDer AI Omnibus ist seit dem 27. Juli 2026 in Kraft. Für bestimmte Hochrisiko-KI gelten neue Fristen, und einzelne Vorgaben wurden vereinfacht. Aber: Nicht alle Pflichten sind auf später verschoben.\n\nFür den Alltag im Mittelstand finde ich drei praktische Fragen wichtiger als Schlagzeilen über Termine:\n\n🔹 WO? In welchen Prozessen arbeitet bei uns bereits KI – vielleicht auch unsichtbar in einer Software?\n🔹 WAS? Welche Daten sieht der Agent, und was darf er selbstständig verändern oder versenden?\n🔹 WER? Wer prüft Ergebnisse und übernimmt die Freigabe bei wichtigen Entscheidungen?\n\nStell dir einen KI-Agenten vor, der Rechnungsdaten ausliest und Buchungsvorschläge erstellt. Das kann Zeit sparen. Die endgültige Buchung sollte aber zu einem klar definierten Prüf- und Rechtekonzept passen.\n\nMein Tipp: Erst die eigenen Anwendungsfälle erfassen, dann die passenden Anforderungen prüfen. Eine allgemeine Fristenübersicht ersetzt diese Einordnung nicht.\n\nWie weit seid ihr mit einer Übersicht eurer KI-Anwendungen?\n\nQuelle: Europäische Kommission, 27.07.2026, und EU-Verordnung 2026/1744.\nhttps://digital-strategy.ec.europa.eu/en/news/ai-omnibus-enters-force\n\n#AIAct #KünstlicheIntelligenz #Mittelstand #KIAgenten",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/5bc4c8f49fd7ea032aaacf52936941e488e268f1/media/images/2026-11-20-eu-ai-act-kmu-2026-branded.png",
+        "alt_text": "Technische Darstellung zum Thema Der AI Omnibus zur EU-KI-Verordnung ist seit 27. Juli 2026 in Kraft (EU-Verordnung 2026/1744). Er vereinfacht bestimmte Vorgaben und verschiebt Anwendungstermine für; Original-Pauderer-Logo unten rechts."
+      }
+    ]
+  }
+}

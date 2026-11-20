@@ -1,0 +1,14 @@
+{
+  "format_version": 2,
+  "target": "linkedin",
+  "text": "AI Act 2026: Mehr Zeit für bestimmte Regeln heißt nicht weniger Verantwortung für KI-Agenten.\n\nSeit dem 27. Juli 2026 gilt der sogenannte AI Omnibus (Verordnung EU 2026/1744). Er vereinfacht Teile der europäischen KI-Regeln. Für bestimmte Hochrisiko-Anwendungen wurden die Fristen angepasst: unter anderem auf den 2. Dezember 2027 für Fälle nach Anhang III und den 2. August 2028 für Hochrisiko-KI in bestimmten regulierten Produkten nach Anhang I. Das ist keine pauschale Verschiebung des gesamten AI Act.\n\nWas bedeutet das für einen mittelständischen Betrieb, der heute einen KI-Agenten einführt?\n\nIch würde mit fünf Fragen anfangen:\n\n1. INVENTAR: Welche KI-Systeme und Agenten setzen wir tatsächlich ein?\n2. ROLLE: Sind wir Anbieter oder Betreiber – und wer ist verantwortlich?\n3. RISIKO: Welche konkreten Aufgaben führt das System aus, und welche Regeln gelten dafür?\n4. DATEN: Woher kommen Informationen, und wohin fließen sie?\n5. FREIGABE: Welche Aktionen darf der Agent vorbereiten, welche muss ein Mensch bestätigen?\n\nBeispiel: Ein Agent kann eingehende Kundenanfragen sortieren und eine Antwort vorschlagen. Ob er sie ohne Prüfung versenden darf, ist eine gesonderte Entscheidung über Prozess, Risiko und Rechte.\n\nMein Fazit: Die neue Rechtslage ist ein guter Anlass für eine saubere Bestandsaufnahme – kein Grund, die Kontrollen auszusetzen. Die rechtliche Einordnung hängt vom konkreten Anwendungsfall ab.\n\nWelche dieser fünf Fragen ist bei euch heute am schwierigsten zu beantworten?\n\nQuellen: Europäische Kommission, 27.07.2026; Verordnung (EU) 2026/1744.\nhttps://digital-strategy.ec.europa.eu/en/news/ai-omnibus-enters-force\n\n#AIAct #KIAgenten #Mittelstand #AIGovernance #AIagentBuilder",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/5bc4c8f49fd7ea032aaacf52936941e488e268f1/media/images/2026-11-20-eu-ai-act-kmu-2026-branded.png",
+        "alt_text": "Technische Darstellung zum Thema Der AI Omnibus zur EU-KI-Verordnung ist seit 27. Juli 2026 in Kraft (EU-Verordnung 2026/1744). Er vereinfacht bestimmte Vorgaben und verschiebt Anwendungstermine für; Original-Pauderer-Logo unten rechts."
+      }
+    ]
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-11-20-eu-ai-act-kmu-2026",
+  "checked_at": "2026-11-20",
+  "sources": [
+    {
+      "url": "https://digital-strategy.ec.europa.eu/en/news/ai-omnibus-enters-force",
+      "published_at": "2026-07-27",
+      "checked_at": "2026-11-20"
+    },
+    {
+      "url": "https://ai-act-service-desk.ec.europa.eu/en/ai-act-explorer",
+      "published_at": "2026-07-27",
+      "checked_at": "2026-11-20"
+    }
+  ],
+  "checks": {
+    "novelty": true,
+    "claims_with_sources": true,
+    "language_and_cta": true,
+    "six_hats": true,
+    "privacy_and_rights": true,
+    "brand_image": true,
+    "posting_time_research": true
+  },
+  "image": {
+    "final": "media/images/2026-11-20-eu-ai-act-kmu-2026-branded.png",
+    "base": "media/source-images/2026-11-20-eu-ai-act-kmu-2026-base.png",
+    "sha256": "313cfc15ff750fb9da3c7c302958fb2ca8a47154b3f1c3d01f08a21c315ab878",
+    "layout": "headline",
+    "review_spec": "visual-reviews/2026-11-20-eu-ai-act-kmu-2026.json",
+    "source_sha256": "2129c7b6e531c3f8d34c288eaf3c2b250c0872b8338f4d710fd9f02277dec1f6",
+    "ai_disclosure": {
+      "required": false,
+      "text": null,
+      "pixel_verified": false
+    },
+    "heading_corner": "top-left",
+    "heading_box": [
+      53,
+      86,
+      840,
+      242
+    ]
+  },
+  "posts": {
+    "linkedin": "ready-for-buffer/auto-2026-11-20-eu-ai-act-kmu-2026-linkedin.json",
+    "facebook": "ready-for-buffer/auto-2026-11-20-eu-ai-act-kmu-2026-facebook.json",
+    "instagram": "ready-for-buffer/auto-2026-11-20-eu-ai-act-kmu-2026-instagram.json"
+  },
+  "posting_times": {
+    "linkedin": {
+      "local": "2026-12-16T16:00:00+01:00",
+      "utc": "2026-12-16T15:00:00Z"
+    },
+    "facebook": {
+      "local": "2026-12-17T09:00:00+01:00",
+      "utc": "2026-12-17T08:00:00Z"
+    },
+    "instagram": {
+      "local": "2026-12-16T18:00:00+01:00",
+      "utc": "2026-12-16T17:00:00Z"
+    }
+  }
+}
