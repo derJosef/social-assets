@@ -17,6 +17,7 @@ permissions: {}
 concurrency:
   group: buffer-drafts-single-flight
   cancel-in-progress: false
+  queue: max
 
 jobs:
   offline:
