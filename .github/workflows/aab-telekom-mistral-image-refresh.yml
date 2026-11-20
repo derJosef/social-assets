@@ -28,7 +28,7 @@ jobs:
         github.event.comment.user.id == 350701981 &&
         github.event.comment.body == 'AAB_TELEKOM_MISTRAL_FIX_THREE_EXISTING_DRAFT_IMAGES_ONCE_20261120'
       }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     timeout-minutes: 20
     env:
       BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
