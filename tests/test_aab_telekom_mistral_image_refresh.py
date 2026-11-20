@@ -101,6 +101,23 @@ class TestMistralImageRefresh(unittest.TestCase):
         self.assertEqual(self.receipts[m.BATCH_RECEIPT]["state"],
                          "verified_three_existing_drafts_image_only")
 
+    def test_buffer_millisecond_timestamp_is_same_instant_and_preserved(self):
+        for channel in m.POSTS:
+            self.posts[channel]["dueAt"] = m.POSTS[channel]["due_at"].replace(
+                "Z", ".000Z")
+        before = deepcopy(self.posts)
+        self.run_edit()
+        self.assertEqual(len(self.edit_calls), 3)
+        for channel, vars in self.edit_calls:
+            self.assertEqual(vars["dueAt"], before[channel]["dueAt"])
+            self.assertEqual(self.posts[channel]["dueAt"], before[channel]["dueAt"])
+
+    def test_time_change_or_missing_zone_is_still_rejected(self):
+        self.assertFalse(m.same_instant("2026-12-09T16:00:00.000Z",
+                                        "2026-12-09T15:00:00Z"))
+        self.assertFalse(m.same_instant("2026-12-09T15:00:00",
+                                        "2026-12-09T15:00:00Z"))
+
     def test_no_schedule_publish_or_create_mutation(self):
         self.assertIn("editPost(", m.EDIT)
         self.assertNotIn("createPost", m.EDIT)
