@@ -1,0 +1,12 @@
+{
+  "campaign": "2026-11-20-telekom-mistral-europa-v6-cyan-t",
+  "run_id": "44712865568",
+  "state": "pending_manual_reconciliation_on_failure",
+  "post_ids": [
+    "6afff0a57b0a126cebb56f34",
+    "6afff0ab738ce4635f93ac57",
+    "6afff0b14c1afd05defcc931"
+  ],
+  "image": "https://raw.githubusercontent.com/derJosef/social-assets/21cb4d7b9bc1f60450d17cfe952cab5ebba4e604/media/images/2026-11-20-telekom-mistral-europa-v6-cyan-t-flow-branded.png",
+  "image_sha256": "f46f3412a1f787b17b531b508e6777c9e7e6a1ad2a1fb34112287c65faf54cfa"
+}
