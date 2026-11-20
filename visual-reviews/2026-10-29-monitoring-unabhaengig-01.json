@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "source": "media/source-images/2026-11-20-monitoring-unabhaengig-source.png",
+  "source_sha256": "a0c77cedc0c5ba113ec4acd2b175bf924c1d29e1359bcc45386bf85cc15fc39c",
+  "layout": "headline",
+  "heading": "WER ÜBERWACHT DEN KI-AGENTEN?",
+  "visual_review": {
+    "no_people": true,
+    "no_robot": true,
+    "no_foreign_logo": true,
+    "no_generated_text": true,
+    "plausible_details": true,
+    "matches_topic": true,
+    "heading_and_logo_space": true
+  },
+  "review_evidence": "ChatGPT inspected the generated image on 2026-11-20 and checked the resulting actual RGB PNG after a deterministic 2px canvas trim to exactly 1120x1400, 4:5. A transparent protected monitoring chamber and red stop switch are visibly separated by a glass barrier from an independent data-processing module. No person, robot, external trademark, readable generated word, or logo was seen. Upper-left area supports the later compositor headline; lower-right is dark and clear for the byte-identical original brand logo. Conceptual cybersecurity illustration, not an exact working safety design. This is ChatGPT visual inspection for Buffer drafts only, NOT a human visual review and NOT publication approval.",
+  "chatgpt_review": {
+    "kind": "chatgpt_visual_inspection_draft_only",
+    "source_sha256": "a0c77cedc0c5ba113ec4acd2b175bf924c1d29e1359bcc45386bf85cc15fc39c"
+  }
+}
