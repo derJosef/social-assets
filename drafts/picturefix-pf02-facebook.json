@@ -1,0 +1,20 @@
+{
+  "format_version": 3,
+  "campaign_id": "PF-02",
+  "brand": "picturefix",
+  "target": "facebook",
+  "text": "Was, wenn eines Tages niemand mehr weiß, wer auf diesem Foto zu sehen ist? 🤎\n\nDie UNESCO hat gerade eine neue Partnerschaft vorgestellt, um wertvolle Kunst- und Archivschätze mit digitaler Technik für kommende Generationen zu bewahren.\n\nUnd bei uns zu Hause? In alten Familienalben stecken oft ebenso unbezahlbare Geschichten. Wer war der Junge mit dem Fahrrad? Wo entstand die Aufnahme? Wer kann sich noch erinnern?\n\n💡 Unser Tipp: Nimm dir diese Woche drei Familienfotos vor. Digitalisiere sie und notiere Namen, Ort, ungefähres Jahr – am besten zusammen mit jemandem, der die Geschichte kennt.\n\nWenn Kratzer, Staub oder verblasste Kontraste den Blick erschweren, kann PictureFix helfen, den digitalen Abzug behutsam zu verbessern. Das historische Original bleibt dabei die Vorlage.\n\n💬 Bei welchem Foto aus deiner Familie würdest du gerne die Geschichte dahinter erfahren?\n\nMehr auf https://picturefix.de\n\nBildhinweis: KI-generierte Werbeillustration. Kein echtes Restaurierungsergebnis. Keine Zusammenarbeit mit der UNESCO.",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/dcf26b0851e2888ea8b767e95f2b91a92d0d6602/media/images/PictureFix_PF02_Facebook_Instagram_1080x1350.png",
+        "alt_text": "KI-generierte sepiafarbene Werbeillustration: Vater und Sohn in Kleidung der 1950er-Jahre treten mit einem alten Fahrrad räumlich aus einem historischen Papierfoto hervor. Echtes PictureFix-Logo; kein Restaurierungsergebnis."
+      }
+    ]
+  },
+  "image_sha256": "f7dc6d94d7cda54e96f16ab61d347e5b8bf5ef08c0c597af7df6111322368e1e",
+  "logo_git_blob_sha1": "0cd926e6631209dd4e5c8029dfb72c29bbf89ea8",
+  "due_at_local": "2026-11-25T12:00:00+01:00",
+  "due_at_utc": "2026-11-25T11:00:00Z"
+}

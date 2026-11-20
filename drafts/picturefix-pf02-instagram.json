@@ -1,0 +1,20 @@
+{
+  "format_version": 3,
+  "campaign_id": "PF-02",
+  "brand": "picturefix",
+  "target": "instagram",
+  "text": "Wer war der Junge mit dem Fahrrad? 🚲🤎\n\nUnd wer erzählt seine Geschichte, wenn sich niemand mehr erinnert?\n\nDie UNESCO schützt aktuell Kulturerbe durch neue Digitalisierungsprojekte. Uns hat das an einen Schatz erinnert, der oft in unseren eigenen Schubladen liegt: alte Familienfotos.\n\n✨ Die kleine Erinnerungsmission:\n1️⃣ Drei alte Fotos auswählen.\n2️⃣ Digitalisieren.\n3️⃣ Namen, Ort und ungefähres Jahr festhalten – und die Geschichten dazu erfragen.\n\nPictureFix kann helfen, Staub, Kratzer und verblasste Bilddetails digital zu verbessern. Behutsam und mit Respekt vor dem Menschen auf dem Original.\n\n💬 Wen würdest du auf einem alten Familienbild gern noch einmal etwas fragen?\n\npicturefix.de\n\nKI-generierte Werbeillustration – kein echtes Restaurierungsbeispiel. Keine Zusammenarbeit mit der UNESCO.\n\n#PictureFix #AlteFamilienfotos #Familiengeschichte #ErinnerungenBewahren #Fotorestaurierung #AlteFotos",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/dcf26b0851e2888ea8b767e95f2b91a92d0d6602/media/images/PictureFix_PF02_Facebook_Instagram_1080x1350.png",
+        "alt_text": "KI-generierte historische Werbeillustration mit PictureFix-Original-Logo: Ein Vater und sein Sohn mit Fahrrad treten aus einem vergilbten Familienfoto heraus. Kleidung etwa 1950er-Jahre. Kein Restaurierungsergebnis."
+      }
+    ]
+  },
+  "image_sha256": "f7dc6d94d7cda54e96f16ab61d347e5b8bf5ef08c0c597af7df6111322368e1e",
+  "logo_git_blob_sha1": "0cd926e6631209dd4e5c8029dfb72c29bbf89ea8",
+  "due_at_local": "2026-11-25T18:00:00+01:00",
+  "due_at_utc": "2026-11-25T17:00:00Z"
+}

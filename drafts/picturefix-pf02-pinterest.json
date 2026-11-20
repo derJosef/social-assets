@@ -1,0 +1,22 @@
+{
+  "format_version": 3,
+  "campaign_id": "PF-02",
+  "brand": "picturefix",
+  "target": "pinterest",
+  "text": "Wer war auf diesem alten Foto zu sehen? So bewahrst du Familiengeschichte: 1. Alte Fotos digitalisieren. 2. Namen, Ort und ungefähres Jahr notieren. 3. Die Geschichten dazu in der Familie erfragen. PictureFix hilft, Kratzer, Staub und verblasste Kontraste digital behutsam zu verbessern. Inspiration durch aktuelle UNESCO-Digitalisierungsprojekte; keine Zusammenarbeit. KI-generierte Werbeillustration – kein echtes Restaurierungsergebnis. Mehr auf picturefix.de.",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/dcf26b0851e2888ea8b767e95f2b91a92d0d6602/media/images/PictureFix_PF02_Pinterest_1000x1500.png",
+        "alt_text": "KI-generierte Sepia-Werbeillustration mit originalem PictureFix-Logo. Vater und Sohn in historischer Kleidung der 1950er-Jahre treten samt Fahrrad aus dem alten Papierfoto in den Raum. Kein Restaurierungsergebnis."
+      }
+    ]
+  },
+  "image_sha256": "1fa8897820105b6b062198511f77422ea335249150fad4c3672d2b4dd9167e7a",
+  "logo_git_blob_sha1": "0cd926e6631209dd4e5c8029dfb72c29bbf89ea8",
+  "pinterest_title": "Alte Familienfotos bewahren: 3 Dinge, die du heute tun kannst",
+  "pinterest_url": "https://picturefix.de",
+  "due_at_local": "2026-11-26T10:00:00+01:00",
+  "due_at_utc": "2026-11-26T09:00:00Z"
+}

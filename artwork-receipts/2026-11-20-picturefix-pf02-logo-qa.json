@@ -1,0 +1,38 @@
+{
+  "campaign": "PF-02",
+  "logo_git_blob_sha1": "0cd926e6631209dd4e5c8029dfb72c29bbf89ea8",
+  "assets": {
+    "facebook_instagram": {
+      "path": "media/images/PictureFix_PF02_Facebook_Instagram_1080x1350.png",
+      "source_sha256": "398f9d7b429e374f9e4530c5cad9574a7f73f82d720290030dd73499df7f5194",
+      "sha256": "f7dc6d94d7cda54e96f16ab61d347e5b8bf5ef08c0c597af7df6111322368e1e",
+      "bytes": 2333893,
+      "dimensions": [
+        1080,
+        1350
+      ],
+      "logo_region": [
+        48,
+        34,
+        390,
+        135
+      ]
+    },
+    "pinterest": {
+      "path": "media/images/PictureFix_PF02_Pinterest_1000x1500.png",
+      "source_sha256": "1bedfc4f3d08eba63b85ea14f54cc1119a1c832f537361a0741c91b2d2472965",
+      "sha256": "1fa8897820105b6b062198511f77422ea335249150fad4c3672d2b4dd9167e7a",
+      "bytes": 2348934,
+      "dimensions": [
+        1000,
+        1500
+      ],
+      "logo_region": [
+        44,
+        51,
+        381,
+        150
+      ]
+    }
+  }
+}
