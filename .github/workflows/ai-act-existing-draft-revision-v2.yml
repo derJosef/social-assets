@@ -1,0 +1,63 @@
+name: AI Agent Builder – AI Act V2 vorhandene Drafts korrigieren
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write # One-time receipt ledger on automation-receipts only.
+  issues: read
+
+concurrency:
+  group: buffer-drafts-single-flight
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  revise-existing-only:
+    if: >-
+      ${{
+        github.ref == 'refs/heads/main' &&
+        github.actor == 'derJosef-agents' &&
+        github.event.comment.user.login == 'derJosef-agents' &&
+        github.event.issue.number == 19 &&
+        !github.event.issue.pull_request &&
+        github.event.issue.user.login == 'derJosef' &&
+        github.event.issue.title == 'AIAGENT_BRIEF:2026-10-13-lieferanten-pdf-prueftor-e2e-003' &&
+        (
+          github.event.comment.body == 'AIAGENT_AI_ACT_EUROPE_V2_EXISTING_DRAFT_PREFLIGHT' ||
+          github.event.comment.body == 'AIAGENT_AI_ACT_EUROPE_V2_EXISTING_DRAFT_APPLY_ONCE'
+        )
+      }}
+    name: Fixed IDs, original dueAt, no new posts
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Offline guards (no Buffer changes)
+        run: |
+          python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0'
+          python3 -m unittest discover -s tests -p 'test_ai_act_draft_revision_v2.py' -v
+      - name: Read-only preflight OR exactly-once correction
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          COMMENT: ${{ github.event.comment.body }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$COMMENT" == 'AIAGENT_AI_ACT_EUROPE_V2_EXISTING_DRAFT_PREFLIGHT' ]]; then
+            python3 scripts/ai_act_draft_revision_v2.py --mode preflight
+            echo 'Read-only preflight passed. No Buffer mutation.' >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$COMMENT" == 'AIAGENT_AI_ACT_EUROPE_V2_EXISTING_DRAFT_APPLY_ONCE' ]]; then
+            python3 scripts/ai_act_draft_revision_v2.py --mode apply
+            echo 'Exactly three existing draft IDs revised; check receipts. No create/queue/publish.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Unknown command' >&2
+            exit 1
+          fi
