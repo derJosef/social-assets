@@ -1,5 +1,5 @@
 {
-  "state": "created_requires_independent_check",
+  "state": "verified_prescheduled_draft_not_queued_with_image",
   "campaign": "PF-03",
   "draft_file": "drafts/picturefix-pf03-pinterest.json",
   "target": "pinterest",
@@ -8,5 +8,9 @@
   "planned_due_at_utc": "2026-12-03T09:00:00Z",
   "channel_id": "6aee0027e29c69a171840e38",
   "github_run_id": "44724406614",
-  "buffer_post_id": "6b0029250c6d6b90527ebe4f"
+  "buffer_post_id": "6b0029250c6d6b90527ebe4f",
+  "buffer_status": "draft",
+  "buffer_due_at": "2026-12-03T09:00:00Z",
+  "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/15554013fc2e4b188c26b478b4e7b596684eecb8/media/images/PictureFix_PF03_Pinterest_1000x1500.png",
+  "verified_at_utc": "2026-11-20T11:04:06.948108+00:00"
 }
