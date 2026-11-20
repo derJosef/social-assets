@@ -2,7 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-11-20-eu-ai-act-kmu-2026-instagram.json",
   "target": "instagram",
   "draft_sha256": "bf3a0d1041860ad3f3a62b72e30a8c576bb198a444642bcad24a5c7c21b7caff",
-  "state": "created_requires_independent_check",
+  "state": "verified_prescheduled_draft_not_queued",
   "github_run_id": "44725991863",
   "due_at_utc": "2026-12-16T17:00:00Z",
   "channel_id": "6ac79a686a5c39ccb650f94b",
