@@ -1,5 +1,5 @@
 {
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "created_requires_independent_check",
   "campaign": "PF-03",
   "draft_file": "drafts/picturefix-pf03-facebook.json",
   "target": "facebook",
@@ -7,5 +7,6 @@
   "original_image_sha256": "9e2a4e8340c155d568a8cd3d39f86f320651d83473db8421e45f6c2b62cc37bd",
   "planned_due_at_utc": "2026-12-01T11:00:00Z",
   "channel_id": "6aedfe89e29c69a17183fbc0",
-  "github_run_id": "44724084148"
+  "github_run_id": "44724084148",
+  "buffer_post_id": "6b0028a59dd03fda0b04c770"
 }
