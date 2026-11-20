@@ -1,0 +1,60 @@
+name: AI Agent Builder – drei bestehende Telekom–Mistral-Drafts auf News-Tag datieren
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: aab-telekom-mistral-20261120-draft-date-change-only
+  cancel-in-progress: false
+
+jobs:
+  correct-three-draft-dates:
+    if: >-
+      ${{
+        github.event_name == 'issue_comment' &&
+        github.event.action == 'created' &&
+        github.ref == 'refs/heads/main' &&
+        github.run_attempt == 1 &&
+        github.actor == 'derJosef-agents' &&
+        github.actor_id == 350701981 &&
+        github.event.issue.number == 82 &&
+        github.event.issue.pull_request &&
+        github.event.issue.user.id == 350701981 &&
+        github.event.comment.user.id == 350701981 &&
+        github.event.comment.body == 'AAB_TELEKOM_MISTRAL_MOVE_THREE_EXISTING_DRAFT_DATES_TO_NEWS_DAY_20261120_ONCE'
+      }}
+    runs-on: ubuntu-slim
+    timeout-minutes: 15
+    env:
+      BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Geschützten main-Stand auschecken
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Abhängigkeit für unveränderte bewährte Buffer-Validierung
+        run: python3 -m pip install --disable-pip-version-check --quiet 'Pillow==12.3.0'
+
+      - name: Veröffentlichungs-Guard und drei bestehende Draft-Termine prüfen und ändern
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/production_activation_guard.py
+          python3 -B scripts/aab_telekom_mistral_draft_dates.py --live
+
+      - name: Status bestätigen
+        if: success()
+        run: echo "Drei bestehende Buffer-Entwürfe auf den News-Tag vorgezogen; Status=draft und alle Medien/Inhalte unverändert, keine Queue oder Veröffentlichung." >> "$GITHUB_STEP_SUMMARY"
