@@ -1,5 +1,5 @@
 {
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "created_requires_independent_check",
   "campaign": "PF-03",
   "draft_file": "drafts/picturefix-pf03-pinterest.json",
   "target": "pinterest",
@@ -7,5 +7,6 @@
   "original_image_sha256": "0e008d198a3eeccf593333ffd600c586155f18bfa4cf1c63560300022656033c",
   "planned_due_at_utc": "2026-12-03T09:00:00Z",
   "channel_id": "6aee0027e29c69a171840e38",
-  "github_run_id": "44724406614"
+  "github_run_id": "44724406614",
+  "buffer_post_id": "6b0029250c6d6b90527ebe4f"
 }
