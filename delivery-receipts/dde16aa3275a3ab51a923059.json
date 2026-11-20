@@ -2,7 +2,12 @@
   "draft_file": "drafts/picturefix-pf01-instagram.json",
   "target": "instagram",
   "draft_sha256": "edf40fd9d5969e294752d445ca626e8d2d80972d41365f67b8ea87a2d0f44861",
-  "state": "created_requires_independent_check",
+  "state": "verified_unpublished_draft_with_image",
   "github_run_id": "44708630184",
-  "buffer_post_id": "6b000ee54c1afd05de096791"
+  "buffer_post_id": "6b000ee54c1afd05de096791",
+  "channel_id": "6aedff5ce29c69a17184054f",
+  "original_image_sha256": "b68ea7a962141f6ddf75ab1cb29a6975e9d433aaa74e07d018cc2fbde3aa94cb",
+  "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/05d902ec11f4bb80b8692f18da24e170f84f7cca/media/images/PictureFix_PF01_Facebook_Instagram_1080x1350_zur_Freigabe.png",
+  "buffer_due_at": null,
+  "buffer_status": "draft"
 }
