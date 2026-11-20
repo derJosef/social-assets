@@ -2,7 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-11-20-eu-ai-act-kmu-2026-linkedin.json",
   "target": "linkedin",
   "draft_sha256": "b888a633c61df49eca29141e394ed0f341b732465698e912291be693b41c0764",
-  "state": "created_requires_independent_check",
+  "state": "verified_prescheduled_draft_not_queued",
   "github_run_id": "44725991863",
   "due_at_utc": "2026-12-16T15:00:00Z",
   "channel_id": "6aac167eea19ca0bde6ada5b",
