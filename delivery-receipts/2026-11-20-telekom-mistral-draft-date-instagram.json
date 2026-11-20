@@ -1,0 +1,10 @@
+{
+  "channel": "instagram",
+  "post_id": "6afff0b14c1afd05defcc931",
+  "old_due_at_utc": "2026-12-02T17:00:00Z",
+  "new_due_at_utc": "2026-11-20T17:00:00Z",
+  "new_local_berlin": "2026-11-20T18:00:00+01:00",
+  "immutable_fingerprint": "e19e0b69fba1786b44b4c4e889b7165141c004247329bce245efd782f730a172",
+  "run_id": "44714953756",
+  "state": "pending_manual_reconciliation_on_failure"
+}
