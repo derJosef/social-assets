@@ -1,0 +1,17 @@
+{
+  "format_version": 3,
+  "brand": "picturefix",
+  "target": "facebook",
+  "text": "Manchmal passt ein ganzes Leben auf ein Stück Fotopapier. 🤎\n\nVielleicht liegt bei dir auch noch so ein Bild: Oma als Kind, mit ihren Zöpfen und ihrer Lieblingspuppe.\n\nWas für andere nur ein altes Foto ist, bewahrt für deine Familie eine ganze Geschichte.\n\nDoch die Zeit hinterlässt Spuren. Kratzer, Staub und verblasste Kontraste erschweren den Blick auf diese besonderen Momente.\n\nPictureFix hilft, alte Familienfotos digital und behutsam zu verbessern. Mit Respekt vor den Menschen und dem Charakter der ursprünglichen Aufnahme.\n\n💬 Welches alte Familienfoto würdest du gerne bewahren?\n\nEntdecke PictureFix: https://picturefix.de\n\nBildhinweis: KI-generierte Werbeillustration, kein echtes Restaurierungsergebnis.",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/05d902ec11f4bb80b8692f18da24e170f84f7cca/media/images/PictureFix_PF01_Facebook_Instagram_1080x1350_zur_Freigabe.png",
+        "alt_text": "KI-generierte Sepia-Werbeillustration: Mädchen mit geflochtenen Zöpfen und Stoffpuppe tritt aus einem alten Papierfoto. Kein echtes Restaurierungsergebnis."
+      }
+    ]
+  },
+  "image_sha256": "b68ea7a962141f6ddf75ab1cb29a6975e9d433aaa74e07d018cc2fbde3aa94cb",
+  "logo_git_blob_sha1": "0cd926e6631209dd4e5c8029dfb72c29bbf89ea8"
+}
