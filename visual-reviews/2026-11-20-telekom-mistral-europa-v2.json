@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "source": "media/source-images/2026-11-20-telekom-mistral-europa-v2-source.png",
+  "source_sha256": "2b1160960536776d51e64c3ca5802021c3db461e6752b5ff02e9ee7f3e592b53",
+  "layout": "logo_only",
+  "heading": null,
+  "visual_review": {
+    "no_people": true,
+    "no_robot": true,
+    "no_foreign_logo": true,
+    "no_generated_text": true,
+    "plausible_details": true,
+    "matches_topic": true,
+    "heading_and_logo_space": true
+  },
+  "review_evidence": "ChatGPT inspected the actual 1080x1350 PNG and an Adobe-returned preview of the uploaded image on 2026-11-20. It depicts cyan light paths connecting abstract translucent compute elements on the left to photorealistic server racks on the right, in navy. No people, faces, robots, readable text, trademarks, or foreign logos visible. Generous dark negative space upper left and lower right for later headline/original logo. Original 1122x1402 ImageGen PNG mechanically fit into 1080x1350 with one-pixel dark extent if needed, no content crop. Local final bytes SHA-256 computed and pinned. This is an AI visual check, NOT a human review or publication approval.",
+  "chatgpt_review": {
+    "kind": "chatgpt_visual_inspection_draft_only",
+    "source_sha256": "2b1160960536776d51e64c3ca5802021c3db461e6752b5ff02e9ee7f3e592b53"
+  }
+}

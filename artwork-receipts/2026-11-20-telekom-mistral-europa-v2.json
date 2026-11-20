@@ -1,0 +1,20 @@
+{
+  "campaign_id": "2026-11-20-telekom-mistral-europa-v2",
+  "brand": "ai-agent-builder",
+  "status": "verified_image_only",
+  "base": "media/source-images/2026-11-20-telekom-mistral-europa-v2-base.png",
+  "final": "media/images/2026-11-20-telekom-mistral-europa-v2-branded.png",
+  "sha256": "9ec530052b1868420222d340ba3d8b9b2fbd76865a8623e1bcdb337b1a1dd5ec",
+  "layout": "logo_only",
+  "image_review": "visual-reviews/2026-11-20-telekom-mistral-europa-v2.json",
+  "source_sha256": "2b1160960536776d51e64c3ca5802021c3db461e6752b5ff02e9ee7f3e592b53",
+  "ai_disclosure": {
+    "required": false,
+    "text": null,
+    "pixel_verified": false
+  },
+  "logo_original_sha256": "15dc410d1a05b96c13466ddf3052ba9cc783cdd7252b74f4fb5c3f886510dea0",
+  "review_method": "chatgpt_visual_inspection_draft_only",
+  "visual_review_pending": [],
+  "human_visual_review": "pending_in_buffer"
+}
