@@ -83,6 +83,16 @@ python3 -m scripts.picturefix.brand_artwork --variant pinterest \
   --out media/images/PictureFix_PF04_Pinterest_1000x1500.png
 ```
 
+Für **beaufsichtigungslose ChatGPT-Läufe mit textbasiertem GitHub-Zugriff**
+existiert außerdem eine bitgenau identische transportfähige Kopie des echten
+Logos als ASCII-Datei `media/brand/PictureFixLogo_Web.b64`. Der Background-Agent
+kann diese Datei über `github_fetch_file` als UTF-8 lesen und in seinen
+Arbeitsbereich schreiben, ohne das rohe PNG per HTTP herunterladen zu müssen.
+Beim Aufruf des Compositors einfach
+`--logo media/brand/PictureFixLogo_Web.b64` anfügen. **Beide Varianten**
+werden *vor* Verarbeitung auf den identischen kanonischen Git-Blob-SHA-1
+geprüft. Das ist keine KI-Nachzeichnung und keine andere Marke.
+
 Die Bild-Pixelprüfung erzwingt ein echtes Logo auch dann, wenn jemand
 Manifest und Hashwerte gleichzeitig verändern würde. **Echte Bildansicht**
 und gegebenenfalls Korrektur vor Merge bleiben notwendig, um historische

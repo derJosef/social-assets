@@ -168,6 +168,21 @@ class CampaignTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             p.load_campaign(self.campaign_path, COMMIT, now=CLOCK, root=self.root)
 
+    def test_text_transport_restores_exact_approved_logo_bytes(self):
+        canonical = Path(__file__).resolve().parents[1] / "media/brand/PictureFixLogo_Web.png"
+        transport = Path(__file__).resolve().parents[1] / "media/brand/PictureFixLogo_Web.b64"
+        from scripts.picturefix.brand_artwork import load_canonical_logo
+        self.assertEqual(load_canonical_logo(canonical).tobytes(),
+                         load_canonical_logo(transport).tobytes())
+        source = self.root / "source-facebook_instagram.png"
+        output = self.root / "media/images/test-branded-from-text.png"
+        branding.compose(source, output, "facebook_instagram", logo=transport)
+        branding.verify_imprint(output, "facebook_instagram", logo=canonical)
+        invalid = self.root / "corrupted-logo.b64"
+        invalid.write_text("AAAA", encoding="ascii")
+        with self.assertRaises(ValueError):
+            load_canonical_logo(invalid)
+
     def _simulate(self, *, existing=None, fail_on_target=None, bad_read=False):
         _, prepared = p.load_campaign(self.campaign_path, COMMIT, now=CLOCK, root=self.root)
         expected = {i["target"]: i["record"] for i in prepared}

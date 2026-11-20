@@ -7,7 +7,9 @@ Only campaign illustrations, never the PictureFix restoration service, are touch
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
+from io import BytesIO
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageOps
@@ -22,11 +24,17 @@ LOGO_LAYOUT = {
 
 
 def load_canonical_logo(path: Path) -> Image.Image:
-    raw = path.read_bytes()
+    # Text-only GitHub connectors cannot always transfer a PNG directly into
+    # a background agent's editor.  The .b64 sibling is a byte-for-byte lossless
+    # transport, not a generated logo.  Both paths must match the same Git blob.
+    if path.suffix == ".b64":
+        raw = base64.b64decode("".join(path.read_text(encoding="ascii").split()), validate=True)
+    else:
+        raw = path.read_bytes()
     blob_sha = hashlib.sha1(f"blob {len(raw)}\0".encode("ascii") + raw).hexdigest()
     if blob_sha != CANONICAL_BLOB:
         raise ValueError("PictureFix brand image differs from the true approved logo")
-    with Image.open(path) as img:
+    with Image.open(BytesIO(raw)) as img:
         if img.format != "PNG" or img.size != (445, 107):
             raise ValueError("Canonical PictureFix logo format/dimensions changed")
         return img.convert("RGBA")
@@ -82,7 +90,8 @@ def main() -> None:
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--variant", choices=tuple(LOGO_LAYOUT), required=True)
-    parser.add_argument("--logo", type=Path, default=Path("media/brand/PictureFixLogo_Web.png"))
+    parser.add_argument("--logo", type=Path, default=Path("media/brand/PictureFixLogo_Web.png"),
+                        help="Original PNG or byte-identical text-only .b64 transport")
     args = parser.parse_args()
     print(compose(args.source, args.out, args.variant, logo=args.logo))
 
