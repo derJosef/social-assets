@@ -2,7 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-11-20-telekom-mistral-europa-v2-linkedin.json",
   "target": "linkedin",
   "draft_sha256": "b309a6c1f17c2997be752cecf23762e84d23230a552f2dfb51ae5d55a04a6177",
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "created_requires_independent_check",
   "github_run_id": "44691953113",
   "due_at_utc": "2026-12-09T15:00:00Z",
   "channel_id": "6aac167eea19ca0bde6ada5b",
@@ -10,5 +10,6 @@
     "campaign": "2026-11-20-telekom-mistral-europa-v2",
     "quality_gate": "passed",
     "image_sha256": "9ec530052b1868420222d340ba3d8b9b2fbd76865a8623e1bcdb337b1a1dd5ec"
-  }
+  },
+  "buffer_post_id": "6afff0a57b0a126cebb56f34"
 }
