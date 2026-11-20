@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "source": "media/source-images/2026-11-20-eu-ai-act-kmu-2026-v2-source.png",
+  "source_sha256": "e99fc9328ea9ce9c2ca868cb40310b5f672aaa7b18923349a773f5f86681226d",
+  "layout": "headline",
+  "heading": "AI ACT 2026: WAS KMU JETZT PRÜFEN",
+  "visual_review": {
+    "no_people": true,
+    "no_robot": true,
+    "no_foreign_logo": true,
+    "no_generated_text": true,
+    "plausible_details": true,
+    "matches_topic": true,
+    "heading_and_logo_space": true
+  },
+  "review_evidence": "ChatGPT inspected the actual selected 1122x1402 preview on 2026-11-20 after Josef selected option 2. The fictional, clearly stylized outline of Europe is rendered with cyan circuit traces; three glass checkpoints with magnifier, gear and tick symbols suggest an EU AI governance review workflow. This is an illustrative motif, not an exact geographic map or a diagram of regulatory legal categories. No people, robots, logos or generated words are visible. Quiet top-left area for heading and lower-right margin for original verified logo. ChatGPT visual inspection is NOT a human review or publication approval.",
+  "chatgpt_review": {
+    "kind": "chatgpt_visual_inspection_draft_only",
+    "source_sha256": "e99fc9328ea9ce9c2ca868cb40310b5f672aaa7b18923349a773f5f86681226d"
+  }
+}
