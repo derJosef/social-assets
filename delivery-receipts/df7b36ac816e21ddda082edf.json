@@ -2,7 +2,12 @@
   "draft_file": "drafts/picturefix-pf01-pinterest.json",
   "target": "pinterest",
   "draft_sha256": "cef7e6864a6b4a1499c8e807ea6d45466f9cf9989f47d927ac2ac53766ad187d",
-  "state": "created_requires_independent_check",
+  "state": "verified_unpublished_draft_with_image",
   "github_run_id": "44708786032",
-  "buffer_post_id": "6b000f2c0f5eda1a57d865eb"
+  "buffer_post_id": "6b000f2c0f5eda1a57d865eb",
+  "channel_id": "6aee0027e29c69a171840e38",
+  "original_image_sha256": "30fdf528505a6e2ca3bf0aed768f876cd32e650e4d39e7a55950cc8b33789c8a",
+  "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/05d902ec11f4bb80b8692f18da24e170f84f7cca/media/images/PictureFix_PF01_Pinterest_1000x1500_zur_Freigabe.png",
+  "buffer_due_at": null,
+  "buffer_status": "draft"
 }
