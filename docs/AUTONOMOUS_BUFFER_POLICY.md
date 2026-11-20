@@ -59,17 +59,20 @@ Bei einer neuen Kampagne:
 }
 ```
 
-## Vollautomatische Produktion neuer Markenbilder
+## Aktueller Bildweg für neue KI-Agent-Builder-Kampagnen (20.11.2026)
 
-Neben dem manuellen ImageGen→Compositing-Weg existiert jetzt der getestete GitHub-Actions-Workflow [Social Visual – automatisch aus Kampagnenauftrag](../.github/workflows/social-visual-auto-from-spec.yml). Dadurch muss bei einer neuen Kampagne kein individuelles Bildskript programmiert werden.
+Der frühere quadratische Drei-Karten-Renderer `scripts/social_visual_from_spec.py` und sein in älteren Tests verwendeter Workflow `social-visual-auto-from-spec.yml` sind **kein aktuell aktivierter Produktionsweg**. Der aktuelle `scripts/social_orchestrator.py` verlangt ausdrücklich eine bereits visuell geprüfte, SHA256-fixierte **4:5-Quelldatei** und verweigert ungeprüfte Karten-Grafiken. Die früheren Techniktests bleiben historische Nachweise, nicht die heutige Ausführungsanleitung.
 
-1. Der Agent erzeugt genau eine neue, quellen- und themenbezogene Datei `artwork-requests/YYYY-MM-DD-slug.json` (schema 1, Marke AI Agent Builder) mit `badge`, `headline`, `subtitle`, exakt drei `cards` mit `title`/`description` und `closing`.
-2. Der Push durch einen GitHub-App-/Benutzer-Token startet den Workflow. Er erzeugt **ohne KI-Neuzeichnung des Logos** ein logo-freies PNG unter `media/source-images/` und setzt das SHA-geprüfte Original-PNG mittels Pillow zusammen. Er prüft die finale Grafik gegen Original und Hintergrundpixel.
-3. **Nur nach bestandenem Test** werden Basisbild, finale Markenbilddatei und ein Bild-Receipt unter `artwork-receipts/YYYY-MM-DD-slug.json` committet (inklusive SHA-256, Überschriften-Box, Bildpfaden). Der Agent liest diese Belege vor der nächsten Phase zurück.
-4. Der Agent führt die eigenständige redaktionelle Prüfung aus, erstellt `campaign-manifests/YYYY-MM-DD-slug.json` und legt die drei neuen Auto-Drafts in `ready-for-buffer/` an; der vorhandene Draft-Workflow verifiziert **vor jedem** Buffer-Aufruf erneut Logo, Basisbild, Quellen und Zeitumrechnung.
-5. Fehlt eine Fähigkeit im Hintergrundlauf, bleibt der Beitrag außerhalb von `ready-for-buffer`; kein Fehler darf durch eine bloße Behauptung `checks: true` übersprungen werden. Die Bild-Erstellung und die Freigabe der tatsächlichen Publikation bleiben getrennte Vorgänge.
+Der am 20.11.2026 **interaktiv** erfolgreiche Weg ist:
 
-**Nachgewiesener Bildtest:** [GitHub-Lauf #37899111557](https://github.com/derJosef/social-assets/actions/runs/37899111557) `success`; drei Dateien (Basis, Final, Receipt) auf GitHub. [Finale Testgrafik](../media/images/2026-10-09-automatisierung-probelauf-branded.png). Das ist ein **reiner Techniktest** und hat keinen weiteren Buffer-Beitrag erstellt.
+1. Ein neues thematisch passendes, ungebrandetes 4:5-Bild mit ChatGPTs eingebauter Bildfunktion erzeugen. Die Bilddatei muss mindestens 1080×1350 Pixel haben; keine Menschen/Roboter, Fremdlogos oder generierte Beschriftungen. Die tatsächlichen PNG-Bytes und SHA256 lokal prüfen, das Motiv visuell kontrollieren und `visual-reviews/YYYY-MM-DD-slug.json` mit `chatgpt_review` und klarer Kennzeichnung `draft_only` erstellen. Das ist **keine** menschliche Publikationsfreigabe.
+2. **Direkter Byteweg ohne Adobe:** Über die aktuell geprüfte GitHub-Verbindung **ausschließlich** `derJosef-agents` das Original-PNG per GitHub-Blob mit `encoding=base64` hochladen und die zurückgegebene Git-Blob-SHA mit `git hash-object` der Originaldatei abgleichen. Die Quelle, das SHA-fixierte Review und genau **ein** vollständiger neuer `orchestration/briefs/YYYY-MM-DD-slug.json`-Auftrag mit `prepared_content` und `execution_mode=drafts` gehören in denselben Branch/PR. Wenn `image_review` bereits auf die beim Merge vorhandene Datei zeigt, ist kein `chatgpt_image`-/Adobe-Import erforderlich.
+3. Nach den Required Checks den dafür autorisierten PR nach `main` bringen. Ein **neu hinzugefügter** Brief startet `.github/workflows/social-campaign-orchestrator.yml` und erzeugt auf einem isolierten Output-Branch das Bild mit geprüftem Original-Logo, Bild-Receipt, Manifest und drei Posts. Der Orchestrator sendet sie über den bereits abgesicherten Buffer-Weg **nur als Drafts mit `dueAt`**.
+4. Den unabhängigen Readback unter `automation-receipts/orchestration/reports/` auswerten: `state=buffer_drafts_verified`, `buffer_verification.status=PASS`, pro Kanal eine eindeutige Post-ID, `status=draft`, `dueAt`, Bild in Buffer und `published=false`. Ohne diesen Beleg niemals Erfolg melden und keine Mutation blind wiederholen.
+
+**E2E-Nachweis:** [PR #90](https://github.com/derJosef/social-assets/pull/90), [GitHub-Lauf #44725991863](https://github.com/derJosef/social-assets/actions/runs/44725991863) und [unabhängiger Buffer-Readback](https://github.com/derJosef/social-assets/blob/automation-receipts/orchestration/reports/2026-11-20-eu-ai-act-kmu-2026-run-44725991863.json) mit drei echten Drafts (LinkedIn/Facebook/Instagram), korrektem `dueAt` und Bild. **Der vollständig unbeaufsichtigte Montag-/Donnerstag-Lauf mit Bildgenerierung ist damit noch nicht separat bewiesen.** Fehlt dem Hintergrundlauf eine Bild- oder GitHub-Fähigkeit, muss er fail-closed stoppen und den konkreten Blocker melden. Keine zusätzliche kostenpflichtige Modell-API ohne eigene Freigabe.
+
+Der zuvor getestete Adobe-Transfer bleibt ein zulässiger alternativer Bildweg, wenn Original-Bytes und Hash wieder nachweislich übereinstimmen. Weder Adobe noch die direkte GitHub-Übertragung erlauben Queueing, Scheduling oder Publikation ohne Josefs gesonderte Freigabe.
 
 **Nachgewiesener Live-Pilot** (bestehende, ebenfalls verifizierte Grafik): [GitHub-Lauf #37898575725](https://github.com/derJosef/social-assets/actions/runs/37898575725), QA-Gate PASS, drei neue Buffer-Entwürfe. [Statusprüfung #37898698353](https://github.com/derJosef/social-assets/actions/runs/37898698353): alle drei `status=draft`, `dueAt=None`.
 
@@ -83,4 +86,4 @@ Neben dem manuellen ImageGen→Compositing-Weg existiert jetzt der getestete Git
 - `scripts/buffer_schedule.py` und `buffer-auto-schedule.yml` behalten die explizite Veröffentlichungsfreigabe; sie dürfen nicht durch autonome Kampagnenerstellung ausgelöst werden.
 - Offline: `python3 -B -m unittest discover -s tests -v` und Bildtests in `scripts/test_logo_composite.py`. Das Erstellen einer Demo-Datei im Repo ist **kein** Live-Test des Buffer-Transfers.
 
-Die lokale PersonalOS-Fassung `O:\` bleibt führend; `derJosef/personalos` ist synchronisierter GitHub-Stand. Vor dem nächsten lokalen Sync diese neue Berechtigungsänderung mit dortigen lokalen Änderungen abgleichen.
+Für PersonalOS-Regeln ist `derJosef/personalos@main` die führende Referenz; PersonalOS wird in diesem Workflow ausschließlich lesend verwendet. Keine Schreibvorgänge in lokale PersonalOS-Stände.
