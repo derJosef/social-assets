@@ -1,0 +1,110 @@
+{
+  "started_at": "2026-11-20T11:15:33.831036+00:00",
+  "mode": "drafts",
+  "state": "buffer_drafts_verified",
+  "steps": {
+    "brief": {
+      "status": "PASS",
+      "detail": ""
+    },
+    "fetch_warning_1": {
+      "status": "WARNING",
+      "detail": "Blocked"
+    },
+    "primary_source_fetch": {
+      "status": "PASS",
+      "detail": "2 Quellen"
+    },
+    "time_studies": {
+      "status": "PASS",
+      "detail": "6 Studien"
+    },
+    "editorial_input_and_structure": {
+      "status": "PASS",
+      "detail": "Bereits redaktionell erstellte Textvorlage"
+    },
+    "autonomous_model_generation": {
+      "status": "NOT_RUN",
+      "detail": "Kein Modellaufruf – alternative Eingabe"
+    },
+    "brand_image_and_campaign_gate": {
+      "status": "PASS",
+      "detail": ""
+    }
+  },
+  "campaign": "2026-11-20-eu-ai-act-kmu-2026",
+  "files": {
+    "base": "media/source-images/2026-11-20-eu-ai-act-kmu-2026-base.png",
+    "final": "media/images/2026-11-20-eu-ai-act-kmu-2026-branded.png",
+    "receipt": "artwork-receipts/2026-11-20-eu-ai-act-kmu-2026.json",
+    "manifest": "campaign-manifests/2026-11-20-eu-ai-act-kmu-2026.json",
+    "plan": "drafts/2026-11-20-eu-ai-act-kmu-2026-plan.md",
+    "posts": [
+      "ready-for-buffer/auto-2026-11-20-eu-ai-act-kmu-2026-linkedin.json",
+      "ready-for-buffer/auto-2026-11-20-eu-ai-act-kmu-2026-facebook.json",
+      "ready-for-buffer/auto-2026-11-20-eu-ai-act-kmu-2026-instagram.json"
+    ]
+  },
+  "finished_at": "2026-11-20T11:15:40.883035+00:00",
+  "buffer_verification": {
+    "status": "PASS",
+    "checked_at": "2026-11-20T11:15:59.492216+00:00",
+    "posts": {
+      "linkedin": {
+        "post_id": "6b002be239116a845dd02cca",
+        "channel_id": "6aac167eea19ca0bde6ada5b",
+        "service": "linkedin",
+        "status": "draft",
+        "dueAt": "2026-12-16T15:00:00Z",
+        "scheduled_local": "2026-12-16T16:00:00+01:00",
+        "text": "AI Act 2026: Mehr Zeit für bestimmte Regeln heißt nicht weniger Verantwortung für KI-Agenten.\n\nSeit dem 27. Juli 2026 gilt der sogenannte AI Omnibus (Verordnung EU 2026/1744). Er vereinfacht Teile der europäischen KI-Regeln. Für bestimmte Hochrisiko-Anwendungen wurden die Fristen angepasst: unter anderem auf den 2. Dezember 2027 für Fälle nach Anhang III und den 2. August 2028 für Hochrisiko-KI in bestimmten regulierten Produkten nach Anhang I. Das ist keine pauschale Verschiebung des gesamten AI Act.\n\nWas bedeutet das für einen mittelständischen Betrieb, der heute einen KI-Agenten einführt?\n\nIch würde mit fünf Fragen anfangen:\n\n1. INVENTAR: Welche KI-Systeme und Agenten setzen wir tatsächlich ein?\n2. ROLLE: Sind wir Anbieter oder Betreiber – und wer ist verantwortlich?\n3. RISIKO: Welche konkreten Aufgaben führt das System aus, und welche Regeln gelten dafür?\n4. DATEN: Woher kommen Informationen, und wohin fließen sie?\n5. FREIGABE: Welche Aktionen darf der Agent vorbereiten, welche muss ein Mensch bestätigen?\n\nBeispiel: Ein Agent kann eingehende Kundenanfragen sortieren und eine Antwort vorschlagen. Ob er sie ohne Prüfung versenden darf, ist eine gesonderte Entscheidung über Prozess, Risiko und Rechte.\n\nMein Fazit: Die neue Rechtslage ist ein guter Anlass für eine saubere Bestandsaufnahme – kein Grund, die Kontrollen auszusetzen. Die rechtliche Einordnung hängt vom konkreten Anwendungsfall ab.\n\nWelche dieser fünf Fragen ist bei euch heute am schwierigsten zu beantworten?\n\nQuellen: Europäische Kommission, 27.07.2026; Verordnung (EU) 2026/1744.\nhttps://digital-strategy.ec.europa.eu/en/news/ai-omnibus-enters-force\n\n#AIAct #KIAgenten #Mittelstand #AIGovernance #AIagentBuilder",
+        "review_image_url": "https://raw.githubusercontent.com/derJosef/social-assets/5bc4c8f49fd7ea032aaacf52936941e488e268f1/media/images/2026-11-20-eu-ai-act-kmu-2026-branded.png",
+        "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/5bc4c8f49fd7ea032aaacf52936941e488e268f1/media/images/2026-11-20-eu-ai-act-kmu-2026-branded.png",
+        "image_attached_in_buffer": true,
+        "buffer_dashboard_url": "https://publish.buffer.com",
+        "buffer_link_kind": "official_dashboard_not_direct_post",
+        "buffer_direct_post_url": null,
+        "editorial_approval": "pending_after_draft",
+        "published": false
+      },
+      "facebook": {
+        "post_id": "6b002be79dd03fda0b064a26",
+        "channel_id": "6ac781e46a5c39ccb64fe01c",
+        "service": "facebook",
+        "status": "draft",
+        "dueAt": "2026-12-17T08:00:00Z",
+        "scheduled_local": "2026-12-17T09:00:00+01:00",
+        "text": "🇪🇺 Der EU AI Act wurde 2026 angepasst. Was heißt das für Betriebe mit KI-Agenten?\n\nDer AI Omnibus ist seit dem 27. Juli 2026 in Kraft. Für bestimmte Hochrisiko-KI gelten neue Fristen, und einzelne Vorgaben wurden vereinfacht. Aber: Nicht alle Pflichten sind auf später verschoben.\n\nFür den Alltag im Mittelstand finde ich drei praktische Fragen wichtiger als Schlagzeilen über Termine:\n\n🔹 WO? In welchen Prozessen arbeitet bei uns bereits KI – vielleicht auch unsichtbar in einer Software?\n🔹 WAS? Welche Daten sieht der Agent, und was darf er selbstständig verändern oder versenden?\n🔹 WER? Wer prüft Ergebnisse und übernimmt die Freigabe bei wichtigen Entscheidungen?\n\nStell dir einen KI-Agenten vor, der Rechnungsdaten ausliest und Buchungsvorschläge erstellt. Das kann Zeit sparen. Die endgültige Buchung sollte aber zu einem klar definierten Prüf- und Rechtekonzept passen.\n\nMein Tipp: Erst die eigenen Anwendungsfälle erfassen, dann die passenden Anforderungen prüfen. Eine allgemeine Fristenübersicht ersetzt diese Einordnung nicht.\n\nWie weit seid ihr mit einer Übersicht eurer KI-Anwendungen?\n\nQuelle: Europäische Kommission, 27.07.2026, und EU-Verordnung 2026/1744.\nhttps://digital-strategy.ec.europa.eu/en/news/ai-omnibus-enters-force\n\n#AIAct #KünstlicheIntelligenz #Mittelstand #KIAgenten",
+        "review_image_url": "https://raw.githubusercontent.com/derJosef/social-assets/5bc4c8f49fd7ea032aaacf52936941e488e268f1/media/images/2026-11-20-eu-ai-act-kmu-2026-branded.png",
+        "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/5bc4c8f49fd7ea032aaacf52936941e488e268f1/media/images/2026-11-20-eu-ai-act-kmu-2026-branded.png",
+        "image_attached_in_buffer": true,
+        "buffer_dashboard_url": "https://publish.buffer.com",
+        "buffer_link_kind": "official_dashboard_not_direct_post",
+        "buffer_direct_post_url": null,
+        "editorial_approval": "pending_after_draft",
+        "published": false
+      },
+      "instagram": {
+        "post_id": "6b002bebc0a7142f84b4bff1",
+        "channel_id": "6ac79a686a5c39ccb650f94b",
+        "service": "instagram",
+        "status": "draft",
+        "dueAt": "2026-12-16T17:00:00Z",
+        "scheduled_local": "2026-12-16T18:00:00+01:00",
+        "text": "🇪🇺 AI ACT 2026: ERST EINORDNEN, DANN AUTOMATISIEREN.\n\nDer AI Omnibus ist seit 27. Juli 2026 in Kraft. Er vereinfacht Teile der Regeln und verschiebt bestimmte Hochrisiko-Fristen. ⏳\n\nWichtig: Das ist KEIN Freifahrtschein für jeden KI-Agenten.\n\nFür deinen Betrieb zählen jetzt drei Checks:\n\n1️⃣ EINSATZ: Wo arbeitet bereits KI mit?\n2️⃣ KONTROLLE: Auf welche Daten und Aktionen darf ein Agent zugreifen?\n3️⃣ FREIGABE: Wer bestätigt kritische Schritte?\n\n💡 Praxisbeispiel: Der Agent liest eine Kundenanfrage, bereitet die Antwort vor – ein Mensch prüft sie vor dem Versand.\n\nNeue Fristen sind hilfreich. Klare Verantwortlichkeiten bleiben unverzichtbar.\n\n💬 Hast du schon eine Liste deiner KI-Anwendungen?\n\nQuelle: EU-Kommission, 27.07.2026; Verordnung (EU) 2026/1744.\n\n#AIAct #KIAgentBuilder #KIAgenten #AIGovernance #Mittelstand #Digitalisierung",
+        "review_image_url": "https://raw.githubusercontent.com/derJosef/social-assets/5bc4c8f49fd7ea032aaacf52936941e488e268f1/media/images/2026-11-20-eu-ai-act-kmu-2026-branded.png",
+        "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/5bc4c8f49fd7ea032aaacf52936941e488e268f1/media/images/2026-11-20-eu-ai-act-kmu-2026-branded.png",
+        "image_attached_in_buffer": true,
+        "buffer_dashboard_url": "https://publish.buffer.com",
+        "buffer_link_kind": "official_dashboard_not_direct_post",
+        "buffer_direct_post_url": null,
+        "editorial_approval": "pending_after_draft",
+        "published": false
+      }
+    }
+  },
+  "github_run_id": "44725991863",
+  "github_run_url": "https://github.com/derJosef/social-assets/actions/runs/44725991863",
+  "job_status": "success",
+  "receipt_at": "2026-11-20T11:15:59.539954+00:00"
+}
