@@ -73,7 +73,8 @@ class DraftDatesTests(unittest.TestCase):
 
     def run_move(self):
         m.live_move(get=self.get, get_receipt=self.fetch_receipt,
-                    write_receipt=self.put_receipt, env=self.env)
+                    write_receipt=self.put_receipt, env=self.env,
+                    now=datetime(2026, 11, 20, 9, 30, tzinfo=timezone.utc))
 
     def test_all_three_existing_drafts_moved_and_everything_else_intact(self):
         original = deepcopy(self.posts)
@@ -151,7 +152,8 @@ class DraftDatesTests(unittest.TestCase):
 
         with self.assertRaises(m.Blocked):
             m.live_move(get=drifting_get, get_receipt=self.fetch_receipt,
-                        write_receipt=self.put_receipt, env=self.env)
+                        write_receipt=self.put_receipt, env=self.env,
+                        now=datetime(2026, 11, 20, 9, 30, tzinfo=timezone.utc))
         self.assertEqual(self.edits, [])
         self.assertEqual(self.receipts[m.BATCH]["state"],
                          "pending_manual_reconciliation_on_failure")

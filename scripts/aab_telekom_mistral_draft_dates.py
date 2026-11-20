@@ -160,13 +160,14 @@ def receipt_path(channel: str) -> str:
 
 
 def live_move(*, get=buffer_graphql, get_receipt=fetch_receipt,
-              write_receipt=put_receipt, env: dict | None = None) -> None:
+              write_receipt=put_receipt, env: dict | None = None,
+              now: datetime | None = None) -> None:
     env = dict(os.environ if env is None else env)
     require(bool(env.get("GITHUB_EVENT_PATH")), "GitHub-Ereignispfad fehlt")
     validate_event(Path(env["GITHUB_EVENT_PATH"]), env)
     key, token = env.get("BUFFER_API_KEY"), env.get("GITHUB_TOKEN")
     require(bool(key and token), "Buffer- bzw. GitHub-Verbindung fehlt")
-    contract()
+    contract(now=now)
     before = {}
     for channel, post in POSTS.items():
         raw = get(key, POST_QUERY, {"id": post["id"]}).get("post")
@@ -186,7 +187,7 @@ def live_move(*, get=buffer_graphql, get_receipt=fetch_receipt,
     }
     batch_sha = write_receipt(token, BATCH, batch, "reserve three existing draft date edits")
     for channel, p in POSTS.items():
-        contract()
+        contract(now=now)
         raw = get(key, POST_QUERY, {"id": p["id"]}).get("post")
         require(verify(raw, channel) == before[channel],
                 f"Inhalt geändert seit Vorprüfung: {channel}")
