@@ -1,0 +1,14 @@
+{
+  "draft_file": "ready-for-buffer/auto-2026-11-20-eu-ai-act-kmu-2026-instagram.json",
+  "target": "instagram",
+  "draft_sha256": "bf3a0d1041860ad3f3a62b72e30a8c576bb198a444642bcad24a5c7c21b7caff",
+  "state": "pending_manual_reconciliation_on_failure",
+  "github_run_id": "44725991863",
+  "due_at_utc": "2026-12-16T17:00:00Z",
+  "channel_id": "6ac79a686a5c39ccb650f94b",
+  "campaign_quality": {
+    "campaign": "2026-11-20-eu-ai-act-kmu-2026",
+    "quality_gate": "passed",
+    "image_sha256": "313cfc15ff750fb9da3c7c302958fb2ca8a47154b3f1c3d01f08a21c315ab878"
+  }
+}
