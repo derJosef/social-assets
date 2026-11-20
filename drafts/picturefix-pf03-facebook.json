@@ -1,0 +1,20 @@
+{
+  "format_version": 3,
+  "campaign_id": "PF-03",
+  "brand": "picturefix",
+  "target": "facebook",
+  "text": "Ein Foto zeigt einen Augenblick. Aber wer erzählt uns, was damals passiert ist? 🤎\n\nVielleicht weiß Oma noch, wie der Mann auf dem Foto hieß. Oder warum alle an diesem Tag so gelacht haben. Diese Geschichten sind ein Teil unserer Familiengeschichte – und werden selten auf die Rückseite geschrieben.\n\n💡 Beim nächsten Familienbesuch: Nehmt euch ein altes Foto und fragt gemeinsam: Wer ist darauf? Wo und wann entstand es? Was ist die Geschichte dahinter? Notiert die Antworten und digitalisiert Foto und Notizen zusammen.\n\nWenn Kratzer, Staub oder verblasste Kontraste das Bild schwer erkennbar machen, kann PictureFix helfen, die digitale Aufnahme behutsam zu verbessern.\n\n💬 Zu welchem Familienfoto würdet ihr gerne die Geschichte erfahren?\n\nhttps://picturefix.de\n\nBildhinweis: KI-generierte Werbeillustration – kein tatsächliches Restaurierungsergebnis.\n#AlteFotos #Familiengeschichte #Erinnerungen #PictureFix",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/15554013fc2e4b188c26b478b4e7b596684eecb8/media/images/PictureFix_PF03_Facebook_Instagram_1080x1350.png",
+        "alt_text": "KI-generierte PictureFix-Werbeillustration: Eine Großmutter und ihre Enkelin in historisch glaubwürdiger Kleidung der 1950er-Jahre erzählen die Geschichte einer kleinen Fotografie. Beide treten räumlich aus einem alten sepiafarbenen Papierfoto. Originales PictureFix-Logo. Kein Restaurierungsergebnis."
+      }
+    ]
+  },
+  "image_sha256": "9e2a4e8340c155d568a8cd3d39f86f320651d83473db8421e45f6c2b62cc37bd",
+  "logo_git_blob_sha1": "0cd926e6631209dd4e5c8029dfb72c29bbf89ea8",
+  "due_at_local": "2026-12-01T12:00:00+01:00",
+  "due_at_utc": "2026-12-01T11:00:00Z"
+}

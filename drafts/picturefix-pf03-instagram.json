@@ -1,0 +1,20 @@
+{
+  "format_version": 3,
+  "campaign_id": "PF-03",
+  "brand": "picturefix",
+  "target": "instagram",
+  "text": "Die wertvollste Bildunterschrift schreibt oft Oma. 🤎📸\n\nEin Name. Ein Ort. Eine Geschichte, die sonst vielleicht niemand mehr kennt.\n\nNimm dir diese Woche ein altes Familienfoto vor. Frag nach, wer zu sehen ist, wann und wo es aufgenommen wurde – und was an diesem Tag passiert ist. Speichere Foto und Erzählung gemeinsam.\n\nWelche Aufnahme würdest du zuerst aus der Schublade holen? Erzähl es in den Kommentaren. ✨\n\nPictureFix kann helfen, Kratzer, Staub und verblasste Kontraste auf der digitalen Aufnahme behutsam zu verbessern: picturefix.de\n\nKI-generierte Werbeillustration – kein tatsächliches Restaurierungsergebnis.\n\n#Familienfotos #Familiengeschichte #ErinnerungenBewahren #AlteFotos #PictureFix",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/15554013fc2e4b188c26b478b4e7b596684eecb8/media/images/PictureFix_PF03_Facebook_Instagram_1080x1350.png",
+        "alt_text": "KI-generierte PictureFix-Werbeillustration: Großmutter und Enkelin in Kleidung und Frisuren der 1950er-Jahre treten aus einem vergilbten Foto heraus. Echtes PictureFix-Logo, kein Restaurierungsergebnis."
+      }
+    ]
+  },
+  "image_sha256": "9e2a4e8340c155d568a8cd3d39f86f320651d83473db8421e45f6c2b62cc37bd",
+  "logo_git_blob_sha1": "0cd926e6631209dd4e5c8029dfb72c29bbf89ea8",
+  "due_at_local": "2026-12-01T18:00:00+01:00",
+  "due_at_utc": "2026-12-01T17:00:00Z"
+}

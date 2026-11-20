@@ -1,0 +1,22 @@
+{
+  "format_version": 3,
+  "campaign_id": "PF-03",
+  "brand": "picturefix",
+  "target": "pinterest",
+  "text": "Die Geschichte hinter einem alten Familienfoto bewahren: 1. Angehörige nach Namen und Beziehungen fragen. 2. Ort, ungefähres Jahr und die Erinnerung zu diesem Tag notieren. 3. Foto und Notizen gemeinsam digital sichern. So wird aus einer Aufnahme eine Familiengeschichte. PictureFix hilft, Kratzer, Staub und verblasste Kontraste auf der digitalen Kopie behutsam zu verbessern. Mehr: https://picturefix.de\n\nKI-generierte Werbeillustration – kein tatsächliches Restaurierungsergebnis.\n#Familienfotos #Fotoarchiv #Familiengeschichte #ErinnerungenBewahren",
+  "media": {
+    "type": "images",
+    "images": [
+      {
+        "url": "https://raw.githubusercontent.com/derJosef/social-assets/15554013fc2e4b188c26b478b4e7b596684eecb8/media/images/PictureFix_PF03_Pinterest_1000x1500.png",
+        "alt_text": "KI-generierte sepiafarbene PictureFix-Werbeillustration: historisch gekleidete Großmutter und Enkelin betrachten ein altes Fotoalbum und ragen plastisch aus einem 1950er-Jahre-Papierfoto. Echtes PictureFix-Logo; kein Restaurierungsergebnis."
+      }
+    ]
+  },
+  "image_sha256": "0e008d198a3eeccf593333ffd600c586155f18bfa4cf1c63560300022656033c",
+  "logo_git_blob_sha1": "0cd926e6631209dd4e5c8029dfb72c29bbf89ea8",
+  "pinterest_title": "Alte Familienfotos: Geschichten für morgen bewahren",
+  "pinterest_url": "https://picturefix.de",
+  "due_at_local": "2026-12-03T10:00:00+01:00",
+  "due_at_utc": "2026-12-03T09:00:00Z"
+}
