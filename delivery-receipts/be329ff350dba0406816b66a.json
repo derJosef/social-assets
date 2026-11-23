@@ -2,7 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-29-monitoring-unabhaengig-01-facebook.json",
   "target": "facebook",
   "draft_sha256": "2b97f0ca705169cda836d4b7775c2698655dd7aa8c737ce1721dd1a4dfe4ed05",
-  "state": "created_requires_independent_check",
+  "state": "verified_prescheduled_draft_not_queued",
   "github_run_id": "45147564669",
   "due_at_utc": "2027-01-14T08:00:00Z",
   "channel_id": "6ac781e46a5c39ccb64fe01c",
