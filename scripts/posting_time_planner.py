@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Select research-backed *proposed* campaign times, never Buffer schedules.
+"""Select short-horizon, research-backed *proposed* campaign times.
 
 The findings below are population-level 2026 Buffer benchmarks, NOT a claim
-about Josef's followers. Existing manifests and scheduling requests reserve
-timeslots; this module reads them but never writes to either directory.
+about Josef's followers. GitHub campaign manifests and scheduling requests
+are historical proposals, not proof that a slot is occupied in Buffer.
+Only a separately verified live Buffer queue may block slots. Without one,
+the resulting dates are tentative and require a live queue check before
+activation. This module never publishes or changes Buffer posts.
 """
 
 from __future__ import annotations
 
-import json
 import re
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
@@ -18,18 +20,13 @@ from zoneinfo import ZoneInfo
 BERLIN = ZoneInfo("Europe/Berlin")
 TARGETS = ("linkedin", "facebook", "instagram")
 MIN_REVIEW_DAYS = 5
-MAX_LOOKAHEAD_DAYS = 56  # Extend when the 35-day window is filled by immutable reservations
+MAX_LOOKAHEAD_DAYS = 21  # Never silently push a new campaign months into the future
 MIN_CHANNEL_GAP = timedelta(days=3)
-# Editorial year-end pause: avoid Christmas and the first complete workweek after
-# New Year (including Epiphany in Bavaria). Draft dates only; no publication.
-YEAR_END_START = (12, 21)
-NEW_YEAR_RESTART = (1, 11)
 
 
-def editorial_day_allowed(day: date) -> bool:
-    """Conservative annual holiday gate; weekends are filtered by SLOTS."""
-    return not ((day.month == 12 and day.day >= YEAR_END_START[1])
-                or (day.month == 1 and day.day < NEW_YEAR_RESTART[1]))
+def editorial_day_allowed(day: date, *, blackouts: frozenset[date] = frozenset()) -> bool:
+    """Only explicitly supplied editorial blackouts apply; SLOTS filters weekdays."""
+    return day not in blackouts
 
 UTC_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
@@ -71,27 +68,6 @@ def require(ok: bool, message: str) -> None:
         raise TimePlanningBlocked(message)
 
 
-def read_json(root: Path, path: Path) -> dict:
-    base = root.resolve(strict=True)
-    actual = path.resolve(strict=True)
-    require(actual.is_relative_to(base) and actual.is_file(), "Fremder Reservierungspfad")
-    require(actual.stat().st_size <= 128_000, "Reservierungsdatei zu groß")
-
-    def unique_keys(pairs):
-        found = {}
-        for key, value in pairs:
-            require(key not in found, "Doppelter JSON-Schlüssel in Reservierung")
-            found[key] = value
-        return found
-
-    try:
-        data = json.loads(actual.read_text(encoding="utf-8"), object_pairs_hook=unique_keys)
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise TimePlanningBlocked("Reservierungsdatei enthält ungültiges JSON") from exc
-    require(isinstance(data, dict), "Reservierung muss JSON-Objekt sein")
-    return data
-
-
 def parse_utc(raw: object) -> datetime:
     require(isinstance(raw, str) and UTC_PATTERN.fullmatch(raw) is not None,
             "Reservierungszeit muss ISO-8601 UTC mit Z sein")
@@ -101,31 +77,40 @@ def parse_utc(raw: object) -> datetime:
         raise TimePlanningBlocked("Ungültige Reservierungszeit") from exc
 
 
-def load_reserved(root: Path) -> dict[str, set[datetime]]:
-    """Include unapproved proposals to avoid clashes; never infer live status."""
-    reserved = {target: set() for target in TARGETS}
-    for path in sorted((root / "campaign-manifests").glob("*.json")):
-        manifest = read_json(root, path)
-        times = manifest.get("posting_times", {})
-        require(isinstance(times, dict), "Zeitwerte in vorhandenem Manifest ungültig")
-        for target, record in times.items():
-            if target not in TARGETS:
-                continue
-            require(isinstance(record, dict), "Zeitwert in vorhandenem Manifest ungültig")
-            reserved[target].add(parse_utc(record.get("utc")))
+def load_reserved(
+    root: Path, *, verified_buffer_slots: dict[str, list[str]] | None = None
+) -> dict[str, set[datetime]]:
+    """Use only times independently verified as scheduled in live Buffer.
 
-    for path in sorted((root / "ready-to-schedule").glob("*.json")):
-        request = read_json(root, path)
-        target = request.get("target")
-        if target in TARGETS:
-            reserved[target].add(parse_utc(request.get("publish_at_utc")))
+    ``root`` is kept for caller compatibility. Neither historical manifests
+    nor approved GitHub requests certify the current Buffer queue. The caller
+    must obtain ``verified_buffer_slots`` from a current Buffer readback; no
+    data means no asserted occupancy, not proof that the queue is empty.
+    """
+    require(isinstance(root, Path), "Projektpfad fehlt")
+    reserved = {target: set() for target in TARGETS}
+    if verified_buffer_slots is None:
+        return reserved
+    require(isinstance(verified_buffer_slots, dict)
+            and set(verified_buffer_slots).issubset(TARGETS),
+            "Live-Buffer-Belegung hat ungültige Kanäle")
+    for target, times in verified_buffer_slots.items():
+        require(isinstance(times, list), "Live-Buffer-Zeiten müssen eine Liste sein")
+        for raw in times:
+            reserved[target].add(parse_utc(raw))
     return reserved
 
 
 def propose_times(
-    today: date, root: Path, *, research_checked_at: date = RESEARCH_CHECKED_AT
+    today: date, root: Path, *, research_checked_at: date = RESEARCH_CHECKED_AT,
+    verified_buffer_slots: dict[str, list[str]] | None = None,
+    blackouts: frozenset[date] = frozenset(),
 ) -> dict[str, dict[str, str]]:
-    """Return Berlin + UTC; stop if independent research is older than 30 days."""
+    """Return tentative Berlin + UTC; stop if research is older than 30 days.
+
+    A caller without a verified live queue MUST recheck Buffer before using
+    the proposal to schedule anything. Proposals alone never reserve slots.
+    """
     require(isinstance(today, date) and not isinstance(today, datetime), "today muss Datum sein")
     require(isinstance(research_checked_at, date)
             and not isinstance(research_checked_at, datetime)
@@ -140,14 +125,17 @@ def propose_times(
                 f"Zwei unabhängige Postingzeiten-Studien fehlen: {target}")
     earliest = today + timedelta(days=MIN_REVIEW_DAYS)
     cutoff = today + timedelta(days=MAX_LOOKAHEAD_DAYS)
-    reserved = load_reserved(root)
+    require(isinstance(blackouts, frozenset)
+            and all(isinstance(d, date) and not isinstance(d, datetime) for d in blackouts),
+            "Redaktionssperren müssen ein Datums-Set sein")
+    reserved = load_reserved(root, verified_buffer_slots=verified_buffer_slots)
     result = {}
 
     for target in TARGETS:
         ranked = []
         for day_offset in range((cutoff - earliest).days + 1):
             day = earliest + timedelta(days=day_offset)
-            if not editorial_day_allowed(day):
+            if not editorial_day_allowed(day, blackouts=blackouts):
                 continue
             for rank, (weekday, hour) in enumerate(SLOTS[target]):
                 if day.weekday() != weekday:
@@ -157,14 +145,13 @@ def propose_times(
                 if any(abs(proposed_utc - old) < MIN_CHANNEL_GAP
                        for old in reserved[target]):
                     continue
-                # One preferred-slot tier is worth eight days of waiting.
-                # This gives a stronger slot some priority without making a
-                # campaign wait weeks for an already crowded primary slot.
-                penalty = 8 * rank + day_offset
-                ranked.append((penalty, day, rank, proposed_utc, local))
+                # Prefer researched primary slots but penalize a weaker tier
+                # by only three days; never skip weeks for a minor preference.
+                penalty = 3 * rank + day_offset
+                ranked.append((penalty, rank, proposed_utc, local))
 
-        require(bool(ranked), f"Kein konfliktfreies Zeitfenster für {target} in {MAX_LOOKAHEAD_DAYS} Tagen")
-        _, _, _, proposed_utc, local = min(ranked)
+        require(bool(ranked), f"Kein konfliktfreies Zeitfenster für {target} in {MAX_LOOKAHEAD_DAYS} Tagen; Buffer prüfen")
+        _, _, proposed_utc, local = min(ranked)
         result[target] = {
             "local": local.isoformat(timespec="seconds"),
             "utc": proposed_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
