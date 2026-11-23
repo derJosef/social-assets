@@ -1,0 +1,99 @@
+{
+  "started_at": "2026-11-23T09:23:27.258947+00:00",
+  "mode": "drafts",
+  "state": "blocked",
+  "steps": {
+    "brief": {
+      "status": "PASS",
+      "detail": ""
+    },
+    "fetch_warning_0": {
+      "status": "WARNING",
+      "detail": "Blocked"
+    },
+    "blocker": {
+      "status": "BLOCKED",
+      "detail": "Blocked: Weniger als zwei unabhängige Belegquellen abrufbar"
+    }
+  },
+  "campaign": "2026-10-29-monitoring-unabhaengig-01",
+  "finished_at": "2026-11-23T09:23:28.016387+00:00",
+  "action_steps": {
+    "checkout": {
+      "status": "PASS",
+      "tool": "actions/checkout@v5"
+    },
+    "setup": {
+      "status": "PASS",
+      "tool": "actions/setup-python@v6"
+    },
+    "deps": {
+      "status": "PASS",
+      "tool": "pip install"
+    },
+    "offline": {
+      "status": "PASS",
+      "tool": "python3 -m unittest"
+    },
+    "request": {
+      "status": "PASS",
+      "tool": "brief intake and git diff"
+    },
+    "guard": {
+      "status": "PASS",
+      "tool": "production_activation_guard.py"
+    },
+    "collision": {
+      "status": "PASS",
+      "tool": "git ls-remote"
+    },
+    "image_import": {
+      "status": "PASS",
+      "tool": "chatgpt_image_import.py"
+    },
+    "preflight": {
+      "status": "PASS",
+      "tool": "prepared_brief_preflight.py"
+    },
+    "reservations": {
+      "status": "PASS",
+      "tool": "git fetch / campaign_reservations.py"
+    },
+    "font": {
+      "status": "PASS",
+      "tool": "curl / sha256sum"
+    },
+    "build": {
+      "status": "FAIL",
+      "tool": "social_orchestrator.py"
+    },
+    "freeze": {
+      "status": "NOT_RUN",
+      "tool": "git commit / git push"
+    },
+    "send": {
+      "status": "NOT_RUN",
+      "tool": "buffer_draft.py"
+    },
+    "readback": {
+      "status": "NOT_RUN",
+      "tool": "orchestrator_verify_buffer.py"
+    }
+  },
+  "action_errors": [
+    {
+      "step": "build",
+      "tool": "social_orchestrator.py",
+      "kind": "step_failure",
+      "summary": "See protected/masked Actions step log",
+      "log_url": "https://github.com/derJosef/social-assets/actions/runs/45146398848"
+    }
+  ],
+  "github_run_id": "45146398848",
+  "github_run_url": "https://github.com/derJosef/social-assets/actions/runs/45146398848",
+  "job_status": "failure",
+  "job_status_at_receipt": "failure",
+  "receipt_at": "2026-11-23T09:23:28.167351+00:00",
+  "receipt_state": "WRITE_PENDING",
+  "resume_safety": "INSPECT_BEFORE_RESTART"
+}
