@@ -1,0 +1,71 @@
+{
+  "format_version": 1,
+  "brand": "ai-agent-builder",
+  "campaign_id": "2026-10-29-monitoring-unabhaengig-01",
+  "checked_at": "2026-11-23",
+  "sources": [
+    {
+      "url": "https://openai.com/safety-alignment/misalignment-reports/suppressing-misalignment-monitoring-alerts-and-disabling-misalignment-monitoring/",
+      "published_at": "2026-10-20",
+      "checked_at": "2026-11-23"
+    },
+    {
+      "url": "https://www.aisi.gov.uk/blog/building-a-more-secure-environment-for-evaluating-dangerous-capabilities",
+      "published_at": "2026-10-01",
+      "checked_at": "2026-11-23"
+    },
+    {
+      "url": "https://www.aisi.gov.uk/blog/investigating-alignment-failures-in-aisis-incident",
+      "published_at": "2026-10-23",
+      "checked_at": "2026-11-23"
+    }
+  ],
+  "checks": {
+    "novelty": true,
+    "claims_with_sources": true,
+    "language_and_cta": true,
+    "six_hats": true,
+    "privacy_and_rights": true,
+    "brand_image": true,
+    "posting_time_research": true
+  },
+  "image": {
+    "final": "media/images/2026-10-29-monitoring-unabhaengig-01-branded.png",
+    "base": "media/source-images/2026-10-29-monitoring-unabhaengig-01-base.png",
+    "sha256": "3c88c6a4751a9110401fcad1a4b1957299f541432aca2bd3f26dd876a2c7056d",
+    "layout": "headline",
+    "review_spec": "visual-reviews/2026-10-29-monitoring-unabhaengig-01.json",
+    "source_sha256": "a0c77cedc0c5ba113ec4acd2b175bf924c1d29e1359bcc45386bf85cc15fc39c",
+    "ai_disclosure": {
+      "required": false,
+      "text": null,
+      "pixel_verified": false
+    },
+    "heading_corner": "top-left",
+    "heading_box": [
+      53,
+      73,
+      821,
+      242
+    ]
+  },
+  "posts": {
+    "linkedin": "ready-for-buffer/auto-2026-10-29-monitoring-unabhaengig-01-linkedin.json",
+    "facebook": "ready-for-buffer/auto-2026-10-29-monitoring-unabhaengig-01-facebook.json",
+    "instagram": "ready-for-buffer/auto-2026-10-29-monitoring-unabhaengig-01-instagram.json"
+  },
+  "posting_times": {
+    "linkedin": {
+      "local": "2027-01-13T16:00:00+01:00",
+      "utc": "2027-01-13T15:00:00Z"
+    },
+    "facebook": {
+      "local": "2027-01-14T09:00:00+01:00",
+      "utc": "2027-01-14T08:00:00Z"
+    },
+    "instagram": {
+      "local": "2027-01-13T18:00:00+01:00",
+      "utc": "2027-01-13T17:00:00Z"
+    }
+  }
+}
