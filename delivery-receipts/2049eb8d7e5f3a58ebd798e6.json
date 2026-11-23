@@ -2,7 +2,7 @@
   "draft_file": "ready-for-buffer/auto-2026-10-29-monitoring-unabhaengig-01-instagram.json",
   "target": "instagram",
   "draft_sha256": "21fc8b2658659f4f5a484491af470060e1ccd5cf9b78895f90971a5ad6212642",
-  "state": "pending_manual_reconciliation_on_failure",
+  "state": "created_requires_independent_check",
   "github_run_id": "45147564669",
   "due_at_utc": "2027-01-13T17:00:00Z",
   "channel_id": "6ac79a686a5c39ccb650f94b",
@@ -10,5 +10,6 @@
     "campaign": "2026-10-29-monitoring-unabhaengig-01",
     "quality_gate": "passed",
     "image_sha256": "3c88c6a4751a9110401fcad1a4b1957299f541432aca2bd3f26dd876a2c7056d"
-  }
+  },
+  "buffer_post_id": "6b0408789c207fed958ecced"
 }
