@@ -323,11 +323,15 @@ def prepare(brief_path,mode,report_path):
                           "automatische Texte ohne freigegebenen Modellanbieter nicht verfügbar. "
                           "Alternativ vorbereitete Texte via prepared_content einreichen.")
         evidences={}
-        for source in brief["sources"]:
+        for source_index, source in enumerate(brief["sources"]):
             try:
                 evidences[source["url"]]=fetch_evidence(source["url"])
             except (Blocked,ValueError,TimeoutError,urllib.error.URLError,urllib.error.HTTPError) as e:
-                note("fetch_warning_"+str(len(evidences)), "WARNING",type(e).__name__)
+                # Keep separate source failures in the persistent receipt,
+                # even if no earlier source succeeded. Never store full bodies.
+                domain = valid_url(source["url"])
+                reason = f"{domain}: {type(e).__name__}: {str(e)[:120]}"
+                note(f"fetch_warning_{source_index}", "WARNING", reason)
         domains={valid_url(u) for u in evidences}
         require(len(domains)>=2,"Weniger als zwei unabhängige Belegquellen abrufbar")
         note("primary_source_fetch","PASS",str(len(evidences))+" Quellen")

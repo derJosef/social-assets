@@ -59,6 +59,29 @@ class OrchestratorTests(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
+    def test_each_source_fetch_failure_has_a_distinct_journal_entry(self):
+        obj = brief("drafts")
+        obj["prepared_content"] = {
+            "posts": {key: "Geprüfte synthetische Beschreibung. " * 10 for key in m.TARGETS},
+            "visual": None,
+            "six_hats": {key: "Synthetischer Test mit ausreichendem Inhalt."
+                         for key in ("white", "red", "black", "yellow", "green", "blue")},
+            "risks": [],
+        }
+        self.path.write_text(json.dumps(obj), encoding="utf-8")
+        report_path = self.root / "failed-fetch-report.json"
+        with patch.object(m, "fetch_evidence", side_effect=m.Blocked("HTTP 403")):
+            with self.assertRaisesRegex(m.Blocked, "zwei unabhängige"):
+                m.prepare(self.name, "drafts", str(report_path))
+        report = json.loads(report_path.read_text())
+        self.assertEqual(report["state"], "blocked")
+        self.assertIn("fetch_warning_0", report["steps"])
+        self.assertIn("fetch_warning_1", report["steps"])
+        self.assertIn("basicthinking.de", report["steps"]["fetch_warning_0"]["detail"])
+        self.assertIn("networks.imdea.org", report["steps"]["fetch_warning_1"]["detail"])
+        self.assertEqual(report["steps"]["fetch_warning_0"]["status"], "WARNING")
+        self.assertNotIn("brand_image_and_campaign_gate", report["steps"])
+
     def test_retired_github_models_never_calls_network(self):
         # A GITHUB_TOKEN is NOT an inference-provider token anymore.
         with patch.dict(m.os.environ,{"OPENAI_API_KEY":"","GITHUB_TOKEN":"test-only"},clear=False), \

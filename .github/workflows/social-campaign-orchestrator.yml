@@ -3,6 +3,8 @@ name: AI Agent Builder – Recherche bis geprüfter Buffer-Entwurf
 on:
   issues:
     types: [opened]
+  issue_comment:
+    types: [created]
   push:
     branches: [main]
     paths:
@@ -31,15 +33,26 @@ concurrency:
 jobs:
   orchestrate:
     name: Research → QA → Original-Logo → Buffer Drafts (or safe stop)
-    # Issue events run only on DEFAULT BRANCH workflow code. The public body
-    # is data, never an instruction; only the confirmed owner may trigger.
+    # Issue and comment events run only on DEFAULT BRANCH code. Resuming is a
+    # single fixed campaign from trusted issue #19, never user-supplied paths.
     if: >-
       ${{
-        github.event_name != 'issues' ||
-        (github.event.action == 'opened' &&
+        github.event_name == 'push' ||
+        github.event_name == 'workflow_dispatch' ||
+        (github.event_name == 'issues' &&
+         github.event.action == 'opened' &&
          github.event.issue.user.login == 'derJosef' &&
          github.event.issue.author_association == 'OWNER' &&
-         startsWith(github.event.issue.title, 'AIAGENT_BRIEF:'))
+         startsWith(github.event.issue.title, 'AIAGENT_BRIEF:')) ||
+        (github.event_name == 'issue_comment' &&
+         github.ref == 'refs/heads/main' &&
+         github.actor == 'derJosef-agents' &&
+         github.event.comment.user.login == 'derJosef-agents' &&
+         github.event.issue.number == 19 &&
+         !github.event.issue.pull_request &&
+         github.event.issue.user.login == 'derJosef' &&
+         github.event.issue.title == 'AIAGENT_BRIEF:2026-10-13-lieferanten-pdf-prueftor-e2e-003' &&
+         github.event.comment.body == 'AIAGENT_RESUME_MONITORING_20261123_DRAFTS_ONLY')
       }}
     # Slim: 1 vCPU / 5 GB RAM; hard GitHub limit 15 min. No Docker or privileged steps.
     runs-on: ubuntu-slim
@@ -90,6 +103,25 @@ jobs:
           print('orchestration/briefs/'+issue['title'].split(':',1)[1]+'.json')
           PY
           )"
+            MODE="drafts"
+          elif [[ "$EVENT_NAME" == "issue_comment" ]]; then
+            # Defense in depth: never interpret issue text as executable input.
+            [[ "$GITHUB_ACTOR" == "derJosef-agents" ]] || exit 1
+            python3 - "$GITHUB_EVENT_PATH" <<'PY'
+          import json,sys
+          with open(sys.argv[1],encoding='utf-8') as f: event=json.load(f)
+          issue=event.get('issue',{})
+          comment=event.get('comment',{})
+          if not (
+              issue.get('number')==19 and not issue.get('pull_request') and
+              issue.get('user',{}).get('login')=='derJosef' and
+              issue.get('title')=='AIAGENT_BRIEF:2026-10-13-lieferanten-pdf-prueftor-e2e-003' and
+              comment.get('user',{}).get('login')=='derJosef-agents' and
+              comment.get('body')=='AIAGENT_RESUME_MONITORING_20261123_DRAFTS_ONLY'
+          ):
+              raise SystemExit('Nicht autorisierter Wiederaufnahme-Auslöser')
+          PY
+            BRIEF="orchestration/briefs/2026-10-29-monitoring-unabhaengig-01.json"
             MODE="drafts"
           elif [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             BRIEF="$INPUT_BRIEF"
