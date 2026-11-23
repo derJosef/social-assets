@@ -38,6 +38,18 @@ query VerifyPictureFixCampaignDraft($id: PostId!) {
   }
 }
 """
+POSTS_QUERY = """
+query AuditPictureFixPosts($organizationId: OrganizationId!, $channelIds: [ChannelId!], $after: String) {
+  posts(first: 100, after: $after, input: {
+    organizationId: $organizationId,
+    filter: {channelIds: $channelIds},
+    sort: [{field: createdAt, direction: desc}]
+  }) {
+    edges { node { id channelId status text dueAt assets { source } } }
+    pageInfo { hasNextPage endCursor }
+  }
+}
+"""
 
 
 class CampaignBlocked(RuntimeError):
@@ -247,6 +259,67 @@ def check_post(post: object, expected: dict, channel: str, post_id: str) -> None
             "Independent Buffer GET did not confirm exact dated, image-bearing DRAFT")
 
 
+def audit_live_picturefix(token: str, channels: dict[str, str], items: list[dict],
+                          verified_ids: dict[str, str], *, query) -> None:
+    """Fail closed on a live same-channel slot or duplicate before any mutation.
+
+    Old GitHub campaign dates are not reservations. The actual Buffer account
+    is queried in full, including drafts, to avoid recreating orphaned posts.
+    Verified receipts are exempted only by their exact Buffer post ID; they are
+    independently checked again in ``send_batch`` before any other send.
+    """
+    account = query(token, bridge.GET_PICTUREFIX_ORGANIZATIONS, {}).get("account")
+    orgs = account.get("organizations") if isinstance(account, dict) else None
+    require(isinstance(orgs, list) and len(orgs) == 1 and
+            isinstance(orgs[0], dict) and orgs[0].get("name") == "PictureFix" and
+            orgs[0].get("channelCount") == 3 and
+            isinstance(orgs[0].get("id"), str) and bool(orgs[0]["id"]),
+            "Live PictureFix organization audit unavailable")
+    require(set(channels) == set(TARGETS) and len(set(channels.values())) == 3,
+            "PictureFix channel audit mismatch")
+    expected = {channels[item["target"]]: item for item in items}
+    seen_ids: set[str] = set()
+    cursor = None
+    for _ in range(5):
+        response = query(token, POSTS_QUERY, {
+            "organizationId": orgs[0]["id"],
+            "channelIds": list(channels.values()),
+            "after": cursor,
+        }).get("posts")
+        require(isinstance(response, dict) and isinstance(response.get("edges"), list),
+                "Live PictureFix Buffer posts page unavailable")
+        for edge in response["edges"]:
+            post = edge.get("node") if isinstance(edge, dict) else None
+            require(isinstance(post, dict) and
+                    isinstance(post.get("id"), str) and bool(POST_ID_RE.fullmatch(post["id"])) and
+                    post["id"] not in seen_ids and post.get("channelId") in expected,
+                    "Live PictureFix post data is incomplete or repeated")
+            seen_ids.add(post["id"])
+            item = expected[post["channelId"]]
+            target = item["target"]
+            if post["id"] == verified_ids.get(target):
+                continue
+            record = item["record"]
+            if post.get("text") == record["text"]:
+                raise CampaignBlocked(f"Existing PictureFix {target} text in Buffer; reconcile before creation")
+            assets = post.get("assets")
+            require(isinstance(assets, list), "Live PictureFix post assets unavailable")
+            if any(isinstance(a, dict) and a.get("source") ==
+                   record["media"]["images"][0]["url"] for a in assets):
+                raise CampaignBlocked(f"Existing PictureFix {target} image in Buffer; reconcile before creation")
+            if post.get("dueAt") is not None and timestamp(post["dueAt"]) == timestamp(record["due_at_utc"]):
+                raise CampaignBlocked(f"Existing PictureFix {target} Buffer time is occupied")
+        page = response.get("pageInfo")
+        require(isinstance(page, dict) and isinstance(page.get("hasNextPage"), bool),
+                "Live PictureFix Buffer pagination unavailable")
+        if not page["hasNextPage"]:
+            return
+        cursor = page.get("endCursor")
+        require(isinstance(cursor, str) and bool(cursor),
+                "Live PictureFix Buffer pagination cursor missing")
+    raise CampaignBlocked("PictureFix Buffer audit exceeds 500 posts; no mutation")
+
+
 def send_batch(manifest_path: str, *, env: dict[str, str] | None = None,
                now: datetime | None = None, root: Path | None = None,
                query=None, get_receipt=None, put_receipt=None) -> list[str]:
@@ -298,6 +371,11 @@ def send_batch(manifest_path: str, *, env: dict[str, str] | None = None,
             states[item["target"]] = {"receipt": receipt, "prior": prior}
         else:
             states[item["target"]] = {"receipt": receipt}
+
+    audit_live_picturefix(token, channels, items, {
+        target: state["prior"]["buffer_post_id"]
+        for target, state in states.items() if "prior" in state
+    }, query=query)
 
     result_ids = []
     for item in items:

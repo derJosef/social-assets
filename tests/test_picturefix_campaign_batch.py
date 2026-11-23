@@ -183,7 +183,8 @@ class CampaignTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             load_canonical_logo(invalid)
 
-    def _simulate(self, *, existing=None, fail_on_target=None, bad_read=False):
+    def _simulate(self, *, existing=None, fail_on_target=None, bad_read=False,
+                  live_posts=None, broken_audit=False, expect_failure=None):
         _, prepared = p.load_campaign(self.campaign_path, COMMIT, now=CLOCK, root=self.root)
         expected = {i["target"]: i["record"] for i in prepared}
         channels = {x: "channel-" + x for x in p.TARGETS}
@@ -203,6 +204,26 @@ class CampaignTests(unittest.TestCase):
 
         def query(_token, operation, vars):
             queries.append((operation, vars))
+            if "PictureFixOrganizations" in operation:
+                return {"account": {"organizations": [
+                    {"id": "picturefix-organization", "name": "PictureFix", "channelCount": 3}
+                ]}}
+            if "AuditPictureFixPosts" in operation:
+                if broken_audit:
+                    return {"posts": {"edges": None}}
+                records = list(live_posts or [])
+                if existing:
+                    for target, state in existing.items():
+                        if state == "verified_prescheduled_draft_not_queued_with_image":
+                            record = expected[target]
+                            records.append({
+                                "id": "a" * 24, "channelId": channels[target],
+                                "status": "draft", "text": record["text"],
+                                "dueAt": record["due_at_utc"],
+                                "assets": [{"source": record["media"]["images"][0]["url"]}],
+                            })
+                return {"posts": {"edges": [{"node": entry} for entry in records],
+                                  "pageInfo": {"hasNextPage": False, "endCursor": None}}}
             if "mutation CreateDatedDraft" in operation:
                 target = vars["channelId"].removeprefix("channel-")
                 if target == fail_on_target:
@@ -238,7 +259,11 @@ class CampaignTests(unittest.TestCase):
             def run():
                 return p.send_batch(self.campaign_path, env=self.env, now=CLOCK, root=self.root,
                                     query=query, get_receipt=fetch, put_receipt=put)
-            if fail_on_target or bad_read or (existing and "pending_manual_reconciliation_on_failure" in existing.values()):
+            should_fail = bool(fail_on_target or bad_read or broken_audit or live_posts or
+                               (existing and "pending_manual_reconciliation_on_failure" in existing.values()))
+            if expect_failure is not None:
+                should_fail = expect_failure
+            if should_fail:
                 with self.assertRaises(p.CampaignBlocked):
                     run()
                 ids = None
@@ -252,13 +277,13 @@ class CampaignTests(unittest.TestCase):
         ids, queries, writes = self._simulate()
         self.assertEqual(len(ids), 3)
         self.assertEqual(len(set(ids)), 3)
-        self.assertEqual(len(queries), 6)
+        self.assertEqual(len(queries), 8)  # organization + live Buffer audit, then 3x write/read
         self.assertEqual(len(writes), 9)
         for index in (0, 3, 6):
             self.assertEqual(writes[index][1]["state"], "pending_manual_reconciliation_on_failure")
             self.assertEqual(writes[index + 2][1]["state"],
                              "verified_prescheduled_draft_not_queued_with_image")
-        for operation, vars in queries[::2]:
+        for operation, vars in queries[2::2]:
             self.assertIn("saveToDraft: true", operation)
             self.assertIn("mode: customScheduled", operation)
             self.assertNotIn("shareNow", operation)
@@ -275,6 +300,76 @@ class CampaignTests(unittest.TestCase):
         self.assertEqual(queries, [])
         self.assertEqual(writes, [])
 
+    def test_live_buffer_time_collision_blocks_before_receipt_or_create(self):
+        _, prepared = p.load_campaign(self.campaign_path, COMMIT, now=CLOCK, root=self.root)
+        fb = prepared[0]["record"]
+        existing = {"id": "f" * 24, "channelId": "channel-facebook",
+                    "status": "scheduled", "text": "Anderer Beitrag",
+                    "dueAt": fb["due_at_utc"], "assets": []}
+        _, queries, writes = self._simulate(live_posts=[existing])
+        self.assertEqual(writes, [])
+        self.assertEqual(sum("mutation CreateDatedDraft" in op for op, _ in queries), 0)
+
+    def test_live_buffer_duplicate_text_blocks_even_at_different_time(self):
+        _, prepared = p.load_campaign(self.campaign_path, COMMIT, now=CLOCK, root=self.root)
+        fb = prepared[0]["record"]
+        existing = {"id": "f" * 24, "channelId": "channel-facebook",
+                    "status": "draft", "text": fb["text"],
+                    "dueAt": "2026-12-18T11:00:00Z", "assets": []}
+        _, queries, writes = self._simulate(live_posts=[existing])
+        self.assertEqual(writes, [])
+        self.assertEqual(sum("mutation CreateDatedDraft" in op for op, _ in queries), 0)
+
+    def test_live_buffer_unreadable_audit_stops_before_any_write(self):
+        _, queries, writes = self._simulate(broken_audit=True)
+        self.assertEqual(writes, [])
+        self.assertEqual(sum("mutation CreateDatedDraft" in op for op, _ in queries), 0)
+
+    def test_live_buffer_pagination_checks_later_pages(self):
+        _, prepared = p.load_campaign(self.campaign_path, COMMIT, now=CLOCK, root=self.root)
+        channels = {x: "channel-" + x for x in p.TARGETS}
+        seen_cursors = []
+
+        def query(_token, operation, vars):
+            if "PictureFixOrganizations" in operation:
+                return {"account": {"organizations": [
+                    {"id": "picturefix-organization", "name": "PictureFix", "channelCount": 3}
+                ]}}
+            seen_cursors.append(vars["after"])
+            if vars["after"] is None:
+                return {"posts": {"edges": [],
+                                  "pageInfo": {"hasNextPage": True, "endCursor": "page-two"}}}
+            return {"posts": {"edges": [{"node": {
+                "id": "f" * 24, "channelId": channels["facebook"],
+                "text": "Anderer Beitrag", "dueAt": prepared[0]["record"]["due_at_utc"],
+                "assets": []}}],
+                "pageInfo": {"hasNextPage": False, "endCursor": None}}}
+
+        with self.assertRaises(p.CampaignBlocked):
+            p.audit_live_picturefix("test-buffer", channels, prepared, {}, query=query)
+        self.assertEqual(seen_cursors, [None, "page-two"])
+
+    def test_live_buffer_duplicate_image_blocks_even_if_copy_changed(self):
+        _, prepared = p.load_campaign(self.campaign_path, COMMIT, now=CLOCK, root=self.root)
+        fb = prepared[0]["record"]
+        existing = {"id": "f" * 24, "channelId": "channel-facebook",
+                    "status": "draft", "text": "Anderer Text",
+                    "dueAt": "2026-12-18T11:00:00Z",
+                    "assets": [{"source": fb["media"]["images"][0]["url"]}]}
+        _, queries, writes = self._simulate(live_posts=[existing])
+        self.assertEqual(writes, [])
+        self.assertEqual(sum("mutation CreateDatedDraft" in op for op, _ in queries), 0)
+
+    def test_live_buffer_same_slot_on_another_channel_is_not_a_collision(self):
+        _, prepared = p.load_campaign(self.campaign_path, COMMIT, now=CLOCK, root=self.root)
+        fb = prepared[0]["record"]
+        other = {"id": "f" * 24, "channelId": "channel-instagram",
+                 "status": "draft", "text": "Anderer Text",
+                 "dueAt": fb["due_at_utc"], "assets": []}
+        _, queries, writes = self._simulate(live_posts=[other], expect_failure=False)
+        self.assertEqual(sum("mutation CreateDatedDraft" in op for op, _ in queries), 3)
+        self.assertEqual(len(writes), 9)
+
     def test_failure_is_not_retried_and_keeps_reservation(self):
         _, queries, writes = self._simulate(fail_on_target="instagram")
         self.assertEqual(sum("mutation CreateDatedDraft" in op for op, _ in queries), 2)
@@ -282,7 +377,7 @@ class CampaignTests(unittest.TestCase):
 
     def test_bad_independent_read_fails_closed(self):
         _, queries, writes = self._simulate(bad_read=True)
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(len(queries), 4)
         self.assertEqual(writes[-1][1]["state"], "created_requires_independent_check")
 
 

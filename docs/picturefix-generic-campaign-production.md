@@ -31,7 +31,14 @@ Josef veröffentlicht nach eigener Prüfung selbst in Buffer.
    `derJosef-agents` (GitHub-ID 350701981), nur neue Kampagnendateien, und
    ausschließlich PictureFix-Token/-Kanäle. Er prüft *alle* Termine, Dateien,
    Texte, offengelegten KI-Illustrationen und immutable Main-Commit-PNGs,
-   bevor er irgendetwas in Buffer anlegt.
+   bevor er irgendetwas in Buffer anlegt. **Zusätzlich liest er die echte
+   PictureFix-Buffer-Belegung vollständig und seitenweise zurück.** Ein bereits
+   vorhandener Beitrag im selben Kanal mit demselben Zeitfenster, identischem
+   Text oder identischer Bild-URL blockiert die gesamte neue Lieferung vor dem
+   ersten Receipt und `createPost`. Fehlerhafte oder unvollständige Buffer-
+   Antworten blockieren ebenso. Historische GitHub-Datumspläne gelten nicht als
+   echte Buffer-Belegung. Bereits per Receipt bestätigte eigene Beiträge
+   werden anhand ihrer exakten Post-ID erkannt und separat erneut geprüft.
 6. Jeder Kanal erhält einen **vorher** geschriebenen One-shot-Receipt in
    `automation-receipts`; anschließend wird `createPost` nur mit
    `saveToDraft: true`, `mode: customScheduled` und Bild versendet. Buffer
@@ -110,3 +117,7 @@ geprüft.
 - Ein vollständiger Live-Probelauf muss in Buffer **3/3** drei unterschiedliche
   IDs mit Bildern, korrekten Daten und Status `draft` nachweisen. Bis dahin
   ist die End-to-End-Autonomie **noch nicht nachgewiesen**.
+- Die Live-Belegungsprüfung ist ein Sicherheitsgate, keine automatisierte
+  Neuplanung. Bei Kollisionen erfolgt ein Stopp zur redaktionellen Korrektur;
+  die Termine werden nicht stillschweigend verschoben. Die Recherche-/Bild-
+  erstellung wird durch diese GitHub-Action weiterhin nicht selbst gestartet.
