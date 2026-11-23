@@ -16,6 +16,19 @@ class WorkflowLedgerTests(unittest.TestCase):
         self.assertIn("scripts/action_phase_ledger.py",yml)
         self.assertIn("if: always()",yml)
 
+    def test_protected_single_campaign_resume_comment_cannot_select_arbitrary_brief(self):
+        yml=(ROOT/".github/workflows/social-campaign-orchestrator.yml").read_text()
+        self.assertIn("issue_comment:", yml)
+        self.assertIn("types: [created]", yml)
+        self.assertIn("github.ref == 'refs/heads/main'", yml)
+        self.assertIn("github.actor == 'derJosef-agents'", yml)
+        self.assertIn("github.event.issue.number == 19", yml)
+        self.assertIn("github.event.comment.user.login == 'derJosef-agents'", yml)
+        self.assertIn("AIAGENT_RESUME_MONITORING_20261123_DRAFTS_ONLY", yml)
+        self.assertIn('BRIEF="orchestration/briefs/2026-10-29-monitoring-unabhaengig-01.json"', yml)
+        self.assertIn('MODE="drafts"', yml)
+        self.assertNotIn('BRIEF="$ISSUE_COMMENT"', yml)
+
     def test_original_trigger_and_review_authority_remain(self):
         yml=(ROOT/".github/workflows/social-campaign-orchestrator.yml").read_text()
         self.assertIn("branches: [main]",yml)
