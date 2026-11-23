@@ -20,6 +20,17 @@ TARGETS = ("linkedin", "facebook", "instagram")
 MIN_REVIEW_DAYS = 5
 MAX_LOOKAHEAD_DAYS = 56  # Extend when the 35-day window is filled by immutable reservations
 MIN_CHANNEL_GAP = timedelta(days=3)
+# Editorial year-end pause: avoid Christmas and the first complete workweek after
+# New Year (including Epiphany in Bavaria). Draft dates only; no publication.
+YEAR_END_START = (12, 21)
+NEW_YEAR_RESTART = (1, 11)
+
+
+def editorial_day_allowed(day: date) -> bool:
+    """Conservative annual holiday gate; weekends are filtered by SLOTS."""
+    return not ((day.month == 12 and day.day >= YEAR_END_START[1])
+                or (day.month == 1 and day.day < NEW_YEAR_RESTART[1]))
+
 UTC_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
 # (weekday with Monday=0, local hour), ranked editorial pilot candidates.
@@ -136,6 +147,8 @@ def propose_times(
         ranked = []
         for day_offset in range((cutoff - earliest).days + 1):
             day = earliest + timedelta(days=day_offset)
+            if not editorial_day_allowed(day):
+                continue
             for rank, (weekday, hour) in enumerate(SLOTS[target]):
                 if day.weekday() != weekday:
                     continue
