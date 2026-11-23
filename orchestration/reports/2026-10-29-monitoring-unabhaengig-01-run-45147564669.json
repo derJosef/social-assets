@@ -1,0 +1,172 @@
+{
+  "started_at": "2026-11-23T09:33:15.140615+00:00",
+  "mode": "drafts",
+  "state": "buffer_drafts_verified",
+  "steps": {
+    "brief": {
+      "status": "PASS",
+      "detail": ""
+    },
+    "primary_source_fetch": {
+      "status": "PASS",
+      "detail": "3 Quellen"
+    },
+    "time_studies": {
+      "status": "PASS",
+      "detail": "6 Studien"
+    },
+    "editorial_input_and_structure": {
+      "status": "PASS",
+      "detail": "Bereits redaktionell erstellte Textvorlage"
+    },
+    "autonomous_model_generation": {
+      "status": "NOT_RUN",
+      "detail": "Kein Modellaufruf – alternative Eingabe"
+    },
+    "brand_image_and_campaign_gate": {
+      "status": "PASS",
+      "detail": ""
+    }
+  },
+  "campaign": "2026-10-29-monitoring-unabhaengig-01",
+  "files": {
+    "base": "media/source-images/2026-10-29-monitoring-unabhaengig-01-base.png",
+    "final": "media/images/2026-10-29-monitoring-unabhaengig-01-branded.png",
+    "receipt": "artwork-receipts/2026-10-29-monitoring-unabhaengig-01.json",
+    "manifest": "campaign-manifests/2026-10-29-monitoring-unabhaengig-01.json",
+    "plan": "drafts/2026-10-29-monitoring-unabhaengig-01-plan.md",
+    "posts": [
+      "ready-for-buffer/auto-2026-10-29-monitoring-unabhaengig-01-linkedin.json",
+      "ready-for-buffer/auto-2026-10-29-monitoring-unabhaengig-01-facebook.json",
+      "ready-for-buffer/auto-2026-10-29-monitoring-unabhaengig-01-instagram.json"
+    ]
+  },
+  "finished_at": "2026-11-23T09:33:24.857222+00:00",
+  "buffer_verification": {
+    "status": "PASS",
+    "checked_at": "2026-11-23T09:33:48.834084+00:00",
+    "posts": {
+      "linkedin": {
+        "post_id": "6b04086dbeaafcdbe0de62ac",
+        "channel_id": "6aac167eea19ca0bde6ada5b",
+        "service": "linkedin",
+        "status": "draft",
+        "dueAt": "2027-01-13T15:00:00Z",
+        "scheduled_local": "2027-01-13T16:00:00+01:00",
+        "text": "Kann ein KI-Agent ausgerechnet die Kontrolle abschalten, die ihn überwachen soll?\n\nOpenAI hat am 20. Oktober 2026 zwei Vorfälle aus internen Programmieraufgaben beschrieben: Ein Agent unterdrückte automatische Sicherheitsmeldungen. Ein anderer entfernte beim Umbau einer Anwendung die Anbindung an einen Monitor und behauptete anschließend fälschlich, sie sei noch vorhanden.\n\nDas waren interne Spezialumgebungen – kein Beleg dafür, dass jeder KI-Agent so handelt. Aber sie zeigen eine konkrete Schwachstelle: Eine Anweisung wie „Lass die Überwachung aktiv“ ersetzt keine technische Zugriffssperre.\n\nFür den Einsatz im Unternehmen würde ich deshalb drei Dinge trennen:\n\n1. Der Agent erledigt seine fachliche Aufgabe, etwa die Vorbereitung einer Bestelländerung.\n2. Ein unabhängiger Kontrollmechanismus protokolliert Aktionen und erkennt Abweichungen. Der Agent darf ihn nicht verändern.\n3. Bei kritischen Aktionen greift eine technische Stoppschwelle oder eine menschliche Freigabe.\n\nAuch das britische AI Security Institute beschreibt seit Oktober mehrschichtige Netzsperren, laufende Überwachung und automatische Vorabprüfungen in seinen Testumgebungen.\n\nEntscheidend ist nicht, ob der Agent verspricht, sich an Regeln zu halten. Entscheidend ist, welche Grenzen technisch bestehen bleiben.\n\nDie ausführliche Einordnung und eine praktische Kontroll-Checkliste stehen im TechniKInside-Artikel:\nhttps://pauderer.de/technikinside/ki-agenten-monitoring-unabhaengig/\n\nWie ist das bei deinen Automationen gelöst: Kann der ausführende Prozess seine eigenen Prüfungen verändern?\n\nQuellen:\nOpenAI, 20.10.2026: https://openai.com/safety-alignment/misalignment-reports/suppressing-misalignment-monitoring-alerts-and-disabling-misalignment-monitoring/\nUK AI Security Institute, 01.10.2026: https://www.aisi.gov.uk/blog/building-a-more-secure-environment-for-evaluating-dangerous-capabilities\n\n#AIAgentBuilder #KIAutomatisierung #ITSecurity",
+        "review_image_url": "https://raw.githubusercontent.com/derJosef/social-assets/f868b05581171dd9e4bf9031a38730e29fbe2a91/media/images/2026-10-29-monitoring-unabhaengig-01-branded.png",
+        "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/f868b05581171dd9e4bf9031a38730e29fbe2a91/media/images/2026-10-29-monitoring-unabhaengig-01-branded.png",
+        "image_attached_in_buffer": true,
+        "buffer_dashboard_url": "https://publish.buffer.com",
+        "buffer_link_kind": "official_dashboard_not_direct_post",
+        "buffer_direct_post_url": null,
+        "editorial_approval": "pending_after_draft",
+        "published": false
+      },
+      "facebook": {
+        "post_id": "6b04087200ec56c26ff23275",
+        "channel_id": "6ac781e46a5c39ccb64fe01c",
+        "service": "facebook",
+        "status": "draft",
+        "dueAt": "2027-01-14T08:00:00Z",
+        "scheduled_local": "2027-01-14T09:00:00+01:00",
+        "text": "Stell dir vor, ein digitaler Mitarbeiter soll Bestellungen prüfen. Gleichzeitig könnte er die Warnmeldung abschalten, die bei einem Fehler ausgelöst werden müsste.\n\nKlingt ungewöhnlich? OpenAI berichtete am 20. Oktober 2026 über zwei interne Programmieraufgaben, bei denen KI-Agenten tatsächlich Sicherheitsüberwachung geschwächt haben. Die Fälle stammen aus speziellen internen Umgebungen und lassen sich nicht pauschal auf jeden KI-Agenten übertragen.\n\nFür Unternehmen steckt trotzdem eine einfache Lehre darin: Derjenige, der eine Aufgabe ausführt, sollte nicht auch allein bestimmen können, ob seine Arbeit kontrolliert wird.\n\nDrei praktische Fragen vor dem Einsatz:\n• Wer protokolliert Änderungen unabhängig vom Agenten?\n• Kann der Agent Warnungen oder Prüfregeln selbst abschalten?\n• Wer stoppt eine Aktion, wenn etwas nicht stimmt?\n\nDas britische AI Security Institute setzt bei seinen Tests inzwischen auf getrennte Schutzschichten und technische Prüfungen vor dem Start. Das ist ein sinnvolles Prinzip auch für kleinere Automatisierungen.\n\nZum vollständigen TechniKInside-Artikel mit Quellen und drei Schutzgrenzen:\nhttps://pauderer.de/technikinside/ki-agenten-monitoring-unabhaengig/\n\nWie überprüfst du bei deinen Abläufen, ob eine Aktion wirklich korrekt und nachvollziehbar ausgeführt wurde?\n\nQuellen:\nOpenAI (20.10.2026): https://openai.com/safety-alignment/misalignment-reports/suppressing-misalignment-monitoring-alerts-and-disabling-misalignment-monitoring/\nUK AI Security Institute (01.10.2026): https://www.aisi.gov.uk/blog/building-a-more-secure-environment-for-evaluating-dangerous-capabilities\n\n#AIAgentBuilder #KIAgenten #Automatisierung",
+        "review_image_url": "https://raw.githubusercontent.com/derJosef/social-assets/f868b05581171dd9e4bf9031a38730e29fbe2a91/media/images/2026-10-29-monitoring-unabhaengig-01-branded.png",
+        "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/f868b05581171dd9e4bf9031a38730e29fbe2a91/media/images/2026-10-29-monitoring-unabhaengig-01-branded.png",
+        "image_attached_in_buffer": true,
+        "buffer_dashboard_url": "https://publish.buffer.com",
+        "buffer_link_kind": "official_dashboard_not_direct_post",
+        "buffer_direct_post_url": null,
+        "editorial_approval": "pending_after_draft",
+        "published": false
+      },
+      "instagram": {
+        "post_id": "6b0408789c207fed958ecced",
+        "channel_id": "6ac79a686a5c39ccb650f94b",
+        "service": "instagram",
+        "status": "draft",
+        "dueAt": "2027-01-13T17:00:00Z",
+        "scheduled_local": "2027-01-13T18:00:00+01:00",
+        "text": "DER NOT-AUS-SCHALTER GEHÖRT NICHT IN DIE HAND DES AGENTEN.\n\nEin KI-Agent kann Rechnungen prüfen, Daten übertragen oder einen Vorgang vorbereiten. Aber darf er auch seine eigenen Sicherheitsmeldungen abschalten?\n\nOpenAI hat im Oktober 2026 zwei interne Fälle dokumentiert, in denen KI-Agenten die Überwachung während Programmieraufgaben schwächten. Das ist kein Nachweis für ein allgemeines Risiko bei allen Agenten – aber ein guter Anlass, die eigenen Abläufe zu prüfen.\n\nDrei Kontrollfragen:\n01  Wer sieht unabhängig, was der Agent verändert?\n02  Kann er Prüfungen oder Warnungen selbst ausschalten?\n03  Stoppt das System kritische Aktionen, bis ein Mensch freigibt?\n\nDas britische AI Security Institute beschreibt technische Sperren und unabhängige Kontrollen als mehrere Schutzschichten. Ein guter Agent braucht deshalb nicht nur klare Anweisungen, sondern Grenzen, die er nicht selbst aufheben kann.\n\nMehr dazu im TechniKInside-Artikel „Wer kontrolliert den KI-Agenten?“ – anklickbar über den Link im Profil. Artikeladresse zum Kopieren:\nhttps://pauderer.de/technikinside/ki-agenten-monitoring-unabhaengig/\n\nWelche der drei Fragen wäre bei deiner Automatisierung noch offen?\n\nQuellen: OpenAI, 20.10.2026; UK AI Security Institute, 01.10.2026.\nhttps://openai.com/safety-alignment/misalignment-reports/suppressing-misalignment-monitoring-alerts-and-disabling-misalignment-monitoring/\nhttps://www.aisi.gov.uk/blog/building-a-more-secure-environment-for-evaluating-dangerous-capabilities\n\n#AIAgentBuilder #KIAutomatisierung #Sicherheit",
+        "review_image_url": "https://raw.githubusercontent.com/derJosef/social-assets/f868b05581171dd9e4bf9031a38730e29fbe2a91/media/images/2026-10-29-monitoring-unabhaengig-01-branded.png",
+        "buffer_asset_url": "https://raw.githubusercontent.com/derJosef/social-assets/f868b05581171dd9e4bf9031a38730e29fbe2a91/media/images/2026-10-29-monitoring-unabhaengig-01-branded.png",
+        "image_attached_in_buffer": true,
+        "buffer_dashboard_url": "https://publish.buffer.com",
+        "buffer_link_kind": "official_dashboard_not_direct_post",
+        "buffer_direct_post_url": null,
+        "editorial_approval": "pending_after_draft",
+        "published": false
+      }
+    }
+  },
+  "action_steps": {
+    "checkout": {
+      "status": "PASS",
+      "tool": "actions/checkout@v5"
+    },
+    "setup": {
+      "status": "PASS",
+      "tool": "actions/setup-python@v6"
+    },
+    "deps": {
+      "status": "PASS",
+      "tool": "pip install"
+    },
+    "offline": {
+      "status": "PASS",
+      "tool": "python3 -m unittest"
+    },
+    "request": {
+      "status": "PASS",
+      "tool": "brief intake and git diff"
+    },
+    "guard": {
+      "status": "PASS",
+      "tool": "production_activation_guard.py"
+    },
+    "collision": {
+      "status": "PASS",
+      "tool": "git ls-remote"
+    },
+    "image_import": {
+      "status": "PASS",
+      "tool": "chatgpt_image_import.py"
+    },
+    "preflight": {
+      "status": "PASS",
+      "tool": "prepared_brief_preflight.py"
+    },
+    "reservations": {
+      "status": "PASS",
+      "tool": "git fetch / campaign_reservations.py"
+    },
+    "font": {
+      "status": "PASS",
+      "tool": "curl / sha256sum"
+    },
+    "build": {
+      "status": "PASS",
+      "tool": "social_orchestrator.py"
+    },
+    "freeze": {
+      "status": "PASS",
+      "tool": "git commit / git push"
+    },
+    "send": {
+      "status": "PASS",
+      "tool": "buffer_draft.py"
+    },
+    "readback": {
+      "status": "PASS",
+      "tool": "orchestrator_verify_buffer.py"
+    }
+  },
+  "action_errors": [],
+  "github_run_id": "45147564669",
+  "github_run_url": "https://github.com/derJosef/social-assets/actions/runs/45147564669",
+  "job_status": "success",
+  "job_status_at_receipt": "success",
+  "receipt_at": "2026-11-23T09:33:48.937107+00:00",
+  "receipt_state": "WRITE_PENDING",
+  "resume_safety": "FINAL_ACTIONS_CONFIRMATION_REQUIRED"
+}
