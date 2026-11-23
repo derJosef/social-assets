@@ -1,0 +1,83 @@
+{
+  "state": "blocked",
+  "steps": {},
+  "action_steps": {
+    "checkout": {
+      "status": "PASS",
+      "tool": "actions/checkout@v5"
+    },
+    "setup": {
+      "status": "PASS",
+      "tool": "actions/setup-python@v6"
+    },
+    "deps": {
+      "status": "PASS",
+      "tool": "pip install"
+    },
+    "offline": {
+      "status": "PASS",
+      "tool": "python3 -m unittest"
+    },
+    "request": {
+      "status": "FAIL",
+      "tool": "brief intake and git diff"
+    },
+    "guard": {
+      "status": "NOT_RUN",
+      "tool": "production_activation_guard.py"
+    },
+    "collision": {
+      "status": "NOT_RUN",
+      "tool": "git ls-remote"
+    },
+    "image_import": {
+      "status": "NOT_RUN",
+      "tool": "chatgpt_image_import.py"
+    },
+    "preflight": {
+      "status": "NOT_RUN",
+      "tool": "prepared_brief_preflight.py"
+    },
+    "reservations": {
+      "status": "NOT_RUN",
+      "tool": "git fetch / campaign_reservations.py"
+    },
+    "font": {
+      "status": "NOT_RUN",
+      "tool": "curl / sha256sum"
+    },
+    "build": {
+      "status": "NOT_RUN",
+      "tool": "social_orchestrator.py"
+    },
+    "freeze": {
+      "status": "NOT_RUN",
+      "tool": "git commit / git push"
+    },
+    "send": {
+      "status": "NOT_RUN",
+      "tool": "buffer_draft.py"
+    },
+    "readback": {
+      "status": "NOT_RUN",
+      "tool": "orchestrator_verify_buffer.py"
+    }
+  },
+  "action_errors": [
+    {
+      "step": "request",
+      "tool": "brief intake and git diff",
+      "kind": "step_failure",
+      "summary": "See protected/masked Actions step log",
+      "log_url": "https://github.com/derJosef/social-assets/actions/runs/45147527600"
+    }
+  ],
+  "github_run_id": "45147527600",
+  "github_run_url": "https://github.com/derJosef/social-assets/actions/runs/45147527600",
+  "job_status": "failure",
+  "job_status_at_receipt": "failure",
+  "receipt_at": "2026-11-23T09:30:55.692857+00:00",
+  "receipt_state": "WRITE_PENDING",
+  "resume_safety": "INSPECT_BEFORE_RESTART",
+  "campaign": "preflight"
+}
