@@ -177,6 +177,38 @@ class PostingTimePlannerTests(unittest.TestCase):
             self.assertGreaterEqual(datetime.fromisoformat(item["local"]).date(),
                                     date(2026, 11, 25))
 
+    def test_year_end_pause_skips_holidays_and_epiphany_week(self):
+        self.assertFalse(planner.editorial_day_allowed(date(2026, 12, 23)))
+        self.assertFalse(planner.editorial_day_allowed(date(2026, 12, 24)))
+        self.assertFalse(planner.editorial_day_allowed(date(2026, 12, 31)))
+        self.assertFalse(planner.editorial_day_allowed(date(2027, 1, 6)))
+        self.assertFalse(planner.editorial_day_allowed(date(2027, 1, 10)))
+        self.assertTrue(planner.editorial_day_allowed(date(2027, 1, 11)))
+        self.assertTrue(planner.editorial_day_allowed(date(2027, 1, 13)))
+        self.assertTrue(planner.editorial_day_allowed(date(2027, 12, 20)))
+
+    def test_november_reservations_no_longer_yield_december_23_24(self):
+        # Existing editorial reservations reproduced without API/network calls.
+        reserved = {
+            "linkedin": ["2026-11-18T15:00:00Z", "2026-11-25T15:00:00Z",
+                         "2026-12-02T15:00:00Z", "2026-12-09T15:00:00Z",
+                         "2026-12-16T15:00:00Z"],
+            "facebook": ["2026-11-19T08:00:00Z", "2026-11-24T18:00:00Z",
+                         "2026-12-03T08:00:00Z", "2026-12-08T18:00:00Z",
+                         "2026-12-17T08:00:00Z"],
+            "instagram": ["2026-11-18T17:00:00Z", "2026-11-25T17:00:00Z",
+                          "2026-12-02T17:00:00Z", "2026-12-09T17:00:00Z",
+                          "2026-12-16T17:00:00Z"],
+        }
+        for target, times in reserved.items():
+            for i, utc in enumerate(times):
+                self.reserve_manifest(target, utc, filename=f"{target}-{i}.json")
+        result = planner.propose_times(date(2026, 11, 23), self.root,
+                                       research_checked_at=date(2026, 11, 20))
+        self.assertEqual(result["linkedin"]["local"], "2027-01-13T16:00:00+01:00")
+        self.assertEqual(result["facebook"]["local"], "2027-01-14T09:00:00+01:00")
+        self.assertEqual(result["instagram"]["local"], "2027-01-13T18:00:00+01:00")
+
     def test_research_older_than_thirty_days_blocks_before_planning(self):
         with self.assertRaisesRegex(planner.TimePlanningBlocked, "30 Tage"):
             planner.propose_times(date(2026, 12, 21), self.root)
